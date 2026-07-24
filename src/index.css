@@ -17,23 +17,23 @@
 @layer base {
   :root {
     /* Ocean Deep — Light Mode */
-    --background: 195 40% 98%;
-    --foreground: 213 60% 12%;
+    --background: 200 45% 95%;
+    --foreground: 213 60% 10%;
 
     --card: 0 0% 100%;
-    --card-foreground: 213 60% 12%;
+    --card-foreground: 213 60% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 213 60% 12%;
+    --popover-foreground: 213 60% 10%;
 
     --primary: 204 62% 27%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 195 30% 94%;
+    --secondary: 200 32% 88%;
     --secondary-foreground: 213 60% 15%;
 
-    --muted: 195 25% 93%;
-    --muted-foreground: 213 20% 38%;
+    --muted: 200 28% 90%;
+    --muted-foreground: 213 22% 32%;
 
     --accent: 189 55% 40%;
     --accent-foreground: 0 0% 100%;
@@ -41,9 +41,10 @@
     --destructive: 0 72% 48%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 195 25% 86%;
-    --input: 195 25% 88%;
+    --border: 200 30% 78%;
+    --input: 200 30% 82%;
     --ring: 189 55% 40%;
+
 
     --radius: 0.75rem;
 
