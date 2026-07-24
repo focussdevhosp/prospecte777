@@ -205,7 +205,7 @@ export function CaptureAndSendTab() {
     setFoundCount(0);
 
     try {
-    try {
+
       const combos: Array<{ niche: string; location: string }> = [];
       for (const n of selectedNiches) for (const l of selectedLocations) combos.push({ niche: n, location: l });
 
