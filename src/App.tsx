@@ -61,6 +61,7 @@ const CRMInboxPage = lazy(() => import("./pages/crm/CRMInbox"));
 const CRMAutomationsPage = lazy(() => import("./pages/crm/CRMAutomations"));
 const AdminPage = lazy(() => import("./pages/Admin"));
 const SupportPage = lazy(() => import("./pages/Support"));
+const ObjectionsPage = lazy(() => import("./pages/Objections"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -119,6 +120,7 @@ const App = () => (
                   <Route path="/follow-up" element={<ProtectedRoute><FollowUpPage /></ProtectedRoute>} />
                   <Route path="/cold-reactivation" element={<ProtectedRoute><ColdReactivationPage /></ProtectedRoute>} />
                   <Route path="/templates" element={<ProtectedRoute><TemplatesPage /></ProtectedRoute>} />
+                  <Route path="/objections" element={<ProtectedRoute><ObjectionsPage /></ProtectedRoute>} />
 
                   {/* Ferramentas */}
                   <Route path="/analytics" element={<ProtectedRoute><AnalyticsPage /></ProtectedRoute>} />
