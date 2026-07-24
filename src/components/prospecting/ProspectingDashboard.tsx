@@ -38,7 +38,7 @@ export function ProspectingDashboard() {
   const totalContacted = campaigns.reduce((a, c) => a + (c.leads_contacted || 0), 0);
   const totalResponses = campaigns.reduce((a, c) => a + (c.leads_responded || 0), 0);
   const responseRate = totalContacted > 0 ? ((totalResponses / totalContacted) * 100).toFixed(1) : '0';
-  const conversions = leads.filter((l) => l.stage === 'Fechado' || l.stage === 'Ganho').length;
+  const conversions = leads.filter((l) => l.stage === 'Ganho').length;
   const costPerLead = totalFound > 0 ? (2.45).toFixed(2) : '0.00';
 
   const stats: Stat[] = [
