@@ -88,6 +88,7 @@ const communicateItems = [
   { title: 'Disparo em Massa', icon: Send, path: '/mass-send', section: 'communicate' },
   { title: 'Follow-up', icon: RefreshCw, path: '/follow-up', section: 'communicate' },
   { title: 'Reativação', icon: Flame, path: '/cold-reactivation', section: 'communicate' },
+  { title: 'Quebra de Objeções', icon: Shield, path: '/objections', badge: 'IA', section: 'communicate' },
   { title: 'Templates', icon: MessageSquareText, path: '/templates', section: 'communicate' },
   { title: 'Anti-Ban', icon: Shield, path: '/antiban', section: 'communicate' },
 ];
