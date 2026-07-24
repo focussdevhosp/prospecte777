@@ -16,6 +16,7 @@ import {
   Facebook, Shield, Loader2, Plug, Unplug, Download, Users,
   DollarSign, Target, TrendingUp, Copy, ExternalLink, Info,
 } from 'lucide-react';
+import { MetaTokenStatus } from '@/components/meta-ads/MetaTokenStatus';
 
 export default function CRMMetaAdsPage() {
   const { settings, updateSettings } = useUserSettings();
@@ -115,6 +116,15 @@ export default function CRMMetaAdsPage() {
           Os dados enviados ao Facebook são hasheados (SHA-256) antes do envio, conforme as diretrizes da LGPD e as políticas de dados da Meta. Apenas telefones públicos são compartilhados.
         </AlertDescription>
       </Alert>
+
+      {isConnected && (
+        <div className="mb-6">
+          <MetaTokenStatus
+            accessToken={metaToken}
+            onReconnect={() => { void handleDisconnect(); }}
+          />
+        </div>
+      )}
 
       {/* Connection */}
       <Card className="mb-6">
