@@ -65,61 +65,55 @@ import { cn } from '@/lib/utils';
 const sectionIconColors: Record<string, string> = {
   main: 'text-chart-1',
   prospect: 'text-chart-2',
-  engage: 'text-chart-3',
-  crm: 'text-chart-4',
-  insight: 'text-chart-5',
-  tools: 'text-chart-1',
+  communicate: 'text-chart-3',
+  sell: 'text-chart-4',
+  analyze: 'text-chart-5',
 };
 
-// ─── PRINCIPAL ──────────────────────────────────────────
+// ─── INÍCIO ─────────────────────────────────────────────
 const mainItems = [
   { title: 'Dashboard', icon: LayoutDashboard, path: '/dashboard', section: 'main' },
 ];
 
-// ─── PROSPECÇÃO ─────────────────────────────────────────
+// ─── 1. PROSPECTAR (encontrar leads) ────────────────────
 const prospectItems = [
   { title: 'Buscar Leads', icon: Search, path: '/prospecting', badge: 'IA', section: 'prospect' },
-  { title: 'Campanhas', icon: Rocket, path: '/campaigns', section: 'prospect' },
   { title: 'Radar CNPJ', icon: Building2, path: '/cnpj-radar', section: 'prospect' },
+  { title: 'Email Finder', icon: Mail, path: '/email-finder', section: 'prospect' },
+  { title: 'Extrator Social', icon: Globe, path: '/social-extractor', section: 'prospect' },
 ];
 
-// ─── ENGAJAMENTO ────────────────────────────────────────
-const engageItems = [
-  { title: 'Disparo em Massa', icon: Send, path: '/mass-send', section: 'engage' },
-  { title: 'Reuniões', icon: Calendar, path: '/meetings', section: 'engage' },
-  { title: 'Follow-up', icon: RefreshCw, path: '/follow-up', section: 'engage' },
-  { title: 'Reativação', icon: Flame, path: '/cold-reactivation', section: 'engage' },
-  { title: 'Templates', icon: MessageSquareText, path: '/templates', section: 'engage' },
-  { title: 'Anti-Ban', icon: Shield, path: '/antiban', section: 'engage' },
+// ─── 2. COMUNICAR (mensagens em escala) ─────────────────
+const communicateItems = [
+  { title: 'Disparo em Massa', icon: Send, path: '/mass-send', section: 'communicate' },
+  { title: 'Follow-up', icon: RefreshCw, path: '/follow-up', section: 'communicate' },
+  { title: 'Reativação', icon: Flame, path: '/cold-reactivation', section: 'communicate' },
+  { title: 'Templates', icon: MessageSquareText, path: '/templates', section: 'communicate' },
+  { title: 'Anti-Ban', icon: Shield, path: '/antiban', section: 'communicate' },
 ];
 
-// ─── CRM ────────────────────────────────────────────────
-const crmItems = [
-  { title: 'CRM', icon: Kanban, path: '/crm/pipeline', badge: 'PRO', section: 'crm' },
+// ─── 3. VENDER (fechar negócio) ─────────────────────────
+const sellItems = [
+  { title: 'CRM Pipeline', icon: Kanban, path: '/crm/pipeline', badge: 'PRO', section: 'sell' },
+  { title: 'Campanhas', icon: Rocket, path: '/campaigns', section: 'sell' },
+  { title: 'Reuniões', icon: Calendar, path: '/meetings', section: 'sell' },
+  { title: 'Agente SDR', icon: Bot, path: '/sdr-agent', badge: 'IA', section: 'sell' },
 ];
 
-// ─── INTELIGÊNCIA ───────────────────────────────────────
-const insightItems = [
-  { title: 'Analytics', icon: BarChart3, path: '/analytics', section: 'insight' },
-  { title: 'Testes A/B', icon: FlaskConical, path: '/ab-testing', section: 'insight' },
-];
-
-// ─── FERRAMENTAS ────────────────────────────────────────
-const toolItems = [
-  { title: 'Agente SDR', icon: Bot, path: '/sdr-agent', badge: 'IA', section: 'tools' },
-  { title: 'Email Finder', icon: Mail, path: '/email-finder', section: 'tools' },
-  { title: 'Extrator Social', icon: Globe, path: '/social-extractor', section: 'tools' },
+// ─── 4. ANALISAR (métricas e otimização) ────────────────
+const analyzeItems = [
+  { title: 'Analytics', icon: BarChart3, path: '/analytics', section: 'analyze' },
+  { title: 'Testes A/B', icon: FlaskConical, path: '/ab-testing', section: 'analyze' },
 ];
 
 type NavItem = { title: string; icon: React.ComponentType<{ className?: string }>; path: string; badge?: string; section?: string };
 
 const sections: { label: string | null; items: NavItem[]; sectionKey: string }[] = [
   { label: null, items: mainItems, sectionKey: 'main' },
-  { label: 'Prospecção', items: prospectItems, sectionKey: 'prospect' },
-  { label: 'Engajamento', items: engageItems, sectionKey: 'engage' },
-  { label: 'CRM', items: crmItems, sectionKey: 'crm' },
-  { label: 'Inteligência', items: insightItems, sectionKey: 'insight' },
-  { label: 'Ferramentas', items: toolItems, sectionKey: 'tools' },
+  { label: '1. Prospectar', items: prospectItems, sectionKey: 'prospect' },
+  { label: '2. Comunicar', items: communicateItems, sectionKey: 'communicate' },
+  { label: '3. Vender', items: sellItems, sectionKey: 'sell' },
+  { label: '4. Analisar', items: analyzeItems, sectionKey: 'analyze' },
 ];
 
 export function AppSidebar() {
