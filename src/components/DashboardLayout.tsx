@@ -152,7 +152,7 @@ export function DashboardLayout({ children, title, description, actions }: Dashb
             </div>
           </header>
 
-          <main className="flex-1 p-4 sm:p-6 lg:p-8 bg-gradient-to-b from-background to-background/95">
+          <main className="relative z-0 flex-1 p-4 sm:p-6 lg:p-8 bg-background text-foreground">
             {description && (
               <p className="text-muted-foreground mb-6 text-sm">{description}</p>
             )}
