@@ -118,6 +118,22 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify(data), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
+    if (action === "debug_token") {
+      // Uses the token to inspect itself (no app secret needed)
+      const res = await fetch(
+        `${base}/debug_token?input_token=${access_token}&access_token=${access_token}`
+      );
+      const data = await res.json();
+      const info = data?.data || {};
+      return new Response(JSON.stringify({
+        is_valid: info.is_valid === true,
+        expires_at: info.expires_at ? info.expires_at * 1000 : null, // ms
+        data_access_expires_at: info.data_access_expires_at ? info.data_access_expires_at * 1000 : null,
+        scopes: info.scopes || [],
+        raw: data,
+      }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
     return new Response(JSON.stringify({ error: "Ação inválida" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (err: any) {
     return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
