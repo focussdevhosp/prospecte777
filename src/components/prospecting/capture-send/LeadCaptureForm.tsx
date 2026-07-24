@@ -183,29 +183,35 @@ export function LeadCaptureForm({
           <Collapsible open={showFilters} onOpenChange={setShowFilters}>
             <CollapsibleTrigger asChild>
               <button className={cn(
-                "w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium transition-all duration-200 border",
+                "group w-full flex items-center gap-3 px-5 py-3.5 rounded-2xl text-sm font-semibold transition-all duration-200 border",
                 showFilters
-                  ? "bg-muted/40 border-border/50 text-foreground"
-                  : "bg-muted/20 border-border/30 text-muted-foreground hover:bg-muted/40 hover:text-foreground"
+                  ? "bg-primary/5 border-primary/20 text-foreground shadow-sm"
+                  : "bg-muted/20 border-border/40 text-foreground/80 hover:bg-muted/30 hover:border-border/60"
               )}>
-                <SlidersHorizontal className="h-4 w-4" />
-                Filtros Avançados
-                <ChevronDown className={cn(
-                  "h-4 w-4 transition-transform duration-200",
-                  showFilters && "rotate-180"
-                )} />
+                <span className={cn(
+                  "flex h-8 w-8 items-center justify-center rounded-lg transition-colors",
+                  showFilters ? "bg-primary/15 text-primary" : "bg-muted/60 text-muted-foreground group-hover:text-foreground"
+                )}>
+                  <SlidersHorizontal className="h-4 w-4" />
+                </span>
+                <span className="flex-1 text-left">Filtros Avançados</span>
                 {hasActiveFilters && (
                   <Badge className="h-5 min-w-[20px] px-1.5 text-[10px] bg-primary text-primary-foreground border-0 rounded-full">
                     {activeFilterCount}
                   </Badge>
                 )}
+                <ChevronDown className={cn(
+                  "h-4 w-4 text-muted-foreground transition-transform duration-200",
+                  showFilters && "rotate-180 text-primary"
+                )} />
               </button>
             </CollapsibleTrigger>
-            <CollapsibleContent className="mt-3 rounded-xl border border-border/40 bg-muted/5 animate-fade-in overflow-hidden">
+            <CollapsibleContent className="mt-3 rounded-2xl border border-border/50 bg-gradient-to-b from-muted/10 to-transparent animate-fade-in overflow-hidden">
               {/* Filter Header */}
               {hasActiveFilters && (
-                <div className="flex items-center justify-between px-5 pt-4 pb-0">
-                  <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">
+                <div className="flex items-center justify-between px-5 pt-4">
+                  <span className="inline-flex items-center gap-2 text-[11px] font-semibold text-primary uppercase tracking-widest">
+                    <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
                     {activeFilterCount} filtro{activeFilterCount > 1 ? 's' : ''} ativo{activeFilterCount > 1 ? 's' : ''}
                   </span>
                   <Button variant="ghost" size="sm" className="h-7 text-xs gap-1 text-muted-foreground hover:text-destructive" onClick={resetFilters}>
@@ -215,16 +221,16 @@ export function LeadCaptureForm({
                 </div>
               )}
 
-              <div className="p-5 space-y-5">
+              <div className="p-5 space-y-4">
                 {/* Row 1: Tipo de Empresa + Serviço */}
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                      <Filter className="h-3.5 w-3.5" />
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="group space-y-2 p-3.5 rounded-xl bg-background border border-border/40 hover:border-primary/30 transition-colors">
+                    <Label className="flex items-center gap-2 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      <Filter className="h-3.5 w-3.5 text-primary/70" />
                       Tipo de Empresa
                     </Label>
                     <Select value={captureFilter} onValueChange={setCaptureFilter}>
-                      <SelectTrigger className="h-10 rounded-lg bg-background">
+                      <SelectTrigger className="h-11 rounded-lg bg-muted/20 border-border/40 font-medium">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -242,13 +248,13 @@ export function LeadCaptureForm({
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-2">
-                    <Label className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                      <Briefcase className="h-3.5 w-3.5" />
+                  <div className="group space-y-2 p-3.5 rounded-xl bg-background border border-border/40 hover:border-primary/30 transition-colors">
+                    <Label className="flex items-center gap-2 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      <Briefcase className="h-3.5 w-3.5 text-primary/70" />
                       Serviço a Oferecer
                     </Label>
                     <Select value={selectedService} onValueChange={setSelectedService}>
-                      <SelectTrigger className="h-10 rounded-lg bg-background">
+                      <SelectTrigger className="h-11 rounded-lg bg-muted/20 border-border/40 font-medium">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -265,18 +271,16 @@ export function LeadCaptureForm({
                   </div>
                 </div>
 
-                <Separator className="opacity-40" />
-
                 {/* Row 2: Rating Slider + Sort */}
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-3">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-3 p-3.5 rounded-xl bg-background border border-border/40">
                     <div className="flex items-center justify-between">
-                      <Label className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                        <Star className="h-3.5 w-3.5" />
+                      <Label className="flex items-center gap-2 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                        <Star className="h-3.5 w-3.5 text-amber-500" />
                         Avaliação Mínima
                       </Label>
-                      <span className="text-sm font-bold tabular-nums text-foreground">
-                        {minRating === 0 ? 'Todas' : `${minRating}+ ⭐`}
+                      <span className="inline-flex items-center gap-1 text-xs font-bold tabular-nums text-foreground bg-amber-500/10 text-amber-600 dark:text-amber-400 px-2 py-0.5 rounded-md">
+                        {minRating === 0 ? 'Todas' : (<><Star className="h-3 w-3 fill-current" />{minRating}+</>)}
                       </span>
                     </div>
                     <Slider
@@ -288,19 +292,19 @@ export function LeadCaptureForm({
                       disabled={isSearching}
                       className="w-full"
                     />
-                    <div className="flex justify-between text-[10px] text-muted-foreground/50">
-                      <span>Todas</span>
+                    <div className="flex justify-between text-[10px] text-muted-foreground/60 font-medium">
+                      <span>0</span>
                       <span>2.5</span>
                       <span>5.0</span>
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                      <ArrowUpDown className="h-3.5 w-3.5" />
+                  <div className="space-y-2 p-3.5 rounded-xl bg-background border border-border/40">
+                    <Label className="flex items-center gap-2 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      <ArrowUpDown className="h-3.5 w-3.5 text-primary/70" />
                       Ordenar Por
                     </Label>
                     <Select value={sortBy} onValueChange={setSortBy}>
-                      <SelectTrigger className="h-10 rounded-lg bg-background">
+                      <SelectTrigger className="h-11 rounded-lg bg-muted/20 border-border/40 font-medium">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -317,30 +321,44 @@ export function LeadCaptureForm({
                   </div>
                 </div>
 
-                <Separator className="opacity-40" />
-
                 {/* Row 3: Toggles */}
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="flex items-center justify-between p-3 rounded-lg bg-background border border-border/30">
-                    <div className="flex items-center gap-2.5">
-                      <ShieldCheck className="h-4 w-4 text-primary" />
-                      <div>
-                        <p className="text-xs font-medium text-foreground">Ignorar duplicados</p>
-                        <p className="text-[10px] text-muted-foreground">Pula leads já salvos</p>
+                  <label className={cn(
+                    "flex items-center justify-between gap-3 p-3.5 rounded-xl bg-background border cursor-pointer transition-colors",
+                    skipDuplicates ? "border-emerald-500/30 bg-emerald-500/[0.03]" : "border-border/40 hover:border-border/60"
+                  )}>
+                    <div className="flex items-center gap-3 min-w-0">
+                      <span className={cn(
+                        "flex h-9 w-9 items-center justify-center rounded-lg shrink-0",
+                        skipDuplicates ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" : "bg-muted/50 text-muted-foreground"
+                      )}>
+                        <ShieldCheck className="h-4 w-4" />
+                      </span>
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold text-foreground truncate">Ignorar duplicados</p>
+                        <p className="text-[10px] text-muted-foreground truncate">Pula leads já salvos</p>
                       </div>
                     </div>
                     <Switch checked={skipDuplicates} onCheckedChange={setSkipDuplicates} disabled={isSearching} />
-                  </div>
-                  <div className="flex items-center justify-between p-3 rounded-lg bg-background border border-border/30">
-                    <div className="flex items-center gap-2.5">
-                      <Zap className="h-4 w-4 text-primary" />
-                      <div>
-                        <p className="text-xs font-medium text-foreground">Apenas com telefone</p>
-                        <p className="text-[10px] text-muted-foreground">Filtra leads sem número</p>
+                  </label>
+                  <label className={cn(
+                    "flex items-center justify-between gap-3 p-3.5 rounded-xl bg-background border cursor-pointer transition-colors",
+                    onlyWithPhone ? "border-primary/30 bg-primary/[0.03]" : "border-border/40 hover:border-border/60"
+                  )}>
+                    <div className="flex items-center gap-3 min-w-0">
+                      <span className={cn(
+                        "flex h-9 w-9 items-center justify-center rounded-lg shrink-0",
+                        onlyWithPhone ? "bg-primary/15 text-primary" : "bg-muted/50 text-muted-foreground"
+                      )}>
+                        <Zap className="h-4 w-4" />
+                      </span>
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold text-foreground truncate">Apenas com telefone</p>
+                        <p className="text-[10px] text-muted-foreground truncate">Filtra leads sem número</p>
                       </div>
                     </div>
                     <Switch checked={onlyWithPhone} onCheckedChange={setOnlyWithPhone} disabled={isSearching} />
-                  </div>
+                  </label>
                 </div>
 
                 {/* Active Filter Chips */}
