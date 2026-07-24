@@ -75,6 +75,26 @@ function extractEmail(text: string): string | undefined {
   return match ? match[0] : undefined;
 }
 
+// Extract rating (e.g. "4.5 estrelas", "4,7 de 5", "★ 4.8") and review count from snippet
+function extractRatingAndReviews(text: string): { rating?: number; reviews_count?: number } {
+  const out: { rating?: number; reviews_count?: number } = {};
+  // rating: "4.5", "4,7", possibly followed by "/5" or "de 5" or "estrelas"
+  const rMatch = text.match(/(?:★|⭐|nota|avaliação|rating)\s*[:\-]?\s*(\d[.,]\d)|(\d[.,]\d)\s*(?:\/\s*5|de\s*5|estrelas?)/i);
+  if (rMatch) {
+    const raw = (rMatch[1] || rMatch[2] || '').replace(',', '.');
+    const n = parseFloat(raw);
+    if (!isNaN(n) && n >= 0 && n <= 5) out.rating = n;
+  }
+  // reviews: "123 avaliações", "45 reviews", "(87)"
+  const revMatch = text.match(/(\d{1,5})\s*(?:avaliaç[õo]es|reviews?|opini[õo]es|coment[aá]rios)/i)
+    || text.match(/\((\d{1,5})\)/);
+  if (revMatch) {
+    const n = parseInt(revMatch[1], 10);
+    if (!isNaN(n) && n < 100000) out.reviews_count = n;
+  }
+  return out;
+}
+
 // FREE: Search using DuckDuckGo HTML endpoint (no API key needed)
 async function searchWithDuckDuckGo(
   searchQuery: string,
@@ -160,6 +180,7 @@ async function searchWithDuckDuckGo(
           if (normalizedName) seenNames.add(normalizedName);
 
           const email = extractEmail(combinedText);
+          const { rating, reviews_count } = extractRatingAndReviews(combinedText);
 
           allResults.push({
             title: title || 'Empresa',
@@ -167,6 +188,8 @@ async function searchWithDuckDuckGo(
             snippet: snippet,
             phone: phone,
             email,
+            rating,
+            reviews_count,
             position: allResults.length + 1,
             website: link,
             address: snippet.length > 10 ? snippet.substring(0, 100) : undefined,
