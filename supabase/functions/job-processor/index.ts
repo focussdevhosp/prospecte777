@@ -72,54 +72,76 @@ async function processJobItem(
           await logToDb(supabase, job.id, job.user_id, 'info', `Gerando mensagem ${isRemarketing ? 'de remarketing' : 'IA'} para ${lead.business_name}...`);
           
           try {
-            // Call AI to generate message from scratch - include user_id for auth
-            const aiResponse = await fetch(
-              `${Deno.env.get("SUPABASE_URL")}/functions/v1/ai-prospecting`,
-              {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
-                },
-                body: JSON.stringify({
-                  action: "generate_message",
-                  user_id: job.user_id, // Pass user_id for internal auth
-                  data: {
-                    lead: {
-                      business_name: lead.business_name,
-                      niche: lead.niche,
-                      location: lead.location,
-                      rating: lead.rating,
-                      reviews_count: lead.reviews_count,
-                      website: lead.website, // Include website info for AI to know if they need a site
-                    },
-                    template: null, // Direct mode - no template
-                    agentSettings: payload.agent_settings || {},
-                    isRemarketing: isRemarketing,
+            // Call AI with retry on 429 (rate limit)
+            let aiResponse: Response | null = null;
+            let lastErrorText = "";
+            const maxAttempts = 4;
+            for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+              aiResponse = await fetch(
+                `${Deno.env.get("SUPABASE_URL")}/functions/v1/ai-prospecting`,
+                {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
                   },
-                }),
-              }
-            );
+                  body: JSON.stringify({
+                    action: "generate_message",
+                    user_id: job.user_id,
+                    data: {
+                      lead: {
+                        business_name: lead.business_name,
+                        niche: lead.niche,
+                        location: lead.location,
+                        rating: lead.rating,
+                        reviews_count: lead.reviews_count,
+                        website: lead.website,
+                      },
+                      template: null,
+                      agentSettings: payload.agent_settings || {},
+                      isRemarketing: isRemarketing,
+                    },
+                  }),
+                }
+              );
 
-            if (!aiResponse.ok) {
-              const errorText = await aiResponse.text();
-              console.error(`[Job ${job.id}] AI generation failed for lead ${index}:`, errorText);
-              await logToDb(supabase, job.id, job.user_id, 'error', `Falha IA para ${lead.business_name}: ${errorText}`);
-              return { success: false, error: `Falha ao gerar mensagem IA: ${errorText}` };
+              if (aiResponse.ok) break;
+
+              lastErrorText = await aiResponse.text();
+              const isRateLimit = aiResponse.status === 429 || /rate limit/i.test(lastErrorText);
+              if (!isRateLimit || attempt === maxAttempts) break;
+
+              // Parse "Retry after XXXXms" from error
+              const retryMatch = lastErrorText.match(/Retry after (\d+)ms/i);
+              const waitMs = retryMatch
+                ? Math.min(parseInt(retryMatch[1]) + 500, 30000)
+                : Math.min(2000 * Math.pow(2, attempt - 1), 30000);
+              await logToDb(supabase, job.id, job.user_id, 'info', `Rate limit IA — aguardando ${Math.round(waitMs / 1000)}s (tentativa ${attempt}/${maxAttempts})`);
+              await new Promise((r) => setTimeout(r, waitMs));
             }
 
-            const aiData = await aiResponse.json();
-            message = aiData.message || "";
-
-            if (!message) {
-              await logToDb(supabase, job.id, job.user_id, 'error', `IA retornou mensagem vazia para ${lead.business_name}`);
-              return { success: false, error: "IA retornou mensagem vazia" };
+            if (!aiResponse || !aiResponse.ok) {
+              // Fallback: generate a simple decent message instead of failing the lead
+              console.warn(`[Job ${job.id}] AI unavailable after retries, using fallback message`);
+              await logToDb(supabase, job.id, job.user_id, 'info', `IA indisponível para ${lead.business_name} — usando mensagem padrão`);
+              const firstName = (lead.business_name || "").split(/\s+/)[0] || "";
+              const nicheTxt = lead.niche ? ` no ramo de ${lead.niche}` : "";
+              message = `Olá${firstName ? " " + firstName : ""}! Tudo bem? Encontrei a ${lead.business_name}${nicheTxt} e queria te mostrar como podemos gerar mais clientes para vocês. Posso te enviar uma proposta rápida?`;
+            } else {
+              const aiData = await aiResponse.json();
+              message = aiData.message || "";
+              if (!message) {
+                const firstName = (lead.business_name || "").split(/\s+/)[0] || "";
+                message = `Olá${firstName ? " " + firstName : ""}! Vi a ${lead.business_name} e queria conversar sobre uma oportunidade rápida. Posso te mandar os detalhes?`;
+              }
             }
           } catch (aiError: any) {
             console.error(`[Job ${job.id}] AI error for lead ${index}:`, aiError);
-            await logToDb(supabase, job.id, job.user_id, 'error', `Erro de IA: ${aiError.message}`);
-            return { success: false, error: `Erro de IA: ${aiError.message}` };
+            await logToDb(supabase, job.id, job.user_id, 'info', `Erro IA (${aiError.message}) — usando mensagem padrão para ${lead.business_name}`);
+            const firstName = (lead.business_name || "").split(/\s+/)[0] || "";
+            message = `Olá${firstName ? " " + firstName : ""}! Encontrei a ${lead.business_name} e gostaria de te apresentar uma oportunidade. Posso te enviar mais detalhes?`;
           }
+
         } else if (payload.use_ai_personalization) {
           // Use AI to personalize template
           console.log(`[Job ${job.id}] Personalizing template for lead ${index}: ${lead.business_name}`);
