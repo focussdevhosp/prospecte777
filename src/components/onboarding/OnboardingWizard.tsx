@@ -110,7 +110,7 @@ export function OnboardingWizard() {
   const [showConfetti, setShowConfetti] = useState(false);
 
   useEffect(() => {
-    if (settings && !settings.knowledge_base && !settings.agent_name) {
+    if (settings && !settings.onboarding_completed) {
       const hasSeenOnboarding = localStorage.getItem(`onboarding_${user?.id}`);
       if (!hasSeenOnboarding) setIsOpen(true);
     }
