@@ -261,7 +261,6 @@ function ROIMetricCard({ icon: Icon, iconColor, iconBg, label, value, sub }: {
   return (
     <div>
       <Card className="border-border/50 group hover:border-primary/30 transition-all duration-300 overflow-hidden relative hover:shadow-lg hover:shadow-primary/[0.06]">
-        <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out bg-gradient-to-r from-transparent via-white/[0.04] to-transparent pointer-events-none" />
         <CardContent className="p-4 relative">
           <div className="flex items-center gap-2.5 mb-2.5">
             <div className={cn("p-2 rounded-xl transition-all duration-300 group-hover:scale-110", iconBg)}>

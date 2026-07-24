@@ -39,7 +39,7 @@ export function ConversionFunnelChart({ stages, totalLeads }: ConversionFunnelCh
       <CardContent className="pt-3 relative">
         {stages.length > 0 ? (
           <div className="space-y-4">
-            {stages.map(([stage, count], i) => {
+            {stages.map(([stage, count]) => {
               const percentage = totalLeads > 0 ? (count / totalLeads) * 100 : 0;
               const config = stageConfig[stage] || { color: 'bg-muted-foreground', bgColor: 'bg-muted/10', label: stage };
               return (

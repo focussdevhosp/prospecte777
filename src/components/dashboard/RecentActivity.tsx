@@ -61,7 +61,7 @@ export function RecentActivity({ activities, isLoading }: RecentActivityProps) {
           </div>
         ) : (
           <div className="space-y-1">
-            {activities.slice(0, 8).map((activity, i) => {
+            {activities.slice(0, 8).map((activity) => {
               const colors = activityColors[activity.activity_type] || { text: 'text-muted-foreground', bg: 'bg-muted/30' };
               return (
                 <div

@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   Radar, Flame, Clock, ArrowRight, MessageCircle,
   TrendingUp, Zap, Star,
@@ -94,7 +93,7 @@ export function OpportunityRadar({ leads }: OpportunityRadarProps) {
       </CardHeader>
       <CardContent className="pt-2 relative">
         <div className="space-y-1">
-            {topOpportunities.map((lead, i) => {
+            {topOpportunities.map((lead) => {
               const bg = hashColor(lead.business_name);
               const initials = lead.business_name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
               const urgency = lead.opportunityScore >= 60 ? 'high' : lead.opportunityScore >= 35 ? 'medium' : 'low';
