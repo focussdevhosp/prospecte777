@@ -44,6 +44,8 @@ export interface UserSettings {
   agent_name: string;
   agent_persona: string;
   knowledge_base: string;
+  onboarding_completed?: boolean;
+  onboarding_niche?: string | null;
   services_offered: string[];
   message_variations: MessageVariation[];
   // Advanced Agent Configuration
