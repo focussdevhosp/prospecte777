@@ -60,9 +60,10 @@ export function usePushNotifications() {
 
       let sub = await registration.pushManager.getSubscription();
       if (!sub) {
+        const key = urlBase64ToUint8Array(keyRes.publicKey);
         sub = await registration.pushManager.subscribe({
           userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(keyRes.publicKey),
+          applicationServerKey: key.buffer.slice(key.byteOffset, key.byteOffset + key.byteLength) as ArrayBuffer,
         });
       }
 
