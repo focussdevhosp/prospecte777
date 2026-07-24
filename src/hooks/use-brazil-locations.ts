@@ -69,12 +69,13 @@ export function useBrazilLocations() {
 
   // Search cities when search term changes
   const searchCities = async (term: string): Promise<BrazilCity[]> => {
-    if (term.length < 2) return [];
+    const clean = term.trim();
+    if (clean.length < 2) return [];
 
     const { data } = await supabase
       .from('brazil_cities')
       .select('*')
-      .ilike('name', `%${term}%`)
+      .ilike('name', `%${clean}%`)
       .order('name')
       .limit(50);
 
