@@ -67,7 +67,7 @@ export function useBrazilLocations() {
     });
   }, []);
 
-  // Search cities when search term changes
+  // Search cities - prioritize exact/prefix matches over substring matches
   const searchCities = async (term: string): Promise<BrazilCity[]> => {
     const clean = term.trim();
     if (clean.length < 2) return [];
@@ -77,9 +77,25 @@ export function useBrazilLocations() {
       .select('*')
       .ilike('name', `%${clean}%`)
       .order('name')
-      .limit(50);
+      .limit(200);
 
-    return (data || []) as BrazilCity[];
+    const rows = (data || []) as BrazilCity[];
+    const normalize = (s: string) =>
+      s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const target = normalize(clean);
+
+    const scored = rows.map((c) => {
+      const n = normalize(c.name);
+      let score = 4;
+      if (n === target) score = 0;
+      else if (n.startsWith(target + ' ') || n === target) score = 1;
+      else if (n.startsWith(target)) score = 2;
+      else if (n.split(/\s+/).some((w) => w.startsWith(target))) score = 3;
+      return { c, score };
+    });
+
+    scored.sort((a, b) => a.score - b.score || a.c.name.localeCompare(b.c.name));
+    return scored.slice(0, 30).map((s) => s.c);
   };
 
   // Get cities by state
