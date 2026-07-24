@@ -674,6 +674,27 @@ export type Database = {
         }
         Relationships: []
       }
+      cnpj_cache: {
+        Row: {
+          cnpj: string
+          data: Json
+          expires_at: string
+          fetched_at: string
+        }
+        Insert: {
+          cnpj: string
+          data: Json
+          expires_at?: string
+          fetched_at?: string
+        }
+        Update: {
+          cnpj?: string
+          data?: Json
+          expires_at?: string
+          fetched_at?: string
+        }
+        Relationships: []
+      }
       community_leads: {
         Row: {
           address: string | null
@@ -1446,6 +1467,42 @@ export type Database = {
         }
         Relationships: []
       }
+      meta_ads_tokens: {
+        Row: {
+          access_token: string
+          ad_account_id: string | null
+          created_at: string
+          expires_at: string | null
+          id: string
+          is_valid: boolean
+          last_validated_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token: string
+          ad_account_id?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_valid?: boolean
+          last_validated_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_token?: string
+          ad_account_id?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_valid?: boolean
+          last_validated_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       niche_patterns: {
         Row: {
           avg_messages_to_convert: number | null
@@ -1685,6 +1742,39 @@ export type Database = {
           niche?: string
           positive_responses?: number | null
           responses_received?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          id: string
+          p256dh: string
+          updated_at: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          p256dh: string
+          updated_at?: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          p256dh?: string
+          updated_at?: string
+          user_agent?: string | null
           user_id?: string
         }
         Relationships: []
