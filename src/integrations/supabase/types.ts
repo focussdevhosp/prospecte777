@@ -1566,6 +1566,54 @@ export type Database = {
         }
         Relationships: []
       }
+      objection_responses: {
+        Row: {
+          angle: string | null
+          category: string
+          created_at: string
+          id: string
+          is_active: boolean
+          is_template: boolean
+          objection_example: string
+          objection_keywords: string[]
+          response_template: string
+          success_count: number
+          updated_at: string
+          usage_count: number
+          user_id: string | null
+        }
+        Insert: {
+          angle?: string | null
+          category: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          is_template?: boolean
+          objection_example: string
+          objection_keywords?: string[]
+          response_template: string
+          success_count?: number
+          updated_at?: string
+          usage_count?: number
+          user_id?: string | null
+        }
+        Update: {
+          angle?: string | null
+          category?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          is_template?: boolean
+          objection_example?: string
+          objection_keywords?: string[]
+          response_template?: string
+          success_count?: number
+          updated_at?: string
+          usage_count?: number
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       payment_events: {
         Row: {
           amount: number | null
