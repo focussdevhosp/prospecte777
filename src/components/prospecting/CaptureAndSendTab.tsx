@@ -72,6 +72,19 @@ export function CaptureAndSendTab() {
     return Math.min(100, score);
   };
 
+  // Valida telefone brasileiro (10-11 dígitos, DDD válido 11-99)
+  const isValidBrazilianPhone = (raw: string): boolean => {
+    const digits = raw.replace(/\D/g, '').replace(/^55/, '');
+    if (digits.length < 10 || digits.length > 11) return false;
+    const ddd = parseInt(digits.slice(0, 2), 10);
+    if (ddd < 11 || ddd > 99) return false;
+    // rejeita sequências óbvias (0000000000, 1111111111)
+    if (/^(\d)\1+$/.test(digits)) return false;
+    return true;
+  };
+
+  const normalizePhone = (raw: string): string => raw.replace(/\D/g, '').replace(/^55/, '');
+
   const checkDuplicatesInDatabase = async (leads: CapturedLead[]): Promise<CapturedLead[]> => {
     if (!user?.id || leads.length === 0) return leads;
     try {
@@ -80,15 +93,16 @@ export function CaptureAndSendTab() {
         .select('phone')
         .eq('user_id', user.id);
       if (!existingLeads) return leads;
-      const existingPhones = new Set(existingLeads.map(l => l.phone.replace(/\D/g, '')));
+      const existingPhones = new Set(existingLeads.map(l => normalizePhone(l.phone)));
       return leads.map(lead => ({
         ...lead,
-        isDuplicate: existingPhones.has(lead.phone.replace(/\D/g, '')),
+        isDuplicate: existingPhones.has(normalizePhone(lead.phone)),
       }));
     } catch {
       return leads;
     }
   };
+
 
   const qualifyLeadsWithAI = async (leads: CapturedLead[]): Promise<CapturedLead[]> => {
     if (leads.length === 0) return leads;
