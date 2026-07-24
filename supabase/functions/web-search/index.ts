@@ -180,6 +180,7 @@ async function searchWithDuckDuckGo(
           if (normalizedName) seenNames.add(normalizedName);
 
           const email = extractEmail(combinedText);
+          const { rating, reviews_count } = extractRatingAndReviews(combinedText);
 
           allResults.push({
             title: title || 'Empresa',
@@ -187,6 +188,8 @@ async function searchWithDuckDuckGo(
             snippet: snippet,
             phone: phone,
             email,
+            rating,
+            reviews_count,
             position: allResults.length + 1,
             website: link,
             address: snippet.length > 10 ? snippet.substring(0, 100) : undefined,
