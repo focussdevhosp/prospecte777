@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Syne:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Manrope:wght@300;400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -16,147 +16,153 @@
 
 @layer base {
   :root {
-    /* Light mode - clean and professional */
-    --background: 220 20% 97%;
-    --foreground: 220 30% 10%;
+    /* Ocean Deep — Light Mode */
+    --background: 195 40% 98%;
+    --foreground: 213 60% 12%;
 
     --card: 0 0% 100%;
-    --card-foreground: 220 30% 10%;
+    --card-foreground: 213 60% 12%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 30% 10%;
+    --popover-foreground: 213 60% 12%;
 
-    --primary: 239 84% 61%;
+    --primary: 204 62% 27%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 14% 93%;
-    --secondary-foreground: 220 30% 10%;
+    --secondary: 195 30% 94%;
+    --secondary-foreground: 213 60% 15%;
 
-    --muted: 220 14% 93%;
-    --muted-foreground: 220 9% 42%;
+    --muted: 195 25% 93%;
+    --muted-foreground: 213 20% 38%;
 
-    --accent: 239 60% 95%;
-    --accent-foreground: 239 84% 50%;
+    --accent: 189 55% 40%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 72% 51%;
+    --destructive: 0 72% 48%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 13% 90%;
-    --input: 220 13% 90%;
-    --ring: 239 84% 67%;
+    --border: 195 25% 86%;
+    --input: 195 25% 88%;
+    --ring: 189 55% 40%;
 
     --radius: 0.75rem;
 
     /* Status */
-    --success: 160 84% 28%;
+    --success: 165 70% 32%;
     --success-foreground: 0 0% 100%;
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 0%;
-    --info: 217 91% 48%;
+    --warning: 38 92% 45%;
+    --warning-foreground: 0 0% 12%;
+    --info: 189 55% 40%;
     --info-foreground: 0 0% 100%;
 
     /* Temperature */
-    --temp-hot: 0 84% 45%;
-    --temp-warm: 38 92% 33%;
-    --temp-cold: 217 91% 48%;
+    --temp-hot: 8 78% 48%;
+    --temp-warm: 32 88% 42%;
+    --temp-cold: 189 55% 40%;
 
     /* Funnel stages */
-    --stage-new: 217 91% 48%;
-    --stage-contact: 38 92% 33%;
-    --stage-negotiation: 25 95% 37%;
-    --stage-proposal: 271 81% 56%;
-    --stage-won: 160 84% 28%;
-    --stage-lost: 0 72% 45%;
+    --stage-new: 189 55% 40%;
+    --stage-contact: 204 62% 35%;
+    --stage-negotiation: 32 88% 45%;
+    --stage-proposal: 178 45% 42%;
+    --stage-won: 165 70% 32%;
+    --stage-lost: 0 65% 48%;
 
     /* Sidebar */
-    --sidebar-background: 230 25% 97%;
-    --sidebar-foreground: 220 30% 15%;
-    --sidebar-primary: 239 84% 61%;
+    --sidebar-background: 213 35% 96%;
+    --sidebar-foreground: 213 60% 15%;
+    --sidebar-primary: 204 62% 27%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 239 60% 93%;
-    --sidebar-accent-foreground: 239 84% 45%;
-    --sidebar-border: 220 13% 88%;
-    --sidebar-ring: 239 84% 67%;
+    --sidebar-accent: 189 50% 90%;
+    --sidebar-accent-foreground: 204 62% 22%;
+    --sidebar-border: 195 25% 85%;
+    --sidebar-ring: 189 55% 40%;
 
     /* Charts */
-    --chart-1: 239 84% 67%;
-    --chart-2: 160 84% 39%;
-    --chart-3: 38 92% 50%;
-    --chart-4: 271 81% 56%;
-    --chart-5: 340 75% 55%;
+    --chart-1: 204 62% 32%;
+    --chart-2: 189 55% 45%;
+    --chart-3: 178 45% 55%;
+    --chart-4: 32 88% 50%;
+    --chart-5: 165 70% 38%;
 
     /* Premium tokens */
-    --glow: 239 84% 67%;
-    --surface: 220 20% 98%;
+    --glow: 189 55% 50%;
+    --surface: 195 40% 98%;
     --surface-elevated: 0 0% 100%;
   }
 
   .dark {
-    --background: 222 47% 7%;
-    --foreground: 213 31% 98%;
+    /* Ocean Deep — Dark Mode */
+    --background: 213 68% 7%;
+    --foreground: 190 30% 96%;
 
-    --card: 222 38% 12%;
-    --card-foreground: 213 31% 98%;
+    --card: 213 55% 12%;
+    --card-foreground: 190 30% 96%;
 
-    --popover: 222 38% 12%;
-    --popover-foreground: 213 31% 98%;
+    --popover: 213 55% 12%;
+    --popover-foreground: 190 30% 96%;
 
-    --primary: 239 84% 72%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 189 65% 48%;
+    --primary-foreground: 213 70% 8%;
 
-    --secondary: 217 33% 16%;
-    --secondary-foreground: 213 31% 98%;
+    --secondary: 213 40% 18%;
+    --secondary-foreground: 190 30% 96%;
 
-    --muted: 217 33% 16%;
-    --muted-foreground: 218 15% 72%;
+    --muted: 213 40% 16%;
+    --muted-foreground: 195 20% 72%;
 
-    --accent: 239 40% 18%;
-    --accent-foreground: 239 84% 80%;
+    --accent: 178 50% 28%;
+    --accent-foreground: 178 60% 88%;
 
-    --destructive: 0 62% 55%;
+    --destructive: 0 65% 55%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 217 33% 22%;
-    --input: 217 33% 22%;
-    --ring: 239 84% 67%;
+    --border: 213 35% 22%;
+    --input: 213 35% 22%;
+    --ring: 189 65% 55%;
 
     /* Status - Dark */
-    --success: 160 84% 30%;
-    --info: 217 91% 48%;
+    --success: 165 70% 42%;
+    --success-foreground: 213 70% 8%;
+    --warning: 38 92% 55%;
+    --warning-foreground: 213 70% 8%;
+    --info: 189 65% 55%;
+    --info-foreground: 213 70% 8%;
 
-    /* Temperature - Dark (brighter for dark bg contrast) */
-    --temp-hot: 0 84% 60%;
-    --temp-warm: 38 92% 50%;
-    --temp-cold: 217 91% 60%;
+    /* Temperature - Dark */
+    --temp-hot: 8 82% 62%;
+    --temp-warm: 32 90% 58%;
+    --temp-cold: 189 65% 60%;
 
     /* Stages - Dark */
-    --stage-new: 217 91% 60%;
-    --stage-contact: 38 92% 50%;
-    --stage-negotiation: 25 95% 53%;
-    --stage-won: 160 84% 39%;
-    --stage-lost: 0 72% 51%;
+    --stage-new: 189 65% 55%;
+    --stage-contact: 204 62% 55%;
+    --stage-negotiation: 32 90% 58%;
+    --stage-proposal: 178 50% 55%;
+    --stage-won: 165 70% 45%;
+    --stage-lost: 0 65% 58%;
 
     /* Sidebar - Dark */
-    --sidebar-background: 225 50% 5%;
-    --sidebar-foreground: 213 31% 96%;
-    --sidebar-primary: 239 84% 67%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 239 30% 12%;
-    --sidebar-accent-foreground: 239 84% 75%;
-    --sidebar-border: 217 33% 12%;
-    --sidebar-ring: 239 84% 67%;
+    --sidebar-background: 213 70% 5%;
+    --sidebar-foreground: 190 30% 94%;
+    --sidebar-primary: 189 65% 50%;
+    --sidebar-primary-foreground: 213 70% 8%;
+    --sidebar-accent: 189 55% 18%;
+    --sidebar-accent-foreground: 178 60% 88%;
+    --sidebar-border: 213 40% 14%;
+    --sidebar-ring: 189 65% 55%;
 
     /* Charts - Dark */
-    --chart-1: 239 84% 70%;
-    --chart-2: 160 84% 45%;
-    --chart-3: 38 92% 55%;
-    --chart-4: 271 81% 65%;
-    --chart-5: 340 75% 60%;
+    --chart-1: 189 65% 55%;
+    --chart-2: 178 50% 55%;
+    --chart-3: 204 62% 55%;
+    --chart-4: 32 90% 60%;
+    --chart-5: 165 70% 48%;
 
     /* Premium tokens */
-    --glow: 239 84% 67%;
-    --surface: 222 41% 6%;
-    --surface-elevated: 222 41% 10%;
+    --glow: 189 65% 55%;
+    --surface: 213 68% 6%;
+    --surface-elevated: 213 55% 11%;
   }
 }
 
@@ -174,7 +180,7 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family: 'Manrope', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     font-size: 1rem;
     line-height: 1.6;
     letter-spacing: -0.01em;
@@ -189,7 +195,7 @@
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Syne', 'Plus Jakarta Sans', system-ui, sans-serif;
+    font-family: 'Sora', 'Manrope', system-ui, sans-serif;
     line-height: 1.15;
     letter-spacing: -0.025em;
     text-wrap: balance;
@@ -256,11 +262,11 @@
 @layer utilities {
   /* Gradients */
   .gradient-primary {
-    background: linear-gradient(135deg, hsl(239 84% 61%) 0%, hsl(271 81% 50%) 100%);
+    background: linear-gradient(135deg, hsl(204 62% 27%) 0%, hsl(189 55% 40%) 55%, hsl(178 45% 55%) 100%);
   }
 
   .text-gradient {
-    background: linear-gradient(135deg, hsl(239 84% 61%) 0%, hsl(271 81% 50%) 100%);
+    background: linear-gradient(135deg, hsl(189 55% 40%) 0%, hsl(178 45% 55%) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
