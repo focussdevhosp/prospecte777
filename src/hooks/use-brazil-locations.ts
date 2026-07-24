@@ -171,7 +171,7 @@ export function useBrazilLocations() {
 
       // Search cities if term is long enough
       if (lowerTerm.length >= 2) {
-        const matchingCities = await searchCities(term);
+        const matchingCities = await searchCities(lowerTerm);
         
         for (const city of matchingCities.slice(0, 10)) {
           const state = states.find(s => s.code === city.state_code);
