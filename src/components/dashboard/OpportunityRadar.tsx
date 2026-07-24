@@ -3,8 +3,6 @@ import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
   Radar, Flame, Clock, ArrowRight, MessageCircle,
   TrendingUp, Zap, Star,
@@ -69,7 +67,7 @@ export function OpportunityRadar({ leads }: OpportunityRadarProps) {
               <Zap className="h-8 w-8 opacity-25" />
             </div>
             <p className="text-xs font-semibold">Sem oportunidades ainda</p>
-            <p className="text-[10px] mt-1.5 text-muted-foreground/40">Leads quentes aparecerão aqui</p>
+            <p className="text-[10px] mt-1.5 text-muted-foreground">Leads quentes aparecerão aqui</p>
           </div>
         </CardContent>
       </Card>
@@ -94,20 +92,14 @@ export function OpportunityRadar({ leads }: OpportunityRadarProps) {
         </div>
       </CardHeader>
       <CardContent className="pt-2 relative">
-        <AnimatePresence mode="popLayout">
-          <div className="space-y-1">
-            {topOpportunities.map((lead, i) => {
+        <div className="space-y-1">
+            {topOpportunities.map((lead) => {
               const bg = hashColor(lead.business_name);
               const initials = lead.business_name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
               const urgency = lead.opportunityScore >= 60 ? 'high' : lead.opportunityScore >= 35 ? 'medium' : 'low';
               
               return (
-                <motion.div
-                  key={lead.id}
-                  initial={{ opacity: 0, x: -12 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.06, duration: 0.3 }}
-                >
+                <div key={lead.id}>
                   <Link
                     to={`/crm/contacts/${lead.id}`}
                     className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-accent/50 transition-all duration-200 group"
@@ -142,11 +134,10 @@ export function OpportunityRadar({ leads }: OpportunityRadarProps) {
                       </div>
                     </div>
                   </Link>
-                </motion.div>
+                </div>
               );
             })}
           </div>
-        </AnimatePresence>
         <Button variant="ghost" size="sm" asChild className="w-full mt-2 text-xs h-8 text-muted-foreground hover:text-foreground gap-1">
           <Link to="/crm/pipeline">
             Ver pipeline completo <ArrowRight className="h-3 w-3" />

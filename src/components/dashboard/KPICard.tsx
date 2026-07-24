@@ -2,7 +2,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import { motion } from 'framer-motion';
 
 interface KPICardProps {
   icon: React.ReactNode;
@@ -55,21 +54,12 @@ export function KPICard({ icon, label, value, change, changeLabel, iconBg, delay
   const gradient = gradientMap[iconBg] || 'from-primary/10 via-primary/5 to-transparent';
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 24, scale: 0.96 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1], delay: delay / 1000 }}
-      whileHover={{ y: -4, transition: { type: 'spring', stiffness: 400, damping: 25 } }}
-      whileTap={{ scale: 0.98 }}
-      className="group relative"
-    >
+    <div className="group relative">
     <Card className="border-border/50 hover:border-primary/40 transition-all duration-300 h-full overflow-hidden hover:shadow-xl hover:shadow-primary/[0.08]">
       {/* Colored gradient background */}
       <div className={cn("absolute inset-0 bg-gradient-to-br opacity-60 pointer-events-none", gradient)} />
 
       {/* Shimmer on hover */}
-      <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out bg-gradient-to-r from-transparent via-white/[0.06] to-transparent pointer-events-none" />
-
       {/* Accent line top */}
       <div className={cn("absolute top-0 left-4 right-4 h-[2px] rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500", iconBg.replace('/8', '/40'))} />
 
@@ -100,6 +90,6 @@ export function KPICard({ icon, label, value, change, changeLabel, iconBg, delay
         )}
       </CardContent>
     </Card>
-    </motion.div>
+    </div>
   );
 }

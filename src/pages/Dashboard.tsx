@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { format, subDays } from 'date-fns';
-import { motion } from 'framer-motion';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Wifi, ArrowRight as ArrowRightIcon, X as XIcon } from 'lucide-react';
@@ -31,16 +30,6 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-const stagger = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.06 } },
-};
-
-const fadeUp = {
-  hidden: { opacity: 0, y: 16 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] } },
-};
 
 export default function DashboardPage() {
   const { data: metrics, isLoading: metricsLoading } = useDashboardMetrics();
@@ -119,11 +108,7 @@ export default function DashboardPage() {
 
       {/* Next Step Banner */}
       {showNextStep && (
-        <motion.div
-          initial={{ opacity: 0, y: -16 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-6 p-4 rounded-2xl border border-primary/20 bg-primary/5 flex items-center gap-4"
-        >
+        <div className="mb-6 p-4 rounded-2xl border border-primary/20 bg-primary/5 flex items-center gap-4">
           <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
             <nextStep.icon className="h-5 w-5 text-primary" />
           </div>
@@ -137,19 +122,14 @@ export default function DashboardPage() {
           <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={handleDismissBanner} aria-label="Fechar banner">
             <XIcon className="h-3.5 w-3.5" />
           </Button>
-        </motion.div>
+        </div>
       )}
 
       {/* Period filter */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.2 }}
-        className="flex items-center justify-between mb-5"
-      >
+      <div className="flex items-center justify-between mb-5">
         <h2 className="text-sm font-semibold text-muted-foreground">Visão Geral</h2>
         <PeriodFilter value={period} onChange={setPeriod} />
-      </motion.div>
+      </div>
 
       {/* KPIs */}
       <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -187,12 +167,7 @@ export default function DashboardPage() {
       </div>
 
       {/* ROI Quick Metrics */}
-      <motion.div
-        variants={stagger}
-        initial="hidden"
-        animate="show"
-        className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4"
-      >
+      <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <ROIMetricCard
           icon={TrendingUp}
           iconColor="text-success"
@@ -229,26 +204,16 @@ export default function DashboardPage() {
           value={String(metrics?.hotLeads || 0)}
           sub="Leads quentes ativos"
         />
-      </motion.div>
+      </div>
 
       {/* Charts */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.35, duration: 0.5 }}
-        className="mb-6 grid gap-4 lg:grid-cols-2"
-      >
+      <div className="mb-6 grid gap-4 lg:grid-cols-2">
         <ProspectionChart data={chartData} />
         <ConversionFunnelChart stages={funnelStages} totalLeads={totalFunnelLeads} />
-      </motion.div>
+      </div>
 
       {/* Bottom section */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.45, duration: 0.5 }}
-        className="grid gap-4 lg:grid-cols-3"
-      >
+      <div className="grid gap-4 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-4">
           <OpportunityRadar leads={leads} />
           <RecentActivity activities={activities} isLoading={activitiesLoading} />
@@ -283,7 +248,7 @@ export default function DashboardPage() {
             </Button>
           </div>
         </div>
-      </motion.div>
+      </div>
     </DashboardLayout>
   );
 }
@@ -294,9 +259,8 @@ function ROIMetricCard({ icon: Icon, iconColor, iconBg, label, value, sub }: {
   icon: LucideIcon; iconColor: string; iconBg: string; label: string; value: string; sub: string;
 }) {
   return (
-    <motion.div variants={fadeUp}>
+    <div>
       <Card className="border-border/50 group hover:border-primary/30 transition-all duration-300 overflow-hidden relative hover:shadow-lg hover:shadow-primary/[0.06]">
-        <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out bg-gradient-to-r from-transparent via-white/[0.04] to-transparent pointer-events-none" />
         <CardContent className="p-4 relative">
           <div className="flex items-center gap-2.5 mb-2.5">
             <div className={cn("p-2 rounded-xl transition-all duration-300 group-hover:scale-110", iconBg)}>
@@ -308,7 +272,7 @@ function ROIMetricCard({ icon: Icon, iconColor, iconBg, label, value, sub }: {
           <p className="text-[10px] text-muted-foreground mt-1 font-medium">{sub}</p>
         </CardContent>
       </Card>
-    </motion.div>
+    </div>
   );
 }
 
@@ -329,12 +293,7 @@ function TempBar({ icon: Icon, label, count, total, color, textColor }: { icon: 
         </div>
       </div>
       <div className="h-2 rounded-full bg-muted/50 overflow-hidden">
-        <motion.div
-          className={cn('h-full rounded-full', color)}
-          initial={{ width: 0 }}
-          animate={{ width: `${pct}%` }}
-          transition={{ duration: 1, ease: [0.16, 1, 0.3, 1], delay: 0.5 }}
-        />
+        <div className={cn('h-full rounded-full', color)} style={{ width: `${pct}%` }} />
       </div>
     </div>
   );

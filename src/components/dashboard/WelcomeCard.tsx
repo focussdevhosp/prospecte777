@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Target, Send, Users, Bot, ArrowRight, Wifi, WifiOff, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -17,27 +16,12 @@ const quickActions = [
   { label: 'Agente IA', icon: Bot, path: '/sdr-agent', color: 'text-warning', bg: 'bg-warning/10', hoverBg: 'group-hover:bg-warning/15', glow: 'group-hover:shadow-warning/10' },
 ];
 
-const container = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.08, delayChildren: 0.15 } },
-};
-
-const item = {
-  hidden: { opacity: 0, y: 16, scale: 0.95 },
-  show: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] } },
-};
-
 export function WelcomeCard({ userName, totalLeads, whatsappConnected }: WelcomeCardProps) {
   const greeting = getGreeting();
   const displayName = userName?.split(' ')[0] || 'Usuário';
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: -10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      className="mb-8"
-    >
+    <div className="mb-8">
       {/* Welcome header with subtle gradient background */}
       <div className="relative rounded-2xl p-6 mb-6 overflow-hidden">
         {/* Ambient gradient */}
@@ -82,14 +66,9 @@ export function WelcomeCard({ userName, totalLeads, whatsappConnected }: Welcome
       </div>
 
       {/* Quick Actions */}
-      <motion.div
-        variants={container}
-        initial="hidden"
-        animate="show"
-        className="grid grid-cols-2 sm:grid-cols-4 gap-3"
-      >
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {quickActions.map((action) => (
-          <motion.div key={action.path} variants={item}>
+          <div key={action.path}>
             <Link
               to={action.path}
               className={cn(
@@ -109,14 +88,14 @@ export function WelcomeCard({ userName, totalLeads, whatsappConnected }: Welcome
                 <action.icon className="h-4.5 w-4.5" />
               </div>
               <div className="relative">
-                <span className="text-sm font-semibold text-foreground/80 group-hover:text-foreground transition-colors">{action.label}</span>
+                <span className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">{action.label}</span>
                 <ArrowRight className="absolute -right-5 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground/0 group-hover:text-muted-foreground/50 group-hover:-right-6 transition-all duration-300" />
               </div>
             </Link>
-          </motion.div>
+          </div>
         ))}
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   );
 }
 
