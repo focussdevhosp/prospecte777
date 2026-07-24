@@ -205,69 +205,89 @@ export function CaptureAndSendTab() {
     setFoundCount(0);
 
     try {
-      setProgress({ current: 0, total: selectedNiches.length * selectedLocations.length, phase: 'Buscando...' });
-      const allLeads: CapturedLead[] = [];
+    try {
+      const combos: Array<{ niche: string; location: string }> = [];
+      for (const n of selectedNiches) for (const l of selectedLocations) combos.push({ niche: n, location: l });
 
-      for (let ni = 0; ni < selectedNiches.length; ni++) {
-        for (let li = 0; li < selectedLocations.length; li++) {
-          if (isStoppedRef.current) break;
-          const currentNiche = selectedNiches[ni];
-          const currentLocation = selectedLocations[li];
-          setProgress({
-            current: ni * selectedLocations.length + li + 1,
-            total: selectedNiches.length * selectedLocations.length,
-            phase: `${currentNiche} em ${currentLocation}`,
-          });
+      setProgress({ current: 0, total: combos.length, phase: 'Buscando em paralelo...' });
+      const streamed: CapturedLead[] = [];
+      const seenPhones = new Set<string>();
+      let done = 0;
 
+      const CONCURRENCY = 3;
+
+      const searchOne = async ({ niche, location }: { niche: string; location: string }) => {
+        if (isStoppedRef.current) return;
+        try {
           const response = await supabase.functions.invoke('web-search', {
             body: {
-              query: currentNiche,
-              location: currentLocation,
+              query: niche,
+              location,
               num_results: leadQuantity,
               search_type: 'places',
               expand_search: true,
             },
           });
-
-          if (response.data?.results) {
-            const leads = response.data.results
-              .filter((result: any) => result.phone)
-              .map((result: any) => ({
-                id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-                business_name: result.title,
+          const results: any[] = response.data?.results ?? [];
+          const batch: CapturedLead[] = [];
+          for (const result of results) {
+            if (!result.phone || !isValidBrazilianPhone(result.phone)) continue;
+            const norm = normalizePhone(result.phone);
+            if (seenPhones.has(norm)) continue;
+            seenPhones.add(norm);
+            batch.push({
+              id: `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
+              business_name: result.title,
+              phone: result.phone,
+              address: result.snippet || result.address,
+              rating: result.rating,
+              reviews_count: result.reviews_count,
+              website: result.website || result.link,
+              niche,
+              location,
+              google_maps_url: result.google_maps_url || (result.link?.includes('maps.google') ? result.link : undefined),
+              photo_url: result.photo_url || result.thumbnail,
+              status: 'pending' as const,
+              qualityScore: calculateQualityScore({
+                title: result.title,
                 phone: result.phone,
+                website: result.website || result.link,
                 address: result.snippet || result.address,
                 rating: result.rating,
                 reviews_count: result.reviews_count,
-                website: result.website || result.link,
-                niche: currentNiche,
-                location: currentLocation,
-                google_maps_url: result.google_maps_url || (result.link?.includes('maps.google') ? result.link : undefined),
-                photo_url: result.photo_url || result.thumbnail,
-                status: 'pending' as const,
-                qualityScore: calculateQualityScore({
-                  title: result.title,
-                  phone: result.phone,
-                  website: result.website || result.link,
-                  address: result.snippet || result.address,
-                  rating: result.rating,
-                  reviews_count: result.reviews_count,
-                }),
-              }));
-            allLeads.push(...leads);
-            setFoundCount(allLeads.length);
+              }),
+            });
           }
+          if (batch.length > 0) {
+            streamed.push(...batch);
+            // stream para UI (ordenado por qualidade)
+            setCapturedLeads([...streamed].sort((a, b) => (b.qualityScore || 0) - (a.qualityScore || 0)));
+            setFoundCount(streamed.length);
+          }
+        } catch (e) {
+          console.error('search combo failed', niche, location, e);
+        } finally {
+          done++;
+          setProgress({ current: done, total: combos.length, phase: `${niche} em ${location}` });
         }
-        if (isStoppedRef.current) break;
-      }
+      };
 
-      const uniqueLeads = allLeads.filter((lead, index, self) => {
-        const normalizedPhone = lead.phone.replace(/\D/g, '');
-        return index === self.findIndex(l => l.phone.replace(/\D/g, '') === normalizedPhone);
+      // Pool com concorrência limitada
+      const queue = [...combos];
+      const workers = Array.from({ length: Math.min(CONCURRENCY, queue.length) }, async () => {
+        while (queue.length > 0 && !isStoppedRef.current) {
+          const next = queue.shift();
+          if (!next) break;
+          await searchOne(next);
+        }
       });
+      await Promise.all(workers);
 
-      const checkedLeads = await checkDuplicatesInDatabase(uniqueLeads);
-      setProgress({ current: 0, total: 1, phase: 'Qualificando leads com IA...' });
+      // Pós-processamento
+      setProgress({ current: 0, total: 1, phase: 'Verificando duplicados...' });
+      const checkedLeads = await checkDuplicatesInDatabase(streamed);
+
+      setProgress({ current: 0, total: 1, phase: 'Qualificando com IA...' });
       const qualifiedLeads = await qualifyLeadsWithAI(checkedLeads);
 
       const sortedLeads = qualifiedLeads.sort((a, b) => {
@@ -281,6 +301,14 @@ export function CaptureAndSendTab() {
       const newLeads = sortedLeads.filter(l => !l.isDuplicate);
       if (autoSave && newLeads.length > 0 && user?.id) {
         await saveLeadsToDatabase(newLeads);
+
+        // Enriquecimento automático em background (não bloqueia UI)
+        const toEnrich = newLeads.filter(l => l.website).slice(0, 30).map(l => l.id);
+        if (toEnrich.length > 0) {
+          supabase.functions.invoke('lead-enrichment', {
+            body: { action: 'batch_enrich', lead_ids: toEnrich },
+          }).catch(err => console.warn('enrichment skipped', err));
+        }
       }
 
       setProcessStatus('completed');
@@ -292,13 +320,17 @@ export function CaptureAndSendTab() {
       }, {} as Record<string, number>);
       const groupSummary = Object.entries(groups).map(([g, c]) => `${c} ${g}`).slice(0, 3).join(', ');
 
-      toast({ title: '✅ Busca concluída!', description: `${newLeads.length} leads novos: ${groupSummary}` });
+      toast({
+        title: '✅ Busca concluída!',
+        description: `${newLeads.length} leads novos${groupSummary ? `: ${groupSummary}` : ''}`,
+      });
     } catch (error: any) {
       toast({ title: '❌ Erro na busca', description: error.message, variant: 'destructive' });
       setProcessStatus('idle');
     }
     setProgress({ current: 0, total: 0, phase: '' });
   };
+
 
   const toggleLeadSelection = (id: string) => {
     setSelectedLeadIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
