@@ -14,6 +14,7 @@ import { useConversations, ConversationSummary } from '@/hooks/use-conversations
 import { useChatMessages } from '@/hooks/use-chat-messages';
 import { QuickReplies } from '@/components/chat/QuickReplies';
 import { AIReplyButton } from '@/components/chat/AIReplyButton';
+import { PortfolioCarouselButton } from '@/components/chat/PortfolioCarouselButton';
 import {
   Search, Loader2, MessageCircle, Send, Bot, Flame, ThermometerSun,
   Snowflake, Phone, ExternalLink, User, ArrowLeft, Zap, Sparkles,
@@ -244,6 +245,12 @@ function ChatPanel({ leadId, lead, onBack }: {
             leadId={leadId}
             lastMessage={lastLeadMessage?.content}
             onUseReply={(msg) => setMsgInput(msg)}
+          />
+          <PortfolioCarouselButton
+            onSendSite={(message) => {
+              sendMessage({ content: message, senderType: 'user' });
+            }}
+            disabled={isSending}
           />
           <div className="flex-1 relative">
             <textarea

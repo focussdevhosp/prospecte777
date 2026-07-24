@@ -1659,6 +1659,54 @@ export type Database = {
         }
         Relationships: []
       }
+      portfolio_sites: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          display_order: number
+          id: string
+          is_active: boolean
+          is_template: boolean
+          send_count: number
+          tags: string[]
+          title: string
+          updated_at: string
+          url: string
+          user_id: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          is_template?: boolean
+          send_count?: number
+          tags?: string[]
+          title: string
+          updated_at?: string
+          url: string
+          user_id?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          is_template?: boolean
+          send_count?: number
+          tags?: string[]
+          title?: string
+          updated_at?: string
+          url?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
