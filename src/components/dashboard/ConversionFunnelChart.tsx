@@ -3,7 +3,6 @@ import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { BarChart3, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { motion } from 'framer-motion';
 
 const stageConfig: Record<string, { color: string; bgColor: string; label: string }> = {
   'Contato': { color: 'bg-info', bgColor: 'bg-info/10', label: 'Contato' },
@@ -58,12 +57,7 @@ export function ConversionFunnelChart({ stages, totalLeads }: ConversionFunnelCh
                     </div>
                   </div>
                   <div className="h-2 rounded-full bg-muted/50 overflow-hidden">
-                    <motion.div
-                      className={cn("h-full rounded-full", config.color)}
-                      initial={{ width: 0 }}
-                      animate={{ width: `${Math.max(percentage, 2)}%` }}
-                      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: i * 0.1 }}
-                    />
+                    <div className={cn("h-full rounded-full", config.color)} style={{ width: `${Math.max(percentage, 2)}%` }} />
                   </div>
                 </div>
               );

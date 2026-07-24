@@ -5,7 +5,6 @@ import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { ActivityLog } from '@/types/database';
-import { motion } from 'framer-motion';
 
 const activityIcons: Record<string, React.ReactNode> = {
   lead_created: <Users className="h-3.5 w-3.5" />,
@@ -58,18 +57,15 @@ export function RecentActivity({ activities, isLoading }: RecentActivityProps) {
               <Clock className="h-8 w-8 opacity-30" />
             </div>
             <p className="text-xs font-semibold">Sem atividades ainda</p>
-            <p className="text-[10px] mt-1.5 text-muted-foreground/40">Comece a prospectar para ver atividades</p>
+            <p className="text-[10px] mt-1.5 text-muted-foreground">Comece a prospectar para ver atividades</p>
           </div>
         ) : (
           <div className="space-y-1">
             {activities.slice(0, 8).map((activity, i) => {
               const colors = activityColors[activity.activity_type] || { text: 'text-muted-foreground', bg: 'bg-muted/30' };
               return (
-                <motion.div
+                <div
                   key={activity.id}
-                  initial={{ opacity: 0, x: -8 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.04, duration: 0.3 }}
                   className="flex items-center gap-3 py-2.5 px-2 rounded-xl hover:bg-accent/30 transition-colors duration-200 group"
                 >
                   <div className={cn(
@@ -81,10 +77,10 @@ export function RecentActivity({ activities, isLoading }: RecentActivityProps) {
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-medium truncate group-hover:text-foreground transition-colors">{activity.description}</p>
                   </div>
-                  <p className="text-[10px] text-muted-foreground/40 shrink-0 font-medium">
+                  <p className="text-[10px] text-muted-foreground shrink-0 font-medium">
                     {formatDistanceToNow(new Date(activity.created_at), { addSuffix: true, locale: ptBR })}
                   </p>
-                </motion.div>
+                </div>
               );
             })}
           </div>
