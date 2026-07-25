@@ -19,7 +19,37 @@ interface BackgroundJob {
   max_retries: number;
 }
 
-// Helper to log to database for persistence
+// Fallback humanizado — usado quando a IA falha. Rotativo por hash do lead.
+function buildFallbackMessage(lead: any): string {
+  const name = lead.business_name || "sua empresa";
+  const niche = lead.niche || "seu segmento";
+  const city = lead.location || "sua região";
+  const hasSite = !!lead.website;
+  const lowRating = lead.rating && lead.rating < 4;
+  const fewReviews = (lead.reviews_count || 0) < 15;
+
+  const openings = ["Oi!", "Opa, tudo bem?", "E aí, tudo certo?"];
+  const opening = openings[Math.abs(hashCode(name)) % openings.length];
+
+  // Escolhe gancho baseado no que o lead tem/não tem
+  if (!hasSite) {
+    return `${opening} Passei aqui na ${name} e reparei que vocês ainda não têm site. Hoje quase todo cliente pesquisa no Google antes de escolher — sem uma página, muita venda escapa.\n\nConsigo montar uma pra vocês em poucos dias. Posso te mandar 2 exemplos que fiz pra ${niche}?`;
+  }
+  if (lowRating) {
+    return `${opening} Vi a ${name} aqui em ${city} e reparei que a avaliação no Google tá abaixo de 4 estrelas — isso derruba MUITO a conversão de quem pesquisa vocês.\n\nTenho uma estratégia que já subiu de 3.6 pra 4.7 em 30 dias em ${niche}. Quer que eu te explique rapidão?`;
+  }
+  if (fewReviews) {
+    return `${opening} Curti a ${name} e vi que vocês têm poucas avaliações no Google — isso faz o cliente escolher o concorrente antes mesmo de conhecer vocês.\n\nTenho um sistema que triplica reviews em 60 dias sem esforço. Posso te mandar como funciona?`;
+  }
+  return `${opening} Passei aqui na ${name}${city !== "sua região" ? ` de ${city}` : ""} e queria trocar uma ideia rápida sobre como trazer mais clientes pra ${niche} de forma previsível.\n\nTem 2 min pra eu te mostrar o que funcionou com empresas parecidas?`;
+}
+
+function hashCode(s: string): number {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0;
+  return h;
+}
+
 async function logToDb(
   supabase: any,
   jobId: string,
