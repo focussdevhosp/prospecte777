@@ -14,8 +14,12 @@ serve(async (req) => {
 
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, serviceRoleKey);
+    // Prefer new-format secret key (sb_secret_...) over legacy service_role JWT
+    // to avoid "unrecognized JWT kid" errors under the signing-keys system.
+    const adminKey =
+      Deno.env.get("SUPABASE_SECRET_KEYS") ||
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, adminKey);
 
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
