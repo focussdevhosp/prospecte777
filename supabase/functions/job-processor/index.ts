@@ -121,26 +121,23 @@ async function processJobItem(
             }
 
             if (!aiResponse || !aiResponse.ok) {
-              // Fallback: generate a simple decent message instead of failing the lead
+              // Fallback humanizado (rotativo) para não parecer template
               console.warn(`[Job ${job.id}] AI unavailable after retries, using fallback message`);
               await logToDb(supabase, job.id, job.user_id, 'info', `IA indisponível para ${lead.business_name} — usando mensagem padrão`);
-              const firstName = (lead.business_name || "").split(/\s+/)[0] || "";
-              const nicheTxt = lead.niche ? ` no ramo de ${lead.niche}` : "";
-              message = `Olá${firstName ? " " + firstName : ""}! Tudo bem? Encontrei a ${lead.business_name}${nicheTxt} e queria te mostrar como podemos gerar mais clientes para vocês. Posso te enviar uma proposta rápida?`;
+              message = buildFallbackMessage(lead);
             } else {
               const aiData = await aiResponse.json();
               message = aiData.message || "";
               if (!message) {
-                const firstName = (lead.business_name || "").split(/\s+/)[0] || "";
-                message = `Olá${firstName ? " " + firstName : ""}! Vi a ${lead.business_name} e queria conversar sobre uma oportunidade rápida. Posso te mandar os detalhes?`;
+                message = buildFallbackMessage(lead);
               }
             }
           } catch (aiError: any) {
             console.error(`[Job ${job.id}] AI error for lead ${index}:`, aiError);
             await logToDb(supabase, job.id, job.user_id, 'info', `Erro IA (${aiError.message}) — usando mensagem padrão para ${lead.business_name}`);
-            const firstName = (lead.business_name || "").split(/\s+/)[0] || "";
-            message = `Olá${firstName ? " " + firstName : ""}! Encontrei a ${lead.business_name} e gostaria de te apresentar uma oportunidade. Posso te enviar mais detalhes?`;
+            message = buildFallbackMessage(lead);
           }
+
 
         } else if (payload.use_ai_personalization) {
           // Use AI to personalize template
