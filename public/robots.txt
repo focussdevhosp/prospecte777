@@ -12,3 +12,10 @@ Allow: /
 
 User-agent: *
 Allow: /
+Disallow: /dashboard
+Disallow: /crm
+Disallow: /settings
+Disallow: /admin
+Disallow: /billing
+
+Sitemap: https://prospecte777.lovable.app/sitemap.xml
