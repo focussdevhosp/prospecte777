@@ -175,7 +175,7 @@ serve(async (req) => {
 
     // LIST USERS
     if (action === "list") {
-      const { data: profiles, error: profilesError } = await supabase
+      const { data: profileRows, error: profilesError } = await supabase
         .from("profiles")
         .select("user_id, email, full_name, avatar_url, created_at")
         .order("created_at", { ascending: false })
@@ -183,10 +183,13 @@ serve(async (req) => {
 
       if (profilesError) throw profilesError;
 
-      const userIds = (profiles || []).map((profile: any) => profile.user_id).filter(Boolean);
+      const userIds = (profileRows || []).map((profile: any) => profile.user_id).filter(Boolean);
 
-      const [profilesRes, settingsRes, rolesRes, blockedRes] = await Promise.all([
-        Promise.resolve({ data: profiles, error: null }),
+      if (userIds.length === 0) {
+        return jsonResponse({ users: [], total: 0 });
+      }
+
+      const [settingsRes, rolesRes, blockedRes] = await Promise.all([
         supabase.from("user_settings").select("user_id, whatsapp_connected, auto_prospecting_enabled").in("user_id", userIds),
         supabase.from("user_roles").select("*").in("user_id", userIds),
         supabase.from("blocked_users").select("user_id").in("user_id", userIds),
@@ -195,12 +198,11 @@ serve(async (req) => {
       const queryError = settingsRes.error || rolesRes.error || blockedRes.error;
       if (queryError) throw queryError;
 
-      const profiles = profilesRes.data;
       const settings = settingsRes.data;
       const roles = rolesRes.data;
       const blockedUserIds = new Set((blockedRes.data || []).map((b: any) => b.user_id));
 
-      const enrichedUsers = (profiles || []).map((profile: any) => {
+      const enrichedUsers = (profileRows || []).map((profile: any) => {
         const setting = settings?.find((s: any) => s.user_id === profile.user_id);
         const userRoles = roles?.filter((r: any) => r.user_id === profile.user_id).map((r: any) => r.role) || [];
 
