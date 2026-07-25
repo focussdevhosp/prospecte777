@@ -19,7 +19,37 @@ interface BackgroundJob {
   max_retries: number;
 }
 
-// Helper to log to database for persistence
+// Fallback humanizado — usado quando a IA falha. Rotativo por hash do lead.
+function buildFallbackMessage(lead: any): string {
+  const name = lead.business_name || "sua empresa";
+  const niche = lead.niche || "seu segmento";
+  const city = lead.location || "sua região";
+  const hasSite = !!lead.website;
+  const lowRating = lead.rating && lead.rating < 4;
+  const fewReviews = (lead.reviews_count || 0) < 15;
+
+  const openings = ["Oi!", "Opa, tudo bem?", "E aí, tudo certo?"];
+  const opening = openings[Math.abs(hashCode(name)) % openings.length];
+
+  // Escolhe gancho baseado no que o lead tem/não tem
+  if (!hasSite) {
+    return `${opening} Passei aqui na ${name} e reparei que vocês ainda não têm site. Hoje quase todo cliente pesquisa no Google antes de escolher — sem uma página, muita venda escapa.\n\nConsigo montar uma pra vocês em poucos dias. Posso te mandar 2 exemplos que fiz pra ${niche}?`;
+  }
+  if (lowRating) {
+    return `${opening} Vi a ${name} aqui em ${city} e reparei que a avaliação no Google tá abaixo de 4 estrelas — isso derruba MUITO a conversão de quem pesquisa vocês.\n\nTenho uma estratégia que já subiu de 3.6 pra 4.7 em 30 dias em ${niche}. Quer que eu te explique rapidão?`;
+  }
+  if (fewReviews) {
+    return `${opening} Curti a ${name} e vi que vocês têm poucas avaliações no Google — isso faz o cliente escolher o concorrente antes mesmo de conhecer vocês.\n\nTenho um sistema que triplica reviews em 60 dias sem esforço. Posso te mandar como funciona?`;
+  }
+  return `${opening} Passei aqui na ${name}${city !== "sua região" ? ` de ${city}` : ""} e queria trocar uma ideia rápida sobre como trazer mais clientes pra ${niche} de forma previsível.\n\nTem 2 min pra eu te mostrar o que funcionou com empresas parecidas?`;
+}
+
+function hashCode(s: string): number {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0;
+  return h;
+}
+
 async function logToDb(
   supabase: any,
   jobId: string,
@@ -121,26 +151,23 @@ async function processJobItem(
             }
 
             if (!aiResponse || !aiResponse.ok) {
-              // Fallback: generate a simple decent message instead of failing the lead
+              // Fallback humanizado (rotativo) para não parecer template
               console.warn(`[Job ${job.id}] AI unavailable after retries, using fallback message`);
               await logToDb(supabase, job.id, job.user_id, 'info', `IA indisponível para ${lead.business_name} — usando mensagem padrão`);
-              const firstName = (lead.business_name || "").split(/\s+/)[0] || "";
-              const nicheTxt = lead.niche ? ` no ramo de ${lead.niche}` : "";
-              message = `Olá${firstName ? " " + firstName : ""}! Tudo bem? Encontrei a ${lead.business_name}${nicheTxt} e queria te mostrar como podemos gerar mais clientes para vocês. Posso te enviar uma proposta rápida?`;
+              message = buildFallbackMessage(lead);
             } else {
               const aiData = await aiResponse.json();
               message = aiData.message || "";
               if (!message) {
-                const firstName = (lead.business_name || "").split(/\s+/)[0] || "";
-                message = `Olá${firstName ? " " + firstName : ""}! Vi a ${lead.business_name} e queria conversar sobre uma oportunidade rápida. Posso te mandar os detalhes?`;
+                message = buildFallbackMessage(lead);
               }
             }
           } catch (aiError: any) {
             console.error(`[Job ${job.id}] AI error for lead ${index}:`, aiError);
             await logToDb(supabase, job.id, job.user_id, 'info', `Erro IA (${aiError.message}) — usando mensagem padrão para ${lead.business_name}`);
-            const firstName = (lead.business_name || "").split(/\s+/)[0] || "";
-            message = `Olá${firstName ? " " + firstName : ""}! Encontrei a ${lead.business_name} e gostaria de te apresentar uma oportunidade. Posso te enviar mais detalhes?`;
+            message = buildFallbackMessage(lead);
           }
+
 
         } else if (payload.use_ai_personalization) {
           // Use AI to personalize template

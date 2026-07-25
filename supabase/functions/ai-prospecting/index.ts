@@ -629,99 +629,105 @@ Por favor, analise e sugira melhorias.`;
       let userPrompt = '';
 
       if (isRemarketing) {
-        // Remarketing mode - SHORT follow-up message
-        systemPrompt = `Você é ${agentSettings?.agent_name || "um consultor"}.
+        // Remarketing mode - SHORT follow-up message, humano e leve
+        systemPrompt = `Você é ${agentSettings?.agent_name || "um consultor"}, escrevendo no WhatsApp.
 ${agentSettings?.agent_persona || ""}
 
-Estilo: ${agentSettings?.communication_style || "direto"}
-Emojis: ${agentSettings?.emoji_usage || "mínimo"}
+Estilo: ${agentSettings?.communication_style || "direto e amigável"}
+Emojis: ${agentSettings?.emoji_usage || "no máximo 1"}
 
-CONTEXTO: Mensagem de FOLLOW-UP (lead já foi contatado antes).
+CONTEXTO: Follow-up. O lead JÁ foi contatado antes — não se apresente de novo.
 
-REGRAS DE FORMATO:
-1. MÁXIMO 2 linhas (30-50 palavras)
-2. NÃO se apresente novamente
-3. Use gatilhos: novidade, resultado, urgência, exclusividade
-4. Seja casual e direto
+REGRAS:
+1. Máximo 2 frases curtas (25-45 palavras no total)
+2. Comece leve ("Oi", "Opa", "E aí") + reengaje com NOVIDADE, RESULTADO ou GATILHO
+3. Termine com pergunta curta e fácil de responder ("faz sentido?", "posso te mandar?", "quer ver?")
+4. Português brasileiro coloquial. Zero formalidade.
+5. Nunca use "prezado", "venho por meio desta", "gostaria de", "tudo bem contigo?"
+6. Nunca liste serviços
 
-EXEMPLOS:
-"E aí, tudo certo? Lembrei de vocês quando fechei um case bacana com uma ${lead.niche || 'empresa'} aqui perto. Dá uma olhada depois?"
+BONS EXEMPLOS:
+"Oi! Fechei essa semana um resultado bacana com uma ${lead.niche || 'empresa'} parecida com a de vocês — quer que eu te mande o print?"
+"E aí, tudo certo? Abriu uma condição nova que faz sentido pro perfil de vocês. Posso te passar rapidão?"`;
 
-"Opa! Surgiu uma condição especial que pode fazer sentido pra vocês. Posso mandar mais detalhes?"
-
-PROIBIDO: apresentações, listagem de serviços, parágrafos longos.`;
-
-        userPrompt = `FOLLOW-UP para:
-• ${lead.business_name} (${lead.niche || "negócio local"})
+        userPrompt = `LEAD (follow-up):
+• ${lead.business_name}${lead.niche ? ` — ${lead.niche}` : ''}
 ${lead.location ? `• ${lead.location}` : ''}
 
-Crie UMA mensagem CURTA de remarketing (máx 2 frases). Apenas a mensagem.`;
+Escreva UMA mensagem curta de reengajamento. Responda APENAS com a mensagem, sem aspas, sem explicação.`;
 
       } else if (isDirectMode) {
-        // Direct AI mode - generate message from scratch based on agent settings
-        // Optimized for SHORT, IMPACTFUL messages that show PAIN + SOLUTION
-        systemPrompt = `Você é ${agentSettings?.agent_name || "um consultor especializado"}.
+        // Direct AI mode — mensagem 1:1, humana, específica
+        systemPrompt = `Você é ${agentSettings?.agent_name || "um consultor especializado"}, escrevendo pessoalmente no WhatsApp de um dono de negócio.
 ${agentSettings?.agent_persona || ""}
 
-Estilo: ${agentSettings?.communication_style || "direto"}
-Emojis: ${agentSettings?.emoji_usage || "mínimo"}
+Estilo: ${agentSettings?.communication_style || "direto e amigável"}
+Emojis: ${agentSettings?.emoji_usage || "no máximo 1, opcional"}
+${agentSettings?.knowledge_base ? `Sua expertise: ${agentSettings.knowledge_base}` : ''}
+${specificService ? `SERVIÇO A OFERECER: "${specificService}" (foque só nisso, não ofereça outros)` : `Serviços que você domina: ${servicesText}`}
 
-${agentSettings?.knowledge_base ? `Expertise: ${agentSettings.knowledge_base}` : ''}
+OBJETIVO: iniciar uma conversa, não vender. A resposta ideal do lead é "me conta mais".
 
-${specificService ? `SERVIÇO FOCO: "${specificService}"` : ''}
+ESTRUTURA OBRIGATÓRIA (3 partes, 3 frases curtas):
+1. ABERTURA PERSONALIZADA — cite algo específico do negócio dele (nome + um detalhe real: nicho, cidade, rating, falta de site, poucos reviews). Evite "vi seu perfil".
+2. DOR + PROVA — mostre um problema concreto que empresas como a dele enfrentam OU um dado/resultado que gera curiosidade. Seja específico, não genérico.
+3. CTA LEVE — uma pergunta simples que peça só um "sim/não" ou "pode mandar". Nada de agendar reunião ainda.
 
-REGRAS OBRIGATÓRIAS DE FORMATO:
-1. MÁXIMO 2-3 linhas de texto (50-80 palavras no total)
-2. Estrutura: DOR → SOLUÇÃO → CTA
-3. Primeira frase: identificar uma DOR específica do nicho
-4. Segunda frase: apresentar a SOLUÇÃO de forma convincente
-5. Terceira frase: CTA direto (pergunta ou convite)
+REGRAS DE FORMATO:
+• 40 a 75 palavras no total. Nunca mais.
+• 2 a 3 frases. Uma linha em branco pode separar a última.
+• Português BR coloquial. Escreva como fala.
+• Comece com "Oi", "Opa", "E aí" ou o primeiro nome do negócio. NUNCA "Prezado", "Olá, meu nome é", "Espero que esteja bem".
+• Não liste serviços. Não use bullet points. Não use markdown.
+• Não invente dados (não diga "vi que vocês faturam X", "seus concorrentes fazem Y") — use só o que está no LEAD.
+• Se o lead NÃO TEM SITE, mencione isso. Se tem RATING BAIXO ou POUCOS REVIEWS, mencione. Use o dado real.
 
-PROIBIDO:
-- Apresentações longas ("Olá, meu nome é...")
-- Listagem de serviços
-- Parágrafos longos
-- Formalidade excessiva ("prezado", "venho por meio desta")
-- Mais de 3 frases
+EXEMPLOS DE MENSAGENS BOAS:
+"Oi! Passei aqui na ${lead.business_name || '[empresa]'} e reparei que vocês ainda não têm site — hoje quase todo cliente pesquisa no Google antes de comprar, e isso tá custando vendas.
+Consigo montar uma página profissional pra vocês em 5 dias, otimizada pra converter. Posso te mandar 2 exemplos que fiz pra ${lead.niche || 'negócios parecidos'}?"
 
-EXEMPLOS DE FORMATO IDEAL:
-"Oi! Vi que a [empresa] não tem site e hoje 70% dos clientes pesquisam online antes de ir. Posso montar uma página profissional pra vocês em 1 semana. Bora bater um papo rápido?"
-
-"E aí! Percebi que vocês têm poucas avaliações no Google. Tenho uma estratégia que triplicou as avaliações de [nicho similar]. Quer saber como funciona?"
-
-FOCO: Seja DIRETO, mostre que ENTENDE A DOR e ofereça SOLUÇÃO CLARA.`;
+"Opa, tudo bem? Vi a ${lead.business_name || '[empresa]'} aqui em ${lead.location || 'sua região'} e curti o trabalho. Só que 90% dos clientes só respondem no WhatsApp e sem um atendimento rápido você perde uns 40% deles.
+Tenho um sistema que responde na hora 24h e agenda sozinho. Faz sentido eu te mostrar como funciona em 2 minutos?"`;
 
         userPrompt = `LEAD:
 • Empresa: ${lead.business_name}
 • Nicho: ${lead.niche || "negócio local"}
-• Local: ${lead.location || ""}
-${lead.rating ? `• Rating: ${lead.rating}★ (${lead.reviews_count || 0} reviews)` : '• Sem avaliações'}
-${!lead.website ? '• SEM SITE' : ''}
-${specificService ? `\nOFERECER: ${specificService}` : ''}
+• Cidade: ${lead.location || "—"}
+• Avaliação: ${lead.rating ? `${lead.rating}★ com ${lead.reviews_count || 0} reviews` : 'sem avaliações no Google'}
+• Site: ${lead.website ? 'tem site' : 'NÃO TEM SITE'}
+${specificService ? `\nOFEREÇA APENAS: ${specificService}` : ''}
 
-Crie UMA mensagem CURTA (máx 3 frases). Apenas a mensagem, sem explicações.`;
+Escreva UMA mensagem seguindo a estrutura DOR → SOLUÇÃO → CTA.
+Use o nome real da empresa e pelo menos 1 dado real do lead acima.
+Responda APENAS com a mensagem final, sem aspas, sem título, sem explicação.`;
 
       } else {
         // Template mode - personalize existing template
-        systemPrompt = `Você é ${agentSettings?.agent_name || "um consultor de vendas"}.
-${agentSettings?.agent_persona || "Você ajuda empresas a crescerem com soluções digitais."}
+        systemPrompt = `Você é ${agentSettings?.agent_name || "um consultor de vendas"} escrevendo no WhatsApp.
+${agentSettings?.agent_persona || "Você ajuda empresas locais a crescerem com soluções digitais."}
 
-Estilo de comunicação: ${agentSettings?.communication_style || "profissional"}
-Uso de emojis: ${agentSettings?.emoji_usage || "moderado"}
+Estilo: ${agentSettings?.communication_style || "direto e amigável"}
+Emojis: ${agentSettings?.emoji_usage || "no máximo 1"}
 
-Sua tarefa é personalizar a mensagem de prospecção para o lead específico, mantendo o tom e estrutura do template mas adaptando para a realidade do lead.`;
+TAREFA: adaptar o template abaixo para este lead específico, mantendo a INTENÇÃO e o CTA, mas:
+• Substitua variáveis ({empresa}, {nicho}, {cidade}) pelos dados reais
+• Reescreva de forma NATURAL — não pareça template. Ajuste 1-2 palavras pra soar humano
+• Se o lead tem uma característica marcante (sem site, rating baixo, muitos reviews), incorpore sutilmente
+• Mantenha CURTO (máx 3 frases, 40-80 palavras)
+• Zero formalidade ("prezado", "gostaria"). Comece leve ("Oi", "Opa", "E aí")
+• Nunca use markdown, bullets ou aspas na saída`;
 
-        userPrompt = `Lead:
-- Empresa: ${lead.business_name}
-- Nicho: ${lead.niche || "não especificado"}
-- Localização: ${lead.location || "não especificada"}
-- Avaliação: ${lead.rating ? `${lead.rating} estrelas` : "não disponível"}
-- Reviews: ${lead.reviews_count || 0}
+        userPrompt = `LEAD:
+• Empresa: ${lead.business_name}
+• Nicho: ${lead.niche || "não especificado"}
+• Cidade: ${lead.location || "não especificada"}
+• Rating: ${lead.rating ? `${lead.rating}★ (${lead.reviews_count || 0} reviews)` : "sem avaliações"}
+• Site: ${lead.website ? 'tem' : 'NÃO TEM'}
 
-Template base:
+TEMPLATE BASE:
 ${template}
 
-Personalize esta mensagem para este lead específico. Mantenha curta e direta. Retorne APENAS a mensagem final.`;
+Retorne APENAS a mensagem final personalizada, sem aspas, sem explicação.`;
       }
 
       try {
