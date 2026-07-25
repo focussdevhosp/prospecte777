@@ -7,30 +7,138 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+const jsonResponse = (payload: unknown, status = 200) =>
+  new Response(JSON.stringify(payload), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+
+const firstUsableKeyFrom = (rawValue: string | undefined) => {
+  if (!rawValue) return null;
+
+  const trimmed = rawValue.trim();
+  if (!trimmed) return null;
+  if (trimmed.startsWith("sb_secret_") || trimmed.split(".").length === 3) {
+    return trimmed;
+  }
+
+  const opaqueMatch = trimmed.match(/sb_secret_[A-Za-z0-9_-]+/);
+  if (opaqueMatch?.[0]) return opaqueMatch[0];
+
+  try {
+    const parsed = JSON.parse(trimmed);
+    const stack = [parsed];
+    while (stack.length > 0) {
+      const current = stack.shift();
+      if (typeof current === "string") {
+        const key = firstUsableKeyFrom(current);
+        if (key) return key;
+      } else if (Array.isArray(current)) {
+        stack.push(...current);
+      } else if (current && typeof current === "object") {
+        stack.push(...Object.values(current));
+      }
+    }
+  } catch {
+    // Not JSON; fall through to the raw value as a final fallback.
+  }
+
+  return trimmed;
+};
+
+const getAdminKey = () =>
+  firstUsableKeyFrom(Deno.env.get("SUPABASE_SECRET_KEYS")) ||
+  firstUsableKeyFrom(Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"));
+
+const createAdminDataClient = (supabaseUrl: string, adminKey: string) => {
+  const isOpaqueSecret = adminKey.startsWith("sb_secret_");
+
+  return createClient(supabaseUrl, adminKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+    },
+    global: {
+      fetch: (input, init = {}) => {
+        const headers = new Headers(init.headers);
+        headers.set("apikey", adminKey);
+
+        // Opaque Supabase secret keys must identify through `apikey` only.
+        // Sending them as `Authorization: Bearer ...` makes some Supabase
+        // services try to parse them as JWTs and causes bad_jwt failures.
+        if (isOpaqueSecret) {
+          headers.delete("Authorization");
+        }
+
+        return fetch(input, { ...init, headers });
+      },
+    },
+  });
+};
+
+const callAuthAdmin = async (
+  supabaseUrl: string,
+  adminKey: string,
+  path: string,
+  init: RequestInit = {},
+) => {
+  const headers = new Headers(init.headers);
+  headers.set("apikey", adminKey);
+  headers.set("Content-Type", "application/json");
+
+  if (!adminKey.startsWith("sb_secret_")) {
+    headers.set("Authorization", `Bearer ${adminKey}`);
+  }
+
+  const response = await fetch(`${supabaseUrl}/auth/v1${path}`, {
+    ...init,
+    headers,
+  });
+
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const message =
+      payload?.msg ||
+      payload?.message ||
+      payload?.error_description ||
+      payload?.error ||
+      `Supabase Auth admin request failed with status ${response.status}`;
+    throw new Error(message);
+  }
+
+  return payload;
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    // Prefer new-format secret key (sb_secret_...) over legacy service_role JWT
-    // to avoid "unrecognized JWT kid" errors under the signing-keys system.
-    const adminKey =
-      Deno.env.get("SUPABASE_SECRET_KEYS") ||
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, adminKey);
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const adminKey = getAdminKey();
+
+    if (!supabaseUrl || !adminKey) {
+      return jsonResponse({ error: "Supabase admin configuration missing" }, 500);
+    }
+
+    const supabase = createAdminDataClient(supabaseUrl, adminKey);
 
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonResponse({ error: "Unauthorized" }, 401);
     }
 
-    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
+    if (!anonKey) {
+      return jsonResponse({ error: "Supabase auth configuration missing" }, 500);
+    }
+
     const userClient = createClient(supabaseUrl, anonKey, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      },
       global: { headers: { Authorization: authHeader } },
     });
 
@@ -39,25 +147,21 @@ serve(async (req) => {
       error: userError,
     } = await userClient.auth.getUser();
     if (userError || !user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonResponse({ error: "Unauthorized" }, 401);
     }
 
     // Check admin role
-    const { data: roleData } = await supabase
+    const { data: roleData, error: roleError } = await supabase
       .from("user_roles")
       .select("role")
       .eq("user_id", user.id)
       .eq("role", "admin")
-      .single();
+      .maybeSingle();
+
+    if (roleError) throw roleError;
 
     if (!roleData) {
-      return new Response(JSON.stringify({ error: "Forbidden: admin only" }), {
-        status: 403,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonResponse({ error: "Forbidden: admin only" }, 403);
     }
 
     // Parse body once
@@ -71,69 +175,63 @@ serve(async (req) => {
 
     // LIST USERS
     if (action === "list") {
-      const {
-        data: { users },
-        error,
-      } = await supabase.auth.admin.listUsers({ page: 1, perPage: 50 });
+      const { data: profiles, error: profilesError } = await supabase
+        .from("profiles")
+        .select("user_id, email, full_name, avatar_url, created_at")
+        .order("created_at", { ascending: false })
+        .limit(1000);
 
-      if (error) throw error;
+      if (profilesError) throw profilesError;
 
-      const userIds = users.map((u: any) => u.id);
+      const userIds = (profiles || []).map((profile: any) => profile.user_id).filter(Boolean);
 
       const [profilesRes, settingsRes, rolesRes, blockedRes] = await Promise.all([
-        supabase.from("profiles").select("*").in("user_id", userIds),
+        Promise.resolve({ data: profiles, error: null }),
         supabase.from("user_settings").select("user_id, whatsapp_connected, auto_prospecting_enabled").in("user_id", userIds),
         supabase.from("user_roles").select("*").in("user_id", userIds),
         supabase.from("blocked_users").select("user_id").in("user_id", userIds),
       ]);
+
+      const queryError = settingsRes.error || rolesRes.error || blockedRes.error;
+      if (queryError) throw queryError;
 
       const profiles = profilesRes.data;
       const settings = settingsRes.data;
       const roles = rolesRes.data;
       const blockedUserIds = new Set((blockedRes.data || []).map((b: any) => b.user_id));
 
-      const enrichedUsers = users.map((u: any) => {
-        const profile = profiles?.find((p: any) => p.user_id === u.id);
-        const setting = settings?.find((s: any) => s.user_id === u.id);
-        const userRoles = roles?.filter((r: any) => r.user_id === u.id).map((r: any) => r.role) || [];
+      const enrichedUsers = (profiles || []).map((profile: any) => {
+        const setting = settings?.find((s: any) => s.user_id === profile.user_id);
+        const userRoles = roles?.filter((r: any) => r.user_id === profile.user_id).map((r: any) => r.role) || [];
 
         return {
-          id: u.id,
-          email: u.email,
+          id: profile.user_id,
+          email: profile.email,
           full_name: profile?.full_name || null,
           avatar_url: profile?.avatar_url || null,
-          created_at: u.created_at,
-          last_sign_in_at: u.last_sign_in_at,
+          created_at: profile.created_at,
+          last_sign_in_at: null,
           whatsapp_connected: setting?.whatsapp_connected || false,
           auto_prospecting: setting?.auto_prospecting_enabled || false,
           roles: userRoles,
-          is_blocked: blockedUserIds.has(u.id),
+          is_blocked: blockedUserIds.has(profile.user_id),
         };
       });
 
-      return new Response(JSON.stringify({ users: enrichedUsers, total: users.length }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonResponse({ users: enrichedUsers, total: enrichedUsers.length });
     }
 
     // DELETE USER
     if (action === "delete") {
       const targetUserId = body.user_id;
       if (!targetUserId) {
-        return new Response(JSON.stringify({ error: "user_id required" }), {
-          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        return jsonResponse({ error: "user_id required" }, 400);
       }
       if (targetUserId === user.id) {
-        return new Response(JSON.stringify({ error: "Cannot delete yourself" }), {
-          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        return jsonResponse({ error: "Cannot delete yourself" }, 400);
       }
-      const { error } = await supabase.auth.admin.deleteUser(targetUserId);
-      if (error) throw error;
-      return new Response(JSON.stringify({ success: true }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      await callAuthAdmin(supabaseUrl, adminKey, `/admin/users/${targetUserId}`, { method: "DELETE" });
+      return jsonResponse({ success: true });
     }
 
     // BLOCK USER
