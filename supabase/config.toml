@@ -74,3 +74,6 @@ verify_jwt = false
 
 [functions.campaign-executor]
 verify_jwt = false
+
+[functions.admin-users]
+verify_jwt = false
