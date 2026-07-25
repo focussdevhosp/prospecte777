@@ -13,7 +13,7 @@ const jsonResponse = (payload: unknown, status = 200) =>
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 
-const firstUsableKeyFrom = (rawValue: string | undefined) => {
+const firstUsableKeyFrom = (rawValue: string | undefined): string | null => {
   if (!rawValue) return null;
 
   const trimmed = rawValue.trim();
@@ -31,7 +31,7 @@ const firstUsableKeyFrom = (rawValue: string | undefined) => {
     while (stack.length > 0) {
       const current = stack.shift();
       if (typeof current === "string") {
-        const key = firstUsableKeyFrom(current);
+        const key: string | null = firstUsableKeyFrom(current);
         if (key) return key;
       } else if (Array.isArray(current)) {
         stack.push(...current);
@@ -60,7 +60,8 @@ const createAdminDataClient = (supabaseUrl: string, adminKey: string) => {
     },
     global: {
       fetch: (input, init = {}) => {
-        const headers = new Headers(init.headers);
+        const requestInit = init as RequestInit;
+        const headers = new Headers(requestInit.headers);
         headers.set("apikey", adminKey);
 
         // Opaque Supabase secret keys must identify through `apikey` only.
@@ -70,7 +71,7 @@ const createAdminDataClient = (supabaseUrl: string, adminKey: string) => {
           headers.delete("Authorization");
         }
 
-        return fetch(input, { ...init, headers });
+        return fetch(input, { ...requestInit, headers });
       },
     },
   });
