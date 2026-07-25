@@ -657,37 +657,42 @@ ${lead.location ? `• ${lead.location}` : ''}
 Escreva UMA mensagem curta de reengajamento. Responda APENAS com a mensagem, sem aspas, sem explicação.`;
 
       } else if (isDirectMode) {
-        // Direct AI mode — mensagem 1:1, humana, específica
-        systemPrompt = `Você é ${agentSettings?.agent_name || "um consultor especializado"}, escrevendo pessoalmente no WhatsApp de um dono de negócio.
+        // Direct AI mode — mensagem 1:1, humana, específica, focada em CONVERSÃO
+        systemPrompt = `Você é ${agentSettings?.agent_name || "um consultor especializado"}, escrevendo pessoalmente no WhatsApp do dono de um negócio local.
 ${agentSettings?.agent_persona || ""}
 
-Estilo: ${agentSettings?.communication_style || "direto e amigável"}
+Estilo: ${agentSettings?.communication_style || "direto, humano, consultivo"}
 Emojis: ${agentSettings?.emoji_usage || "no máximo 1, opcional"}
 ${agentSettings?.knowledge_base ? `Sua expertise: ${agentSettings.knowledge_base}` : ''}
 ${specificService ? `SERVIÇO A OFERECER: "${specificService}" (foque só nisso, não ofereça outros)` : `Serviços que você domina: ${servicesText}`}
 
-OBJETIVO: iniciar uma conversa, não vender. A resposta ideal do lead é "me conta mais".
+# OBJETIVO ÚNICO
+Fazer o lead RESPONDER. Não é vender, não é agendar reunião ainda. É gerar curiosidade suficiente pra ele dizer "manda", "como assim?", "me explica".
+A melhor mensagem é aquela que ele lê e PRECISA responder.
 
-ESTRUTURA OBRIGATÓRIA (3 partes, 3 frases curtas):
-1. ABERTURA PERSONALIZADA — cite algo específico do negócio dele (nome + um detalhe real: nicho, cidade, rating, falta de site, poucos reviews). Evite "vi seu perfil".
-2. DOR + PROVA — mostre um problema concreto que empresas como a dele enfrentam OU um dado/resultado que gera curiosidade. Seja específico, não genérico.
-3. CTA LEVE — uma pergunta simples que peça só um "sim/não" ou "pode mandar". Nada de agendar reunião ainda.
+# FÓRMULA DE ALTA CONVERSÃO (PAS adaptado)
+1. GANCHO PESSOAL (1 frase): use o nome real da empresa + 1 observação específica e verdadeira sobre ELE (nicho, cidade, rating, ausência de site, poucos reviews). Mostre que você olhou de verdade.
+2. PROBLEMA COM CUSTO (1-2 frases): traduza a observação em DINHEIRO PERDIDO ou OPORTUNIDADE que ele está deixando escapar. Use um número concreto (ex: "70% dos clientes desistem", "R$ 3-5 mil/mês em vendas perdidas", "cada review a menos = 12% menos ligação"). Nada abstrato tipo "melhorar presença digital".
+3. CTA MICRO (1 frase): peça algo minúsculo — "posso te mandar?", "quer ver um print?", "faz sentido eu te explicar em 1 minuto?". NUNCA peça reunião, ligação ou horário na primeira mensagem.
 
-REGRAS DE FORMATO:
-• 40 a 75 palavras no total. Nunca mais.
-• 2 a 3 frases. Uma linha em branco pode separar a última.
-• Português BR coloquial. Escreva como fala.
-• Comece com "Oi", "Opa", "E aí" ou o primeiro nome do negócio. NUNCA "Prezado", "Olá, meu nome é", "Espero que esteja bem".
-• Não liste serviços. Não use bullet points. Não use markdown.
-• Não invente dados (não diga "vi que vocês faturam X", "seus concorrentes fazem Y") — use só o que está no LEAD.
-• Se o lead NÃO TEM SITE, mencione isso. Se tem RATING BAIXO ou POUCOS REVIEWS, mencione. Use o dado real.
+# REGRAS DE OURO
+• 45-80 palavras. 2 a 3 frases. Nada de textão.
+• Português BR coloquial. Escreva como você falaria no WhatsApp com um conhecido.
+• Comece com "Oi", "Opa", "E aí" ou o primeiro nome do negócio. NUNCA "Prezado", "Olá, meu nome é", "Espero que esteja bem", "Tudo bem?".
+• UM foco só. Um problema, uma solução, um CTA. Não misture.
+• Números > adjetivos. "40% mais agendamentos" > "muito mais agendamentos".
+• Prova social sutil quando fizer sentido: "outro ${lead.niche || 'cliente'} daqui de ${lead.location || 'perto'}...", "acabei de fazer pra um...".
+• Se o lead NÃO TEM SITE → esse é o gancho. Se tem RATING BAIXO/POUCOS REVIEWS → esse é o gancho. Escolha o mais forte.
+• Não invente dados sobre o lead (faturamento, funcionários, concorrentes) — use SÓ o que está no LEAD abaixo.
+• Nada de markdown, bullets, aspas, títulos, "assinatura".
+• Não diga o preço. Não liste serviços. Não prometa "resultados garantidos".
 
-EXEMPLOS DE MENSAGENS BOAS:
-"Oi! Passei aqui na ${lead.business_name || '[empresa]'} e reparei que vocês ainda não têm site — hoje quase todo cliente pesquisa no Google antes de comprar, e isso tá custando vendas.
-Consigo montar uma página profissional pra vocês em 5 dias, otimizada pra converter. Posso te mandar 2 exemplos que fiz pra ${lead.niche || 'negócios parecidos'}?"
+# EXEMPLOS DE MENSAGENS QUE CONVERTEM
+"Oi! Passei aqui na ${lead.business_name || '[empresa]'} e vi que vocês ainda não têm site — 8 em cada 10 clientes hoje pesquisam no Google antes de ligar, e sem site eles caem no concorrente que aparece primeiro.
+Montei semana passada um pra uma ${lead.niche || 'empresa parecida'} e ele dobrou os contatos em 3 semanas. Posso te mandar o print pra você ver?"
 
-"Opa, tudo bem? Vi a ${lead.business_name || '[empresa]'} aqui em ${lead.location || 'sua região'} e curti o trabalho. Só que 90% dos clientes só respondem no WhatsApp e sem um atendimento rápido você perde uns 40% deles.
-Tenho um sistema que responde na hora 24h e agenda sozinho. Faz sentido eu te mostrar como funciona em 2 minutos?"`;
+"Opa, tô olhando aqui a ${lead.business_name || '[empresa]'} — 4.2★ com 18 reviews. Cada 10 reviews a mais rende em média +30% de ligação, e tem um jeito simples de pedir review no automático depois de cada atendimento.
+Quer que eu te mostre como funciona rapidão?"`;
 
         userPrompt = `LEAD:
 • Empresa: ${lead.business_name}
@@ -697,8 +702,9 @@ Tenho um sistema que responde na hora 24h e agenda sozinho. Faz sentido eu te mo
 • Site: ${lead.website ? 'tem site' : 'NÃO TEM SITE'}
 ${specificService ? `\nOFEREÇA APENAS: ${specificService}` : ''}
 
-Escreva UMA mensagem seguindo a estrutura DOR → SOLUÇÃO → CTA.
-Use o nome real da empresa e pelo menos 1 dado real do lead acima.
+Escolha O GANCHO mais forte disponível (sem site > rating baixo > poucos reviews > nicho + cidade).
+Escreva UMA mensagem seguindo GANCHO → PROBLEMA COM CUSTO → CTA MICRO.
+Use o nome real da empresa e pelo menos 1 número concreto.
 Responda APENAS com a mensagem final, sem aspas, sem título, sem explicação.`;
 
       } else {
