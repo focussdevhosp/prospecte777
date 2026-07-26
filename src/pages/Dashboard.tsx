@@ -16,7 +16,7 @@ import { PeriodFilter } from '@/components/dashboard/PeriodFilter';
 import { ProspectionChart } from '@/components/dashboard/ProspectionChart';
 import { ConversionFunnelChart } from '@/components/dashboard/ConversionFunnelChart';
 import { RecentActivity } from '@/components/dashboard/RecentActivity';
-import { OpportunityRadar } from '@/components/dashboard/OpportunityRadar';
+import { RecentLeadsTable } from '@/components/dashboard/RecentLeadsTable';
 import {
   Users,
   TrendingUp,
@@ -128,13 +128,13 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Section: Performance */}
-      <SectionHeader
-        title="Performance"
-        subtitle="Métricas principais do seu funil"
-        right={<PeriodFilter value={period} onChange={setPeriod} />}
-      />
-      <div className="mb-8 grid grid-cols-2 gap-3 lg:grid-cols-4">
+      {/* Visão Geral */}
+      <div className="mb-4 flex items-center justify-between gap-4">
+        <h2 className="text-sm font-bold tracking-tight">Visão Geral</h2>
+        <PeriodFilter value={period} onChange={setPeriod} />
+      </div>
+
+      <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <KPICard
           icon={<Users className="h-4 w-4 text-primary" />}
           label="Total de Leads"
@@ -148,6 +148,8 @@ export default function DashboardPage() {
           icon={<Send className="h-4 w-4 text-info" />}
           label="Mensagens Enviadas"
           value={contactedLeads}
+          change={125}
+          changeLabel={`+${contactedLeads} este mês`}
           iconBg="bg-info/8"
           delay={50}
         />
@@ -155,6 +157,8 @@ export default function DashboardPage() {
           icon={<MessageSquare className="h-4 w-4 text-success" />}
           label="Taxa de Resposta"
           value={`${metrics?.conversionRate?.toFixed(1) || '0.0'}%`}
+          change={0}
+          changeLabel="0% este mês"
           iconBg="bg-success/8"
           delay={100}
         />
@@ -163,92 +167,18 @@ export default function DashboardPage() {
           label="Conversões"
           value={wonLeads}
           change={12}
+          changeLabel={`+${wonLeads} este mês`}
           iconBg="bg-warning/8"
           delay={150}
         />
       </div>
 
-      {/* Section: ROI */}
-      <SectionHeader title="ROI & Pipeline" subtitle="Impacto financeiro em tempo real" />
-      <div className="mb-8 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <ROIMetricCard
-          icon={TrendingUp}
-          tone="success"
-          label="ROI"
-          value={totalLeads && wonLeads ? `${((wonLeads / totalLeads) * 100).toFixed(1)}%` : '0%'}
-          sub="Taxa de conversão geral"
-        />
-        <ROIMetricCard
-          icon={DollarSign}
-          tone="primary"
-          label="Custo / Lead"
-          value="R$ 0,00"
-          sub="Prospecção 100% gratuita"
-        />
-        <ROIMetricCard
-          icon={Target}
-          tone="warning"
-          label="Pipeline"
-          value={new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', notation: 'compact' }).format(
-            (metrics?.leadsByStage?.['Proposta'] || 0) * 500 + (metrics?.leadsByStage?.['Negociação'] || 0) * 1000
-          )}
-          sub="Valor estimado em aberto"
-        />
-        <ROIMetricCard
-          icon={Activity}
-          tone="info"
-          label="Engajamento"
-          value={String(metrics?.hotLeads || 0)}
-          sub="Leads quentes ativos agora"
-        />
-      </div>
-
-      {/* Section: Análise */}
-      <SectionHeader title="Análise" subtitle="Captação diária e progresso do funil" />
-      <div className="mb-8 grid gap-4 lg:grid-cols-5">
-        <div className="lg:col-span-3">
-          <ProspectionChart data={chartData} />
-        </div>
-        <div className="lg:col-span-2">
-          <ConversionFunnelChart stages={funnelStages} totalLeads={totalFunnelLeads} />
-        </div>
-      </div>
-
-      {/* Section: Ação */}
-      <SectionHeader title="Central de Ação" subtitle="Oportunidades e atividade recente" />
-      <div className="grid gap-4 lg:grid-cols-3">
-        <div className="lg:col-span-2 space-y-4">
-          <OpportunityRadar leads={leads} />
-          <RecentActivity activities={activities} isLoading={activitiesLoading} />
-        </div>
-
-        <div className="space-y-4">
-          <Card className="border-border/50 overflow-hidden relative">
-            <div className="absolute inset-0 bg-gradient-to-br from-warning/[0.04] to-transparent pointer-events-none" />
-            <CardContent className="p-5 relative">
-              <div className="flex items-center gap-2.5 mb-4">
-                <div className="p-2 rounded-lg bg-warning/10">
-                  <ThermometerSun className="h-4 w-4 text-warning" />
-                </div>
-                <h3 className="text-sm font-bold">Temperatura dos Leads</h3>
-              </div>
-              <div className="space-y-4">
-                <TempBar icon={Flame} label="Quente" count={metrics?.hotLeads || 0} total={totalLeads || 1} color="bg-destructive" textColor="text-destructive" />
-                <TempBar icon={ThermometerSun} label="Morno" count={metrics?.warmLeads || 0} total={totalLeads || 1} color="bg-warning" textColor="text-warning" />
-                <TempBar icon={Snowflake} label="Frio" count={metrics?.coldLeads || 0} total={totalLeads || 1} color="bg-info" textColor="text-info" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <div className="grid grid-cols-2 gap-2.5">
-            <Button asChild size="sm" className="gradient-primary h-11 text-xs font-bold shadow-md shadow-primary/15 hover:shadow-lg hover:shadow-primary/25 transition-shadow rounded-xl">
-              <Link to="/prospecting"><Target className="mr-1.5 h-3.5 w-3.5" />Prospectar</Link>
-            </Button>
-            <Button asChild variant="outline" size="sm" className="h-11 text-xs font-bold border-border/40 hover:border-primary/30 rounded-xl">
-              <Link to="/crm/contacts"><Users className="mr-1.5 h-3.5 w-3.5" />Ver Leads</Link>
-            </Button>
-          </div>
-        </div>
+      {/* 4-column grid: chart, funnel, activity, leads */}
+      <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-4">
+        <ProspectionChart data={chartData} />
+        <ConversionFunnelChart stages={funnelStages} totalLeads={totalFunnelLeads} />
+        <RecentActivity activities={activities} isLoading={activitiesLoading} />
+        <RecentLeadsTable leads={leads} />
       </div>
     </DashboardLayout>
   );
