@@ -13,7 +13,7 @@ const CAKTO_CHECKOUT_URL = 'https://pay.cakto.com.br/o5dfn8a_827823';
 
 const plan = {
   name: 'Profissional',
-  price: 149,
+  price: 97,
   features: [
     '3 chips WhatsApp',
     'Todos os extratores',

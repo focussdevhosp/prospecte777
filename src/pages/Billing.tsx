@@ -55,7 +55,7 @@ const plans = [
     name: 'Profissional',
     tagline: 'Mais popular',
     icon: Crown,
-    monthlyPrice: 149,
+    monthlyPrice: 97,
     chips: 3,
     popular: true,
     features: [
