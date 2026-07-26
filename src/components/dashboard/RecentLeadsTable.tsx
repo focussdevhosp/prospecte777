@@ -58,8 +58,8 @@ export function RecentLeadsTable({ leads }: Props) {
             <div className="divide-y divide-border/20">
               {recent.map((l) => (
                 <div key={l.id} className="grid grid-cols-[1fr_1fr_auto_auto] gap-x-3 items-center px-2 py-2.5 hover:bg-accent/20 rounded-md transition-colors">
-                  <span className="text-xs font-semibold truncate">{l.name || 'Sem nome'}</span>
-                  <span className="text-xs text-muted-foreground truncate hidden sm:block">{l.company || '—'}</span>
+                  <span className="text-xs font-semibold truncate">{l.business_name || 'Sem nome'}</span>
+                  <span className="text-xs text-muted-foreground truncate hidden sm:block">{l.niche || l.location || '—'}</span>
                   <Badge variant="outline" className={cn('text-[10px] font-semibold px-1.5 py-0 h-5', stageStyles[l.stage || 'Novo'] || stageStyles.Novo)}>
                     {l.stage || 'Novo'}
                   </Badge>
