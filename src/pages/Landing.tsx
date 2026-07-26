@@ -38,7 +38,7 @@ const CAKTO_CHECKOUT_URL = 'https://pay.cakto.com.br/o5dfn8a_827823';
 const SINGLE_PLAN = {
   id: 'pro',
   name: 'Profissional',
-  price: 149,
+  price: 97,
   features: [
     'Disparos ilimitados de mensagens',
     '3 chips WhatsApp com rotação automática',
