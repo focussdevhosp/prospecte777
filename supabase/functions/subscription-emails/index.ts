@@ -26,7 +26,7 @@ function getWelcomeEmailHtml(planName: string, userName: string): string {
       <p style="color:#22c55e;font-size:14px;margin:0;">✅ Acesso liberado a todas as funcionalidades do plano</p>
     </div>
     <p style="color:#cbd5e1;font-size:14px;margin:20px 0 0;">Olá${userName ? ` ${userName}` : ''}, comece agora a prospectar e conquistar novos clientes!</p>
-    <a href="https://prospecte777.lovable.app/dashboard" style="display:inline-block;margin-top:20px;background:#22c55e;color:#fff;text-decoration:none;padding:12px 30px;border-radius:8px;font-weight:bold;">Acessar Dashboard →</a>
+    <a href="https://nexaprospect.com.br/dashboard" style="display:inline-block;margin-top:20px;background:#22c55e;color:#fff;text-decoration:none;padding:12px 30px;border-radius:8px;font-weight:bold;">Acessar Dashboard →</a>
   </div>
   <p style="text-align:center;color:#94a3b8;font-size:12px;margin-top:20px;">NexaProspect — Prospecção inteligente por WhatsApp</p>
 </div>
@@ -47,7 +47,7 @@ function getExpiringEmailHtml(planName: string, daysLeft: number, userName: stri
     <div style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:12px;padding:20px;margin:20px 0;">
       <p style="color:#f59e0b;font-size:14px;margin:0;">Renove agora para não perder acesso às funcionalidades</p>
     </div>
-    <a href="https://prospecte777.lovable.app/billing" style="display:inline-block;margin-top:20px;background:#f59e0b;color:#fff;text-decoration:none;padding:12px 30px;border-radius:8px;font-weight:bold;">Renovar Plano →</a>
+    <a href="https://nexaprospect.com.br/billing" style="display:inline-block;margin-top:20px;background:#f59e0b;color:#fff;text-decoration:none;padding:12px 30px;border-radius:8px;font-weight:bold;">Renovar Plano →</a>
   </div>
   <p style="text-align:center;color:#94a3b8;font-size:12px;margin-top:20px;">NexaProspect — Prospecção inteligente por WhatsApp</p>
 </div>
@@ -69,7 +69,7 @@ function getExpiredEmailHtml(planName: string, userName: string): string {
       <p style="color:#ef4444;font-size:14px;margin:0;">Seu acesso à plataforma está bloqueado</p>
     </div>
     <p style="color:#cbd5e1;font-size:14px;margin:20px 0 0;">Renove agora para recuperar acesso completo e continuar prospectando.</p>
-    <a href="https://prospecte777.lovable.app/billing" style="display:inline-block;margin-top:20px;background:#ef4444;color:#fff;text-decoration:none;padding:12px 30px;border-radius:8px;font-weight:bold;">Renovar Agora →</a>
+    <a href="https://nexaprospect.com.br/billing" style="display:inline-block;margin-top:20px;background:#ef4444;color:#fff;text-decoration:none;padding:12px 30px;border-radius:8px;font-weight:bold;">Renovar Agora →</a>
   </div>
   <p style="text-align:center;color:#94a3b8;font-size:12px;margin-top:20px;">NexaProspect — Prospecção inteligente por WhatsApp</p>
 </div>
@@ -90,7 +90,7 @@ function getRenewalEmailHtml(planName: string, userName: string): string {
     <div style="background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);border-radius:12px;padding:20px;margin:20px 0;">
       <p style="color:#22c55e;font-size:14px;margin:0;">Seu acesso continua ativo! Continue prospectando 🚀</p>
     </div>
-    <a href="https://prospecte777.lovable.app/dashboard" style="display:inline-block;margin-top:20px;background:#22c55e;color:#fff;text-decoration:none;padding:12px 30px;border-radius:8px;font-weight:bold;">Acessar Dashboard →</a>
+    <a href="https://nexaprospect.com.br/dashboard" style="display:inline-block;margin-top:20px;background:#22c55e;color:#fff;text-decoration:none;padding:12px 30px;border-radius:8px;font-weight:bold;">Acessar Dashboard →</a>
   </div>
   <p style="text-align:center;color:#94a3b8;font-size:12px;margin-top:20px;">NexaProspect — Prospecção inteligente por WhatsApp</p>
 </div>
@@ -121,7 +121,7 @@ async function sendEmail(payload: EmailPayload): Promise<boolean> {
         to_name: payload.toName || "",
         subject: payload.subject,
         html: payload.html,
-        from: "NexaProspect <noreply@prospecte777.lovable.app>",
+        from: "NexaProspect <noreply@nexaprospect.com.br>",
       }),
     });
 
