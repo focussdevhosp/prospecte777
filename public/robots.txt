@@ -18,4 +18,4 @@ Disallow: /settings
 Disallow: /admin
 Disallow: /billing
 
-Sitemap: https://nexaprospect.online/sitemap.xml
+Sitemap: https://nexaprospect.com.br/sitemap.xml
