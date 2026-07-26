@@ -16,40 +16,40 @@
 
 @layer base {
   :root {
-    /* Ocean Deep — Light Mode */
-    --background: 200 45% 95%;
-    --foreground: 213 60% 10%;
+    /* Emerald Prestige — Light Mode */
+    --background: 44 45% 96%;
+    --foreground: 158 60% 8%;
 
     --card: 0 0% 100%;
-    --card-foreground: 213 60% 10%;
+    --card-foreground: 158 60% 8%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 213 60% 10%;
+    --popover-foreground: 158 60% 8%;
 
-    --primary: 204 62% 27%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 158 78% 18%;
+    --primary-foreground: 44 50% 96%;
 
-    --secondary: 200 32% 88%;
-    --secondary-foreground: 213 60% 15%;
+    --secondary: 44 32% 88%;
+    --secondary-foreground: 158 60% 12%;
 
-    --muted: 200 28% 90%;
-    --muted-foreground: 213 22% 32%;
+    --muted: 44 26% 91%;
+    --muted-foreground: 158 18% 30%;
 
-    --accent: 189 55% 40%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 46 68% 48%;
+    --accent-foreground: 158 60% 10%;
 
-    --destructive: 0 72% 48%;
+    --destructive: 0 72% 46%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 200 30% 78%;
-    --input: 200 30% 82%;
-    --ring: 189 55% 40%;
+    --border: 44 22% 82%;
+    --input: 44 22% 84%;
+    --ring: 46 68% 48%;
 
 
     --radius: 0.75rem;
 
     /* Status */
-    --success: 165 70% 32%;
+    --success: 161 76% 28%;
     --success-foreground: 0 0% 100%;
     --warning: 38 92% 45%;
     --warning-foreground: 0 0% 12%;
@@ -63,72 +63,73 @@
 
     /* Funnel stages */
     --stage-new: 189 55% 40%;
-    --stage-contact: 204 62% 35%;
+    --stage-contact: 158 60% 30%;
     --stage-negotiation: 32 88% 45%;
-    --stage-proposal: 178 45% 42%;
-    --stage-won: 165 70% 32%;
+    --stage-proposal: 46 68% 48%;
+    --stage-won: 161 76% 30%;
     --stage-lost: 0 65% 48%;
 
     /* Sidebar */
-    --sidebar-background: 213 35% 96%;
-    --sidebar-foreground: 213 60% 15%;
-    --sidebar-primary: 204 62% 27%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 189 50% 90%;
-    --sidebar-accent-foreground: 204 62% 22%;
-    --sidebar-border: 195 25% 85%;
-    --sidebar-ring: 189 55% 40%;
+    --sidebar-background: 158 32% 96%;
+    --sidebar-foreground: 158 60% 12%;
+    --sidebar-primary: 158 78% 18%;
+    --sidebar-primary-foreground: 44 50% 96%;
+    --sidebar-accent: 46 55% 90%;
+    --sidebar-accent-foreground: 158 60% 12%;
+    --sidebar-border: 44 22% 84%;
+    --sidebar-ring: 46 68% 48%;
 
     /* Charts */
-    --chart-1: 204 62% 32%;
-    --chart-2: 189 55% 45%;
-    --chart-3: 178 45% 55%;
-    --chart-4: 32 88% 50%;
-    --chart-5: 165 70% 38%;
+    --chart-1: 158 78% 22%;
+    --chart-2: 161 60% 40%;
+    --chart-3: 46 68% 50%;
+    --chart-4: 178 45% 40%;
+    --chart-5: 32 88% 50%;
 
     /* Premium tokens */
-    --glow: 189 55% 50%;
-    --surface: 195 40% 98%;
+    --glow: 46 70% 55%;
+    --surface: 44 40% 98%;
     --surface-elevated: 0 0% 100%;
   }
 
   .dark {
-    /* Ocean Deep — Dark Mode */
-    --background: 213 68% 7%;
-    --foreground: 190 30% 96%;
+    /* Emerald Prestige — Dark Mode */
+    --background: 158 42% 6%;
+    --foreground: 44 32% 94%;
 
-    --card: 213 55% 12%;
-    --card-foreground: 190 30% 96%;
+    --card: 158 38% 10%;
+    --card-foreground: 44 32% 94%;
 
-    --popover: 213 55% 12%;
-    --popover-foreground: 190 30% 96%;
+    --popover: 158 38% 10%;
+    --popover-foreground: 44 32% 94%;
 
-    --primary: 189 65% 48%;
-    --primary-foreground: 213 70% 8%;
+    --primary: 46 72% 58%;
+    --primary-foreground: 158 60% 8%;
 
-    --secondary: 213 40% 18%;
-    --secondary-foreground: 190 30% 96%;
+    --secondary: 158 30% 16%;
+    --secondary-foreground: 44 32% 94%;
 
-    --muted: 213 40% 16%;
-    --muted-foreground: 195 20% 72%;
+    --muted: 158 26% 14%,
+    --muted: 158 26% 14%;
+    --muted-foreground: 44 16% 74%;
 
-    --accent: 178 50% 28%;
-    --accent-foreground: 178 60% 88%;
+    --accent: 161 60% 34%;
+    --accent-foreground: 44 40% 96%;
 
     --destructive: 0 65% 55%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 213 35% 22%;
-    --input: 213 35% 22%;
-    --ring: 189 65% 55%;
+    --border: 158 26% 20%;
+    --input: 158 26% 20%;
+    --ring: 46 72% 58%;
 
     /* Status - Dark */
-    --success: 165 70% 42%;
-    --success-foreground: 213 70% 8%;
-    --warning: 38 92% 55%;
-    --warning-foreground: 213 70% 8%;
+    --success: 161 70% 44%;
+    --success-foreground: 158 60% 8%;
+    --warning: 38 92% 58%;
+    --warning-foreground: 158 60% 8%;
     --info: 189 65% 55%;
-    --info-foreground: 213 70% 8%;
+    --info-foreground: 158 60% 8%;
 
     /* Temperature - Dark */
     --temp-hot: 8 82% 62%;
@@ -137,33 +138,33 @@
 
     /* Stages - Dark */
     --stage-new: 189 65% 55%;
-    --stage-contact: 204 62% 55%;
+    --stage-contact: 161 60% 45%;
     --stage-negotiation: 32 90% 58%;
-    --stage-proposal: 178 50% 55%;
-    --stage-won: 165 70% 45%;
+    --stage-proposal: 46 72% 58%;
+    --stage-won: 161 70% 46%;
     --stage-lost: 0 65% 58%;
 
     /* Sidebar - Dark */
-    --sidebar-background: 213 70% 5%;
-    --sidebar-foreground: 190 30% 94%;
-    --sidebar-primary: 189 65% 50%;
-    --sidebar-primary-foreground: 213 70% 8%;
-    --sidebar-accent: 189 55% 18%;
-    --sidebar-accent-foreground: 178 60% 88%;
-    --sidebar-border: 213 40% 14%;
-    --sidebar-ring: 189 65% 55%;
+    --sidebar-background: 158 45% 5%;
+    --sidebar-foreground: 44 32% 92%;
+    --sidebar-primary: 46 72% 58%;
+    --sidebar-primary-foreground: 158 60% 8%;
+    --sidebar-accent: 158 35% 14%;
+    --sidebar-accent-foreground: 46 65% 70%;
+    --sidebar-border: 158 30% 12%;
+    --sidebar-ring: 46 72% 58%;
 
     /* Charts - Dark */
-    --chart-1: 189 65% 55%;
-    --chart-2: 178 50% 55%;
-    --chart-3: 204 62% 55%;
-    --chart-4: 32 90% 60%;
-    --chart-5: 165 70% 48%;
+    --chart-1: 46 72% 58%;
+    --chart-2: 161 60% 45%;
+    --chart-3: 158 50% 55%;
+    --chart-4: 44 65% 70%;
+    --chart-5: 32 90% 60%;
 
     /* Premium tokens */
-    --glow: 189 65% 55%;
-    --surface: 213 68% 6%;
-    --surface-elevated: 213 55% 11%;
+    --glow: 46 72% 58%;
+    --surface: 158 42% 5%;
+    --surface-elevated: 158 38% 9%;
   }
 }
 
