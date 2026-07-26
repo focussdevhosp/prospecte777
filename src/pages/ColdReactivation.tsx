@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { DashboardLayout } from '@/components/DashboardLayout';
+import { GroupNav, messagingGroup } from '@/components/GroupNav';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -81,9 +82,10 @@ export default function ColdReactivationPage() {
 
   return (
     <DashboardLayout
-      title="Reativação de Leads Frios"
-      description="Reative leads inativos automaticamente com mensagens personalizadas"
+      title="Disparos"
+      description="Envie mensagens em massa, follow-ups e reative leads frios"
     >
+      <GroupNav items={messagingGroup} />
       <div className="space-y-6 animate-fade-in">
         {/* Status Cards */}
         <div className="grid gap-4 md:grid-cols-4">

@@ -1,13 +1,15 @@
 import { motion } from 'framer-motion';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { SDRAgentDashboard } from '@/components/sdr/SDRAgentDashboard';
+import { GroupNav, campaignsGroup } from '@/components/GroupNav';
 
 export default function SDRAgentPage() {
   return (
     <DashboardLayout
-      title="Agente SDR"
-      description="Configure e monitore seu agente de qualificação de leads em tempo real"
+      title="Campanhas"
+      description="Campanhas ativas, testes A/B, Agente SDR e reuniões"
     >
+      <GroupNav items={campaignsGroup} />
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}

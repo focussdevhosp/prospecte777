@@ -8,6 +8,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useMeetings } from '@/hooks/use-meetings';
 import { ScheduledProspectingTab } from '@/components/prospecting/ScheduledProspectingTab';
+import { GroupNav, campaignsGroup } from '@/components/GroupNav';
 import {
   Calendar,
   Clock,
@@ -164,7 +165,8 @@ export default function MeetingsPage() {
   const successRate = totalHistory > 0 ? Math.round((completedCount / totalHistory) * 100) : 0;
 
   return (
-    <DashboardLayout title="Reuniões e Agendamentos" description="Gerencie reuniões com leads e prospecção agendada">
+    <DashboardLayout title="Campanhas" description="Campanhas ativas, testes A/B, Agente SDR e reuniões">
+      <GroupNav items={campaignsGroup} />
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}>
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="mb-6">

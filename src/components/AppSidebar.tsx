@@ -75,46 +75,41 @@ const mainItems = [
   { title: 'Dashboard', icon: LayoutDashboard, path: '/dashboard', section: 'main' },
 ];
 
-// ─── 1. PROSPECTAR (encontrar leads) ────────────────────
+// ─── 1. PROSPECTAR (agrupa 4 ferramentas de busca) ──────
 const prospectItems = [
-  { title: 'Buscar Leads', icon: Search, path: '/prospecting', badge: 'IA', section: 'prospect' },
-  { title: 'Radar CNPJ', icon: Building2, path: '/cnpj-radar', section: 'prospect' },
-  { title: 'Email Finder', icon: Mail, path: '/email-finder', section: 'prospect' },
-  { title: 'Extrator Social', icon: Globe, path: '/social-extractor', section: 'prospect' },
+  { title: 'Prospectar', icon: Search, path: '/prospecting', badge: 'IA', section: 'prospect',
+    matchPaths: ['/prospecting', '/cnpj-radar', '/email-finder', '/social-extractor'] },
 ];
 
-// ─── 2. COMUNICAR (mensagens em escala) ─────────────────
+// ─── 2. COMUNICAR (agrupa mensagens + biblioteca) ───────
 const communicateItems = [
-  { title: 'Disparo em Massa', icon: Send, path: '/mass-send', section: 'communicate' },
-  { title: 'Follow-up', icon: RefreshCw, path: '/follow-up', section: 'communicate' },
-  { title: 'Reativação', icon: Flame, path: '/cold-reactivation', section: 'communicate' },
-  { title: 'Quebra de Objeções', icon: Shield, path: '/objections', badge: 'IA', section: 'communicate' },
-  { title: 'Templates', icon: MessageSquareText, path: '/templates', section: 'communicate' },
-  { title: 'Anti-Ban', icon: Shield, path: '/antiban', section: 'communicate' },
+  { title: 'Disparos', icon: Send, path: '/mass-send', section: 'communicate',
+    matchPaths: ['/mass-send', '/follow-up', '/cold-reactivation'] },
+  { title: 'Biblioteca', icon: MessageSquareText, path: '/templates', section: 'communicate',
+    matchPaths: ['/templates', '/objections', '/antiban'] },
 ];
 
-// ─── 3. VENDER (fechar negócio) ─────────────────────────
+// ─── 3. VENDER (CRM + campanhas) ────────────────────────
 const sellItems = [
-  { title: 'CRM Pipeline', icon: Kanban, path: '/crm/pipeline', badge: 'PRO', section: 'sell' },
-  { title: 'Campanhas', icon: Rocket, path: '/campaigns', section: 'sell' },
-  { title: 'Reuniões', icon: Calendar, path: '/meetings', section: 'sell' },
-  { title: 'Agente SDR', icon: Bot, path: '/sdr-agent', badge: 'IA', section: 'sell' },
+  { title: 'CRM Pipeline', icon: Kanban, path: '/crm/pipeline', badge: 'PRO', section: 'sell',
+    matchPaths: ['/crm'] },
+  { title: 'Campanhas', icon: Rocket, path: '/campaigns', section: 'sell',
+    matchPaths: ['/campaigns', '/ab-testing', '/sdr-agent', '/meetings'] },
 ];
 
-// ─── 4. ANALISAR (métricas e otimização) ────────────────
+// ─── 4. ANALISAR ────────────────────────────────────────
 const analyzeItems = [
   { title: 'Analytics', icon: BarChart3, path: '/analytics', section: 'analyze' },
-  { title: 'Testes A/B', icon: FlaskConical, path: '/ab-testing', section: 'analyze' },
 ];
 
-type NavItem = { title: string; icon: React.ComponentType<{ className?: string }>; path: string; badge?: string; section?: string };
+type NavItem = { title: string; icon: React.ComponentType<{ className?: string }>; path: string; badge?: string; section?: string; matchPaths?: string[] };
 
 const sections: { label: string | null; items: NavItem[]; sectionKey: string }[] = [
   { label: null, items: mainItems, sectionKey: 'main' },
-  { label: '1. Prospectar', items: prospectItems, sectionKey: 'prospect' },
-  { label: '2. Comunicar', items: communicateItems, sectionKey: 'communicate' },
-  { label: '3. Vender', items: sellItems, sectionKey: 'sell' },
-  { label: '4. Analisar', items: analyzeItems, sectionKey: 'analyze' },
+  { label: 'Prospectar', items: prospectItems, sectionKey: 'prospect' },
+  { label: 'Comunicar', items: communicateItems, sectionKey: 'communicate' },
+  { label: 'Vender', items: sellItems, sectionKey: 'sell' },
+  { label: 'Analisar', items: analyzeItems, sectionKey: 'analyze' },
 ];
 
 export function AppSidebar() {
@@ -138,13 +133,16 @@ export function AppSidebar() {
     .toUpperCase()
     .slice(0, 2) || user?.email?.[0].toUpperCase() || '?';
 
-  const isActive = (path: string) => {
+  const isActive = (path: string, matchPaths?: string[]) => {
+    if (matchPaths && matchPaths.length) {
+      return matchPaths.some((p) => location.pathname === p || location.pathname.startsWith(p + '/'));
+    }
     if (path === '/crm/pipeline') return location.pathname.startsWith('/crm');
     return location.pathname === path;
   };
 
   const MenuItem = ({ item }: { item: NavItem }) => {
-    const active = isActive(item.path);
+    const active = isActive(item.path, item.matchPaths);
     const content = (
       <SidebarMenuButton
         asChild

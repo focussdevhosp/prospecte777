@@ -1,13 +1,15 @@
 import { motion } from 'framer-motion';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { MassSendTab } from '@/components/prospecting/MassSendTab';
+import { GroupNav, messagingGroup } from '@/components/GroupNav';
 
 export default function MassSendPage() {
   return (
     <DashboardLayout
-      title="Disparo em Massa"
-      description="Envie mensagens em massa para seus leads"
+      title="Disparos"
+      description="Envie mensagens em massa, follow-ups e reative leads frios"
     >
+      <GroupNav items={messagingGroup} />
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}

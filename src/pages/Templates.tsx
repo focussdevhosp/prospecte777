@@ -1,13 +1,15 @@
 import { motion } from 'framer-motion';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { TemplatesTab } from '@/components/prospecting/TemplatesTab';
+import { GroupNav, libraryGroup } from '@/components/GroupNav';
 
 export default function TemplatesPage() {
   return (
     <DashboardLayout
-      title="Templates de Mensagem"
-      description="Crie e gerencie templates para suas campanhas"
+      title="Biblioteca"
+      description="Templates, quebra de objeções e proteções anti-ban"
     >
+      <GroupNav items={libraryGroup} />
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}

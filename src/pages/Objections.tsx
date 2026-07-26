@@ -11,6 +11,8 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Copy, Plus, Search, Sparkles, Trash2, Shield, TestTube2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { DashboardLayout } from "@/components/DashboardLayout";
+import { GroupNav, libraryGroup } from "@/components/GroupNav";
 
 const CATEGORY_META: Record<string, { label: string; color: string }> = {
   preco: { label: "💰 Preço", color: "bg-amber-500/10 text-amber-600 border-amber-500/30" },
@@ -93,7 +95,9 @@ export default function Objections() {
   };
 
   return (
-    <div className="p-8 space-y-6 max-w-6xl mx-auto">
+    <DashboardLayout title="Biblioteca" description="Templates, quebra de objeções e proteções anti-ban">
+      <GroupNav items={libraryGroup} />
+      <div className="space-y-6">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="space-y-1">
           <div className="flex items-center gap-3">
@@ -233,7 +237,8 @@ export default function Objections() {
           )}
         </TabsContent>
       </Tabs>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }
 
