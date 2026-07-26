@@ -2,13 +2,13 @@ import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { format, subDays } from 'date-fns';
 import { DashboardLayout } from '@/components/DashboardLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Wifi, ArrowRight as ArrowRightIcon, X as XIcon } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDashboardMetrics } from '@/hooks/use-dashboard-metrics';
 import { useActivityLog } from '@/hooks/use-activity-log';
 import { useUserSettings } from '@/hooks/use-user-settings';
+import { useLeads } from '@/hooks/use-leads';
 import { OnboardingWizard } from '@/components/onboarding/OnboardingWizard';
 import { WelcomeCard } from '@/components/dashboard/WelcomeCard';
 import { KPICard } from '@/components/dashboard/KPICard';
@@ -17,7 +17,6 @@ import { ProspectionChart } from '@/components/dashboard/ProspectionChart';
 import { ConversionFunnelChart } from '@/components/dashboard/ConversionFunnelChart';
 import { RecentActivity } from '@/components/dashboard/RecentActivity';
 import { OpportunityRadar } from '@/components/dashboard/OpportunityRadar';
-import { useLeads } from '@/hooks/use-leads';
 import {
   Users,
   TrendingUp,
@@ -27,6 +26,11 @@ import {
   ThermometerSun,
   Snowflake,
   Target,
+  Wifi,
+  ArrowRight,
+  X,
+  DollarSign,
+  Activity,
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -37,37 +41,38 @@ export default function DashboardPage() {
   const { settings } = useUserSettings();
   const { leads } = useLeads();
   const [period, setPeriod] = useState('30d');
-  const [bannerDismissed, setBannerDismissed] = useState(() =>
-    localStorage.getItem('nexaprospect-banner-dismissed-v1') === 'true'
+  const [bannerDismissed, setBannerDismissed] = useState(
+    () => localStorage.getItem('nexaprospect-banner-dismissed-v1') === 'true'
   );
 
-  const funnelStages = useMemo(() => {
-    return Object.entries(metrics?.leadsByStage || {});
-  }, [metrics?.leadsByStage]);
-
+  const funnelStages = useMemo(
+    () => Object.entries(metrics?.leadsByStage || {}),
+    [metrics?.leadsByStage]
+  );
   const totalFunnelLeads = funnelStages.reduce((acc, [, count]) => acc + count, 0);
 
   const chartData = useMemo(() => {
     if (!metrics?.leadsByDate) return [];
     const days = period === 'today' ? 1 : period === '7d' ? 7 : period === '90d' ? 90 : 30;
-    const now = new Date();
-    const entries = Object.entries(metrics.leadsByDate);
-    const cutoff = format(subDays(now, days), 'yyyy-MM-dd');
-    return entries
+    const cutoff = format(subDays(new Date(), days), 'yyyy-MM-dd');
+    return Object.entries(metrics.leadsByDate)
       .filter(([date]) => date >= cutoff)
       .map(([date, leads]) => ({ date: format(new Date(date + 'T12:00:00'), 'dd/MM'), leads }));
   }, [period, metrics]);
 
   const nextStep = useMemo(() => {
-    if (!settings?.whatsapp_connected) return { icon: Wifi, title: 'Conecte seu WhatsApp', desc: 'Ative envios automáticos e o Agente SDR', path: '/settings/connections' };
-    if ((metrics?.totalLeads || 0) === 0) return { icon: Target, title: 'Capture seus primeiros leads', desc: 'Busque no Google Maps, Instagram ou Facebook', path: '/prospecting' };
-    if ((metrics?.hotLeads || 0) > 0) return { icon: Flame, title: `Você tem ${metrics?.hotLeads} leads quentes esperando`, desc: 'Responda agora para aumentar conversões', path: '/crm/inbox' };
+    if (!settings?.whatsapp_connected)
+      return { icon: Wifi, title: 'Conecte seu WhatsApp', desc: 'Ative envios automáticos e o Agente SDR', path: '/settings/connections' };
+    if ((metrics?.totalLeads || 0) === 0)
+      return { icon: Target, title: 'Capture seus primeiros leads', desc: 'Busque no Google Maps, Instagram ou Facebook', path: '/prospecting' };
+    if ((metrics?.hotLeads || 0) > 0)
+      return { icon: Flame, title: `${metrics?.hotLeads} leads quentes esperando resposta`, desc: 'Responda agora para aumentar conversões', path: '/crm/inbox' };
     return null;
   }, [settings?.whatsapp_connected, metrics?.totalLeads, metrics?.hotLeads]);
 
   const showNextStep = nextStep && !bannerDismissed;
 
-  const handleDismissBanner = () => {
+  const dismissBanner = () => {
     setBannerDismissed(true);
     localStorage.setItem('nexaprospect-banner-dismissed-v1', 'true');
   };
@@ -76,25 +81,21 @@ export default function DashboardPage() {
     return (
       <DashboardLayout title="Dashboard">
         <div className="space-y-6">
-          <Skeleton className="h-40 rounded-xl" />
+          <Skeleton className="h-40 rounded-2xl" />
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             {[...Array(4)].map((_, i) => (
-              <Card key={i} className="border-border/40">
-                <CardContent className="p-5">
-                  <div className="flex justify-between mb-4">
-                    <Skeleton className="h-10 w-10 rounded-xl" />
-                    <Skeleton className="h-6 w-12 rounded-lg" />
-                  </div>
-                  <Skeleton className="mb-2 h-8 w-20" />
-                  <Skeleton className="h-3 w-28 opacity-60" />
-                </CardContent>
-              </Card>
+              <Skeleton key={i} className="h-32 rounded-2xl" />
             ))}
           </div>
+          <Skeleton className="h-72 rounded-2xl" />
         </div>
       </DashboardLayout>
     );
   }
+
+  const totalLeads = metrics?.totalLeads || 0;
+  const wonLeads = metrics?.leadsByStage?.['Ganho'] || 0;
+  const contactedLeads = metrics?.leadsByStage?.['Contato'] || 0;
 
   return (
     <DashboardLayout title="Dashboard">
@@ -102,42 +103,43 @@ export default function DashboardPage() {
 
       <WelcomeCard
         userName={settings?.agent_name}
-        totalLeads={metrics?.totalLeads || 0}
+        totalLeads={totalLeads}
         whatsappConnected={!!settings?.whatsapp_connected}
       />
 
       {/* Next Step Banner */}
       {showNextStep && (
-        <div className="mb-6 p-4 rounded-2xl border border-primary/20 bg-primary/5 flex items-center gap-4">
-          <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-            <nextStep.icon className="h-5 w-5 text-primary" />
+        <div className="mb-8 relative overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/[0.08] via-primary/[0.04] to-transparent p-4 sm:p-5">
+          <div className="flex items-center gap-4">
+            <div className="h-11 w-11 shrink-0 rounded-xl bg-primary/15 flex items-center justify-center">
+              <nextStep.icon className="h-5 w-5 text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold">{nextStep.title}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{nextStep.desc}</p>
+            </div>
+            <Button size="sm" asChild className="gradient-primary shrink-0 shadow-md shadow-primary/20">
+              <Link to={nextStep.path}>Fazer agora <ArrowRight className="h-3 w-3 ml-1" /></Link>
+            </Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={dismissBanner} aria-label="Fechar">
+              <X className="h-3.5 w-3.5" />
+            </Button>
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold">{nextStep.title}</p>
-            <p className="text-xs text-muted-foreground">{nextStep.desc}</p>
-          </div>
-          <Button size="sm" asChild className="gradient-primary shrink-0">
-            <Link to={nextStep.path}>Fazer agora <ArrowRightIcon className="h-3 w-3 ml-1" /></Link>
-          </Button>
-          <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={handleDismissBanner} aria-label="Fechar banner">
-            <XIcon className="h-3.5 w-3.5" />
-          </Button>
         </div>
       )}
 
-      {/* Period filter */}
-      <div className="flex items-center justify-between mb-5">
-        <h2 className="text-sm font-semibold text-muted-foreground">Visão Geral</h2>
-        <PeriodFilter value={period} onChange={setPeriod} />
-      </div>
-
-      {/* KPIs */}
-      <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+      {/* Section: Performance */}
+      <SectionHeader
+        title="Performance"
+        subtitle="Métricas principais do seu funil"
+        right={<PeriodFilter value={period} onChange={setPeriod} />}
+      />
+      <div className="mb-8 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <KPICard
           icon={<Users className="h-4 w-4 text-primary" />}
           label="Total de Leads"
-          value={metrics?.totalLeads || 0}
-          change={metrics?.leadsThisMonth ? Math.round((metrics.leadsThisMonth / Math.max(metrics.totalLeads - metrics.leadsThisMonth, 1)) * 100) : 0}
+          value={totalLeads}
+          change={metrics?.leadsThisMonth ? Math.round((metrics.leadsThisMonth / Math.max(totalLeads - metrics.leadsThisMonth, 1)) * 100) : 0}
           changeLabel={`+${metrics?.leadsThisMonth || 0} este mês`}
           iconBg="bg-primary/8"
           delay={0}
@@ -145,7 +147,7 @@ export default function DashboardPage() {
         <KPICard
           icon={<Send className="h-4 w-4 text-info" />}
           label="Mensagens Enviadas"
-          value={metrics?.totalLeads ? metrics.leadsByStage?.['Contato'] || 0 : 0}
+          value={contactedLeads}
           iconBg="bg-info/8"
           delay={50}
         />
@@ -159,60 +161,61 @@ export default function DashboardPage() {
         <KPICard
           icon={<TrendingUp className="h-4 w-4 text-warning" />}
           label="Conversões"
-          value={metrics?.leadsByStage?.['Ganho'] || 0}
+          value={wonLeads}
           change={12}
           iconBg="bg-warning/8"
           delay={150}
         />
       </div>
 
-      {/* ROI Quick Metrics */}
-      <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+      {/* Section: ROI */}
+      <SectionHeader title="ROI & Pipeline" subtitle="Impacto financeiro em tempo real" />
+      <div className="mb-8 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <ROIMetricCard
           icon={TrendingUp}
-          iconColor="text-success"
-          iconBg="bg-success/8"
+          tone="success"
           label="ROI"
-          value={metrics?.totalLeads && metrics?.leadsByStage?.['Ganho']
-            ? `${((metrics.leadsByStage['Ganho'] / metrics.totalLeads) * 100).toFixed(1)}%`
-            : '0%'}
+          value={totalLeads && wonLeads ? `${((wonLeads / totalLeads) * 100).toFixed(1)}%` : '0%'}
           sub="Taxa de conversão geral"
         />
         <ROIMetricCard
-          icon={Target}
-          iconColor="text-primary"
-          iconBg="bg-primary/8"
-          label="Custo/Lead"
+          icon={DollarSign}
+          tone="primary"
+          label="Custo / Lead"
           value="R$ 0,00"
-          sub="Prospecção gratuita"
+          sub="Prospecção 100% gratuita"
         />
         <ROIMetricCard
-          icon={Flame}
-          iconColor="text-warning"
-          iconBg="bg-warning/8"
+          icon={Target}
+          tone="warning"
           label="Pipeline"
           value={new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', notation: 'compact' }).format(
             (metrics?.leadsByStage?.['Proposta'] || 0) * 500 + (metrics?.leadsByStage?.['Negociação'] || 0) * 1000
           )}
-          sub="Valor estimado"
+          sub="Valor estimado em aberto"
         />
         <ROIMetricCard
-          icon={MessageSquare}
-          iconColor="text-info"
-          iconBg="bg-info/8"
+          icon={Activity}
+          tone="info"
           label="Engajamento"
           value={String(metrics?.hotLeads || 0)}
-          sub="Leads quentes ativos"
+          sub="Leads quentes ativos agora"
         />
       </div>
 
-      {/* Charts */}
-      <div className="mb-6 grid gap-4 lg:grid-cols-2">
-        <ProspectionChart data={chartData} />
-        <ConversionFunnelChart stages={funnelStages} totalLeads={totalFunnelLeads} />
+      {/* Section: Análise */}
+      <SectionHeader title="Análise" subtitle="Captação diária e progresso do funil" />
+      <div className="mb-8 grid gap-4 lg:grid-cols-5">
+        <div className="lg:col-span-3">
+          <ProspectionChart data={chartData} />
+        </div>
+        <div className="lg:col-span-2">
+          <ConversionFunnelChart stages={funnelStages} totalLeads={totalFunnelLeads} />
+        </div>
       </div>
 
-      {/* Bottom section */}
+      {/* Section: Ação */}
+      <SectionHeader title="Central de Ação" subtitle="Oportunidades e atividade recente" />
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-4">
           <OpportunityRadar leads={leads} />
@@ -220,25 +223,23 @@ export default function DashboardPage() {
         </div>
 
         <div className="space-y-4">
-          {/* Temperature */}
-          <Card className="border-border/50 hover:border-border/70 transition-colors duration-300 overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-destructive/[0.02] to-transparent pointer-events-none" />
-            <CardHeader className="pb-1 relative">
-              <div className="flex items-center gap-2.5">
-                <div className="p-1.5 rounded-lg bg-warning/10">
+          <Card className="border-border/50 overflow-hidden relative">
+            <div className="absolute inset-0 bg-gradient-to-br from-warning/[0.04] to-transparent pointer-events-none" />
+            <CardContent className="p-5 relative">
+              <div className="flex items-center gap-2.5 mb-4">
+                <div className="p-2 rounded-lg bg-warning/10">
                   <ThermometerSun className="h-4 w-4 text-warning" />
                 </div>
-                <CardTitle className="text-sm font-bold">Temperatura dos Leads</CardTitle>
+                <h3 className="text-sm font-bold">Temperatura dos Leads</h3>
               </div>
-            </CardHeader>
-            <CardContent className="pt-3 space-y-4 relative">
-              <TempBar icon={Flame} label="Quente" count={metrics?.hotLeads || 0} total={metrics?.totalLeads || 1} color="bg-destructive" textColor="text-destructive" />
-              <TempBar icon={ThermometerSun} label="Morno" count={metrics?.warmLeads || 0} total={metrics?.totalLeads || 1} color="bg-warning" textColor="text-warning" />
-              <TempBar icon={Snowflake} label="Frio" count={metrics?.coldLeads || 0} total={metrics?.totalLeads || 1} color="bg-info" textColor="text-info" />
+              <div className="space-y-4">
+                <TempBar icon={Flame} label="Quente" count={metrics?.hotLeads || 0} total={totalLeads || 1} color="bg-destructive" textColor="text-destructive" />
+                <TempBar icon={ThermometerSun} label="Morno" count={metrics?.warmLeads || 0} total={totalLeads || 1} color="bg-warning" textColor="text-warning" />
+                <TempBar icon={Snowflake} label="Frio" count={metrics?.coldLeads || 0} total={totalLeads || 1} color="bg-info" textColor="text-info" />
+              </div>
             </CardContent>
           </Card>
 
-          {/* Quick actions */}
           <div className="grid grid-cols-2 gap-2.5">
             <Button asChild size="sm" className="gradient-primary h-11 text-xs font-bold shadow-md shadow-primary/15 hover:shadow-lg hover:shadow-primary/25 transition-shadow rounded-xl">
               <Link to="/prospecting"><Target className="mr-1.5 h-3.5 w-3.5" />Prospectar</Link>
@@ -255,45 +256,67 @@ export default function DashboardPage() {
 
 /* ── Sub-components ── */
 
-function ROIMetricCard({ icon: Icon, iconColor, iconBg, label, value, sub }: {
-  icon: LucideIcon; iconColor: string; iconBg: string; label: string; value: string; sub: string;
-}) {
+function SectionHeader({ title, subtitle, right }: { title: string; subtitle?: string; right?: React.ReactNode }) {
   return (
-    <div>
-      <Card className="border-border/50 group hover:border-primary/30 transition-all duration-300 overflow-hidden relative hover:shadow-lg hover:shadow-primary/[0.06]">
-        <CardContent className="p-4 relative">
-          <div className="flex items-center gap-2.5 mb-2.5">
-            <div className={cn("p-2 rounded-xl transition-all duration-300 group-hover:scale-110", iconBg)}>
-              <Icon className={cn("h-3.5 w-3.5", iconColor)} />
-            </div>
-            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.12em]">{label}</span>
-          </div>
-          <p className="text-xl font-extrabold tabular-nums group-hover:text-primary transition-colors duration-300">{value}</p>
-          <p className="text-[10px] text-muted-foreground mt-1 font-medium">{sub}</p>
-        </CardContent>
-      </Card>
+    <div className="mb-4 flex items-end justify-between gap-4">
+      <div>
+        <h2 className="text-base sm:text-lg font-bold tracking-tight">{title}</h2>
+        {subtitle && <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>}
+      </div>
+      {right}
     </div>
   );
 }
 
-function TempBar({ icon: Icon, label, count, total, color, textColor }: { icon: LucideIcon; label: string; count: number; total: number; color: string; textColor: string }) {
+const toneMap = {
+  success: { color: 'text-success', bg: 'bg-success/10', ring: 'group-hover:ring-success/20' },
+  primary: { color: 'text-primary', bg: 'bg-primary/10', ring: 'group-hover:ring-primary/20' },
+  warning: { color: 'text-warning', bg: 'bg-warning/10', ring: 'group-hover:ring-warning/20' },
+  info: { color: 'text-info', bg: 'bg-info/10', ring: 'group-hover:ring-info/20' },
+} as const;
+
+function ROIMetricCard({ icon: Icon, tone, label, value, sub }: {
+  icon: LucideIcon; tone: keyof typeof toneMap; label: string; value: string; sub: string;
+}) {
+  const t = toneMap[tone];
+  return (
+    <Card className="group border-border/50 hover:border-primary/30 transition-all duration-300 overflow-hidden hover:shadow-lg hover:shadow-primary/[0.06]">
+      <CardContent className="p-4 sm:p-5">
+        <div className="flex items-center gap-2.5 mb-3">
+          <div className={cn('p-2 rounded-xl transition-transform duration-300 group-hover:scale-110', t.bg)}>
+            <Icon className={cn('h-3.5 w-3.5', t.color)} />
+          </div>
+          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.12em]">{label}</span>
+        </div>
+        <p className="text-xl sm:text-2xl font-extrabold tabular-nums">{value}</p>
+        <p className="text-[10px] text-muted-foreground mt-1 font-medium">{sub}</p>
+      </CardContent>
+    </Card>
+  );
+}
+
+function TempBar({ icon: Icon, label, count, total, color, textColor }: {
+  icon: LucideIcon; label: string; count: number; total: number; color: string; textColor: string;
+}) {
   const pct = total > 0 ? (count / total) * 100 : 0;
   return (
-    <div className="group">
+    <div>
       <div className="flex items-center justify-between mb-2">
         <span className={cn('flex items-center gap-2 text-xs font-semibold', textColor)}>
-          <div className={cn("p-1.5 rounded-lg", color.replace('bg-', 'bg-') + '/10')}>
+          <div className={cn('p-1.5 rounded-lg', color + '/10')}>
             <Icon className="h-3 w-3" />
           </div>
           {label}
         </span>
         <div className="flex items-center gap-2">
           <span className="text-sm font-bold tabular-nums">{count}</span>
-          <span className="text-[10px] text-muted-foreground tabular-nums font-semibold bg-muted/50 px-1.5 py-0.5 rounded-md">{pct.toFixed(0)}%</span>
+          <span className="text-[10px] text-muted-foreground tabular-nums font-semibold bg-muted/50 px-1.5 py-0.5 rounded-md">
+            {pct.toFixed(0)}%
+          </span>
         </div>
       </div>
       <div className="h-2 rounded-full bg-muted/50 overflow-hidden">
-        <div className={cn('h-full rounded-full', color)} style={{ width: `${pct}%` }} />
+        <div className={cn('h-full rounded-full transition-all duration-500', color)} style={{ width: `${pct}%` }} />
       </div>
     </div>
   );
