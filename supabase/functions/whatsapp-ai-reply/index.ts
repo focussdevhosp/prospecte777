@@ -966,6 +966,22 @@ ${signalsSummary}
 # PADRÕES DO NICHO "${lead.niche || 'geral'}"
 ${patternsSummary}
 
+# 🧠 MEMÓRIA DO LEAD (insights coletados em interações anteriores — USE para personalizar)
+${(leadMemories && leadMemories.length)
+  ? leadMemories.map(m => `- [${m.memory_type}] ${m.key}: ${m.value}${m.confidence < 0.8 ? ` (confiança ${Math.round((m.confidence||0)*100)}%)` : ''}`).join('\n')
+  : 'Nenhuma memória ainda — colete dor, decisor, orçamento, prazo nesta conversa.'}
+
+# 🛡️ OBJEÇÕES DETECTADAS NA MENSAGEM ATUAL (use como referência, NÃO copie literalmente)
+${matchedObjections.length
+  ? matchedObjections.map(o => `- ${o.category.toUpperCase()} (${o.angle || 'padrão'}): "${o.response_template?.slice(0, 180)}..."`).join('\n')
+  : 'Sem match direto — se houver objeção, use handleObjection.'}
+
+# 🎨 PORTFÓLIO DISPONÍVEL (envie link só quando o lead pedir prova/exemplo do nicho dele)
+${(portfolio && portfolio.length)
+  ? portfolio.map(p => `- ${p.title} [${p.niche || 'geral'}]: ${p.url}`).join('\n')
+  : 'Sem portfólio cadastrado.'}
+
+
 # CONTEXTO ATUAL
 - Data de hoje: ${currentDateFormatted} (${currentDate})
 - Hora: ${currentHour}h
