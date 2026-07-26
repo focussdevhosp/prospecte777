@@ -5,6 +5,7 @@ import { FollowUpManager } from '@/components/followup/FollowUpManager';
 import { FollowUpSequencesTab } from '@/components/prospecting/FollowUpSequencesTab';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Clock, Layers } from 'lucide-react';
+import { GroupNav, messagingGroup } from '@/components/GroupNav';
 
 const fadeSlide = {
   initial: { opacity: 0, y: 12 },
@@ -17,9 +18,10 @@ export default function FollowUpPage() {
 
   return (
     <DashboardLayout
-      title="Follow-up"
-      description="Gerencie follow-ups pendentes e sequências automáticas"
+      title="Disparos"
+      description="Envie mensagens em massa, follow-ups e reative leads frios"
     >
+      <GroupNav items={messagingGroup} />
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}

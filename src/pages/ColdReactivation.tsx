@@ -81,9 +81,10 @@ export default function ColdReactivationPage() {
 
   return (
     <DashboardLayout
-      title="Reativação de Leads Frios"
-      description="Reative leads inativos automaticamente com mensagens personalizadas"
+      title="Disparos"
+      description="Envie mensagens em massa, follow-ups e reative leads frios"
     >
+      <GroupNav items={messagingGroup} />
       <div className="space-y-6 animate-fade-in">
         {/* Status Cards */}
         <div className="grid gap-4 md:grid-cols-4">

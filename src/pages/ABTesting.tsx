@@ -1,12 +1,14 @@
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { ABTestingTab } from '@/components/prospecting/ABTestingTab';
+import { GroupNav, campaignsGroup } from '@/components/GroupNav';
 
 export default function ABTestingPage() {
   return (
     <DashboardLayout
-      title="Testes A/B"
-      description="Compare variantes de mensagens e descubra qual converte mais"
+      title="Campanhas"
+      description="Campanhas ativas, testes A/B, Agente SDR e reuniões"
     >
+      <GroupNav items={campaignsGroup} />
       <div className="animate-fade-in">
         <ABTestingTab />
       </div>
