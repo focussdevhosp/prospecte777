@@ -18,4 +18,4 @@ Disallow: /settings
 Disallow: /admin
 Disallow: /billing
 
-Sitemap: https://prospecte777.lovable.app/sitemap.xml
+Sitemap: https://nexaprospect.online/sitemap.xml
