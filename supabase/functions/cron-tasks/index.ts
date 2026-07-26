@@ -260,6 +260,9 @@ Deno.serve(async (req) => {
         }
       }
       results.scheduled_followups = { sent, skipped, due: (dueFollowups || []).length };
+    }
+
+
 
 
     // Task 5: Send daily reports
