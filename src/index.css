@@ -16,154 +16,153 @@
 
 @layer base {
   :root {
-    /* Emerald Prestige — Light Mode */
-    --background: 44 45% 96%;
-    --foreground: 158 60% 8%;
+    /* Instagram — Light Mode (purple → pink → orange) */
+    --background: 30 40% 98%;
+    --foreground: 280 40% 12%;
 
     --card: 0 0% 100%;
-    --card-foreground: 158 60% 8%;
+    --card-foreground: 280 40% 12%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 158 60% 8%;
+    --popover-foreground: 280 40% 12%;
 
-    --primary: 158 78% 18%;
-    --primary-foreground: 44 50% 96%;
+    --primary: 328 78% 52%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 44 32% 88%;
-    --secondary-foreground: 158 60% 12%;
+    --secondary: 24 92% 92%;
+    --secondary-foreground: 280 40% 14%;
 
-    --muted: 44 26% 91%;
-    --muted-foreground: 158 18% 30%;
+    --muted: 320 28% 94%;
+    --muted-foreground: 280 12% 38%;
 
-    --accent: 46 68% 48%;
-    --accent-foreground: 158 60% 10%;
+    --accent: 24 92% 58%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 72% 46%;
+    --destructive: 0 72% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 44 22% 82%;
-    --input: 44 22% 84%;
-    --ring: 46 68% 48%;
-
+    --border: 320 22% 88%;
+    --input: 320 22% 90%;
+    --ring: 328 78% 52%;
 
     --radius: 0.75rem;
 
     /* Status */
-    --success: 161 76% 28%;
+    --success: 152 68% 40%;
     --success-foreground: 0 0% 100%;
-    --warning: 38 92% 45%;
+    --warning: 38 95% 50%;
     --warning-foreground: 0 0% 12%;
-    --info: 189 55% 40%;
+    --info: 262 72% 55%;
     --info-foreground: 0 0% 100%;
 
     /* Temperature */
-    --temp-hot: 8 78% 48%;
-    --temp-warm: 32 88% 42%;
-    --temp-cold: 189 55% 40%;
+    --temp-hot: 8 82% 55%;
+    --temp-warm: 32 92% 52%;
+    --temp-cold: 262 72% 60%;
 
     /* Funnel stages */
-    --stage-new: 189 55% 40%;
-    --stage-contact: 158 60% 30%;
-    --stage-negotiation: 32 88% 45%;
-    --stage-proposal: 46 68% 48%;
-    --stage-won: 161 76% 30%;
-    --stage-lost: 0 65% 48%;
+    --stage-new: 262 72% 58%;
+    --stage-contact: 300 68% 55%;
+    --stage-negotiation: 32 92% 55%;
+    --stage-proposal: 328 78% 55%;
+    --stage-won: 152 68% 42%;
+    --stage-lost: 0 65% 55%;
 
     /* Sidebar */
-    --sidebar-background: 158 32% 96%;
-    --sidebar-foreground: 158 60% 12%;
-    --sidebar-primary: 158 78% 18%;
-    --sidebar-primary-foreground: 44 50% 96%;
-    --sidebar-accent: 46 55% 90%;
-    --sidebar-accent-foreground: 158 60% 12%;
-    --sidebar-border: 44 22% 84%;
-    --sidebar-ring: 46 68% 48%;
+    --sidebar-background: 320 30% 97%;
+    --sidebar-foreground: 280 40% 14%;
+    --sidebar-primary: 328 78% 52%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 320 40% 92%;
+    --sidebar-accent-foreground: 280 40% 14%;
+    --sidebar-border: 320 22% 88%;
+    --sidebar-ring: 328 78% 52%;
 
     /* Charts */
-    --chart-1: 158 78% 22%;
-    --chart-2: 161 60% 40%;
-    --chart-3: 46 68% 50%;
-    --chart-4: 178 45% 40%;
-    --chart-5: 32 88% 50%;
+    --chart-1: 262 72% 58%;
+    --chart-2: 300 68% 55%;
+    --chart-3: 328 78% 55%;
+    --chart-4: 12 90% 58%;
+    --chart-5: 42 95% 55%;
 
     /* Premium tokens */
-    --glow: 46 70% 55%;
-    --surface: 44 40% 98%;
+    --glow: 328 90% 65%;
+    --surface: 30 40% 99%;
     --surface-elevated: 0 0% 100%;
   }
 
   .dark {
-    /* Emerald Prestige — Dark Mode */
-    --background: 158 42% 6%;
-    --foreground: 44 32% 94%;
+    /* Black · Silver · Light Blue — Dark Mode */
+    --background: 220 18% 5%;
+    --foreground: 210 20% 92%;
 
-    --card: 158 38% 10%;
-    --card-foreground: 44 32% 94%;
+    --card: 220 16% 9%;
+    --card-foreground: 210 20% 94%;
 
-    --popover: 158 38% 10%;
-    --popover-foreground: 44 32% 94%;
+    --popover: 220 16% 9%;
+    --popover-foreground: 210 20% 94%;
 
-    --primary: 46 72% 58%;
-    --primary-foreground: 158 60% 8%;
+    --primary: 200 92% 68%;
+    --primary-foreground: 220 30% 8%;
 
-    --secondary: 158 30% 16%;
-    --secondary-foreground: 44 32% 94%;
+    --secondary: 220 14% 16%;
+    --secondary-foreground: 210 20% 92%;
 
-    --muted: 158 26% 14%;
-    --muted-foreground: 44 16% 74%;
+    --muted: 220 12% 14%;
+    --muted-foreground: 215 14% 70%;
 
-    --accent: 161 60% 34%;
-    --accent-foreground: 44 40% 96%;
+    --accent: 210 20% 78%;
+    --accent-foreground: 220 30% 8%;
 
-    --destructive: 0 65% 55%;
+    --destructive: 0 68% 55%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 158 26% 20%;
-    --input: 158 26% 20%;
-    --ring: 46 72% 58%;
+    --border: 220 14% 20%;
+    --input: 220 14% 20%;
+    --ring: 200 92% 68%;
 
     /* Status - Dark */
-    --success: 161 70% 44%;
-    --success-foreground: 158 60% 8%;
-    --warning: 38 92% 58%;
-    --warning-foreground: 158 60% 8%;
-    --info: 189 65% 55%;
-    --info-foreground: 158 60% 8%;
+    --success: 152 62% 50%;
+    --success-foreground: 220 30% 8%;
+    --warning: 38 92% 60%;
+    --warning-foreground: 220 30% 8%;
+    --info: 200 92% 68%;
+    --info-foreground: 220 30% 8%;
 
     /* Temperature - Dark */
-    --temp-hot: 8 82% 62%;
-    --temp-warm: 32 90% 58%;
-    --temp-cold: 189 65% 60%;
+    --temp-hot: 8 78% 62%;
+    --temp-warm: 32 90% 60%;
+    --temp-cold: 200 92% 68%;
 
     /* Stages - Dark */
-    --stage-new: 189 65% 55%;
-    --stage-contact: 161 60% 45%;
-    --stage-negotiation: 32 90% 58%;
-    --stage-proposal: 46 72% 58%;
-    --stage-won: 161 70% 46%;
-    --stage-lost: 0 65% 58%;
+    --stage-new: 200 92% 68%;
+    --stage-contact: 210 40% 75%;
+    --stage-negotiation: 38 92% 60%;
+    --stage-proposal: 200 82% 62%;
+    --stage-won: 152 62% 52%;
+    --stage-lost: 0 65% 60%;
 
     /* Sidebar - Dark */
-    --sidebar-background: 158 45% 5%;
-    --sidebar-foreground: 44 32% 92%;
-    --sidebar-primary: 46 72% 58%;
-    --sidebar-primary-foreground: 158 60% 8%;
-    --sidebar-accent: 158 35% 14%;
-    --sidebar-accent-foreground: 46 65% 70%;
-    --sidebar-border: 158 30% 12%;
-    --sidebar-ring: 46 72% 58%;
+    --sidebar-background: 220 20% 4%;
+    --sidebar-foreground: 210 20% 90%;
+    --sidebar-primary: 200 92% 68%;
+    --sidebar-primary-foreground: 220 30% 8%;
+    --sidebar-accent: 220 16% 12%;
+    --sidebar-accent-foreground: 200 80% 78%;
+    --sidebar-border: 220 14% 14%;
+    --sidebar-ring: 200 92% 68%;
 
     /* Charts - Dark */
-    --chart-1: 46 72% 58%;
-    --chart-2: 161 60% 45%;
-    --chart-3: 158 50% 55%;
-    --chart-4: 44 65% 70%;
-    --chart-5: 32 90% 60%;
+    --chart-1: 200 92% 68%;
+    --chart-2: 210 40% 78%;
+    --chart-3: 200 60% 52%;
+    --chart-4: 215 20% 60%;
+    --chart-5: 190 80% 62%;
 
     /* Premium tokens */
-    --glow: 46 72% 58%;
-    --surface: 158 42% 5%;
-    --surface-elevated: 158 38% 9%;
+    --glow: 200 92% 68%;
+    --surface: 220 20% 4%;
+    --surface-elevated: 220 16% 8%;
   }
 }
 
@@ -263,11 +262,21 @@
 @layer utilities {
   /* Gradients */
   .gradient-primary {
-    background: linear-gradient(135deg, hsl(158 78% 16%) 0%, hsl(161 65% 30%) 55%, hsl(46 68% 50%) 100%);
+    background: linear-gradient(135deg, hsl(262 72% 55%) 0%, hsl(328 78% 55%) 55%, hsl(24 92% 58%) 100%);
   }
 
   .text-gradient {
-    background: linear-gradient(135deg, hsl(161 65% 40%) 0%, hsl(46 70% 55%) 100%);
+    background: linear-gradient(135deg, hsl(262 72% 55%) 0%, hsl(328 78% 55%) 50%, hsl(24 92% 58%) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .dark .gradient-primary {
+    background: linear-gradient(135deg, hsl(220 20% 8%) 0%, hsl(210 20% 60%) 55%, hsl(200 92% 68%) 100%);
+  }
+  .dark .text-gradient {
+    background: linear-gradient(135deg, hsl(210 30% 85%) 0%, hsl(200 92% 68%) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
