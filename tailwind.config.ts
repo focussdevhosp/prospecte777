@@ -29,8 +29,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['Figtree', 'system-ui', '-apple-system', 'sans-serif'],
-        display: ['Outfit', 'Figtree', 'sans-serif'],
+        sans: ['DM Sans', 'system-ui', '-apple-system', 'sans-serif'],
+        display: ['Space Grotesk', 'DM Sans', 'sans-serif'],
         mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
       },
       colors: {
