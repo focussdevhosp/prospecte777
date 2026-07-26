@@ -200,6 +200,71 @@ Deno.serve(async (req) => {
       results.sdr_processed = sdrProcessed;
     }
 
+    // Task 9b: Process scheduled intelligent follow-ups (SDR cadence)
+    if (!task || task === "process_scheduled_followups") {
+      const nowIso = new Date().toISOString();
+      const { data: dueFollowups } = await supabase
+        .from("intelligent_followups")
+        .select("id, lead_id, user_id, trigger_reason, message_template")
+        .eq("status", "pending")
+        .lte("scheduled_at", nowIso)
+        .limit(30);
+
+      let sent = 0;
+      let skipped = 0;
+      for (const fup of dueFollowups || []) {
+        try {
+          // Respect user's working hours
+          const { data: uSettings } = await supabase
+            .from("user_settings")
+            .select("sdr_agent_enabled, auto_start_hour, auto_end_hour")
+            .eq("user_id", fup.user_id)
+            .single();
+          if (!uSettings?.sdr_agent_enabled) { skipped++; continue; }
+          const hUtc = new Date().getUTCHours();
+          const startH = (uSettings.auto_start_hour ?? 9) + 3;
+          const endH = (uSettings.auto_end_hour ?? 18) + 3;
+          if (hUtc < startH || hUtc >= endH) { skipped++; continue; }
+
+          // Skip if lead already replied since follow-up was scheduled
+          const { data: leadRow } = await supabase
+            .from("leads")
+            .select("last_response_at, last_contact_at, phone")
+            .eq("id", fup.lead_id)
+            .single();
+          if (!leadRow?.phone) { skipped++; continue; }
+
+          // Trigger AI reply to compose + send the follow-up
+          const { error: aiErr } = await supabase.functions.invoke("whatsapp-ai-reply", {
+            body: {
+              lead_id: fup.lead_id,
+              message_content: fup.message_template || `[SDR follow-up: ${fup.trigger_reason}]`,
+              auto_reply_enabled: true,
+              is_scheduled_followup: true,
+            },
+          });
+
+          await supabase
+            .from("intelligent_followups")
+            .update({
+              status: aiErr ? "failed" : "sent",
+              sent_at: nowIso,
+              result: aiErr ? aiErr.message : "dispatched via ai-reply",
+            })
+            .eq("id", fup.id);
+
+          if (!aiErr) sent++;
+        } catch (e) {
+          console.error(`Follow-up ${fup.id} error:`, e);
+          skipped++;
+        }
+      }
+      results.scheduled_followups = { sent, skipped, due: (dueFollowups || []).length };
+    }
+
+
+
+
     // Task 5: Send daily reports
     if (!task || task === "send_reports") {
       const now = new Date();
