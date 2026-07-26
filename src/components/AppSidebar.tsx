@@ -133,13 +133,16 @@ export function AppSidebar() {
     .toUpperCase()
     .slice(0, 2) || user?.email?.[0].toUpperCase() || '?';
 
-  const isActive = (path: string) => {
+  const isActive = (path: string, matchPaths?: string[]) => {
+    if (matchPaths && matchPaths.length) {
+      return matchPaths.some((p) => location.pathname === p || location.pathname.startsWith(p + '/'));
+    }
     if (path === '/crm/pipeline') return location.pathname.startsWith('/crm');
     return location.pathname === path;
   };
 
   const MenuItem = ({ item }: { item: NavItem }) => {
-    const active = isActive(item.path);
+    const active = isActive(item.path, item.matchPaths);
     const content = (
       <SidebarMenuButton
         asChild
