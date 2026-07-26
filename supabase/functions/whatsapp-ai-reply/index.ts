@@ -808,11 +808,39 @@ ${s.objection_responses ? `- Objeções: ${JSON.stringify(s.objection_responses)
       .order("response_rate", { ascending: false })
       .limit(5);
 
+    // Get long-term lead memory (insights from prior conversation)
+    const { data: leadMemories } = await supabase
+      .from("lead_memory")
+      .select("memory_type, key, value, confidence")
+      .eq("lead_id", lead_id)
+      .order("updated_at", { ascending: false })
+      .limit(20);
+
+    // Get objection library (matched by keywords in the current message)
+    const lowerMsg = (message_content || "").toLowerCase();
+    const { data: allObjections } = await supabase
+      .from("objection_responses")
+      .select("category, objection_keywords, objection_example, response_template, angle")
+      .eq("user_id", lead.user_id)
+      .eq("is_active", true);
+    const matchedObjections = (allObjections || []).filter(o =>
+      (o.objection_keywords || []).some((kw: string) => lowerMsg.includes((kw || "").toLowerCase()))
+    ).slice(0, 3);
+
+    // Get portfolio sites (for social proof when relevant)
+    const { data: portfolio } = await supabase
+      .from("portfolio_sites")
+      .select("title, url, niche, description")
+      .eq("user_id", lead.user_id)
+      .eq("is_active", true)
+      .limit(6);
+
     // Build conversation context
     const conversationHistory = (messages || []).map((m) => ({
       role: m.sender_type === "lead" ? "user" : "assistant",
       content: m.content,
     }));
+
 
     // Metrics
     const leadMessages = (messages || []).filter(m => m.sender_type === "lead").length;
