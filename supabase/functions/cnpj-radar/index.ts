@@ -1,14 +1,14 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import {
+  checkRateLimit,
+  corsHeaders,
+  handleCors,
+  rateLimited,
+  requirePaidPlan,
+  requireUserOrInternal,
+  serviceClient,
+} from "../_shared/auth.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
-
-const supabase = createClient(
-  Deno.env.get("SUPABASE_URL")!,
-  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-);
+const supabase = serviceClient();
 
 async function fetchWithRetry(url: string, tries = 3, timeoutMs = 8000): Promise<Response> {
   let lastErr: unknown;
@@ -37,7 +37,18 @@ async function fetchWithRetry(url: string, tries = 3, timeoutMs = 8000): Promise
 }
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const preflight = handleCors(req);
+  if (preflight) return preflight;
+
+  const auth = await requireUserOrInternal(req);
+  if (auth.error) return auth.error;
+  const paywall = await requirePaidPlan(auth.ctx);
+  if (paywall) return paywall;
+
+  if (auth.ctx.kind === "user") {
+    const limit = await checkRateLimit(auth.ctx.supabase, auth.ctx.userId, "cnpj-radar", 90, 60);
+    if (!limit.allowed) return rateLimited(limit.resetIn);
+  }
 
   try {
     const { action, cnpj, filters } = await req.json();

@@ -1,22 +1,16 @@
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { corsHeaders, handleCors, requireInternal } from "../_shared/auth.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
-
-// This function is called by an external cron service (e.g., cron-job.org, Uptime Robot)
-// to perform maintenance tasks
+// Motor de manutenção. Roda a cada 5 minutos pelo pg_cron, que se identifica
+// com o segredo interno guardado em private.app_config.
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+  const preflight = handleCors(req);
+  if (preflight) return preflight;
+
+  const auth = await requireInternal(req);
+  if (auth.error) return auth.error;
+  const supabase = auth.ctx.supabase;
 
   try {
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
-
     const body = await req.json().catch(() => ({}));
     const { task } = body;
 
@@ -281,6 +275,12 @@ Deno.serve(async (req) => {
         }
         results.reports_sent = usersWithReport?.length || 0;
       }
+    }
+
+    // Task 6: Limpar janelas de rate limit já vencidas
+    if (!task || task === "cleanup") {
+      const { data: pruned } = await supabase.rpc("prune_rate_limits");
+      results.rate_limits_pruned = pruned || 0;
     }
 
     console.log("Cron tasks completed:", results);

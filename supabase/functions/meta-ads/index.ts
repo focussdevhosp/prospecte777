@@ -1,12 +1,19 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+import {
+  corsHeaders,
+  handleCors,
+  requirePaidPlan,
+  requireUserOrInternal,
+} from "../_shared/auth.ts";
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const preflight = handleCors(req);
+  if (preflight) return preflight;
+
+  const auth = await requireUserOrInternal(req);
+  if (auth.error) return auth.error;
+  const paywall = await requirePaidPlan(auth.ctx);
+  if (paywall) return paywall;
 
   try {
     const { action, access_token, ad_account_id, payload } = await req.json();

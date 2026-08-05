@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useSubscription } from '@/hooks/use-subscription';
+import { useAdminRole } from '@/hooks/use-admin';
 import { useAuth } from '@/lib/auth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -32,14 +33,15 @@ interface SubscriptionGuardProps {
 
 export function SubscriptionGuard({ children }: SubscriptionGuardProps) {
   const { subscription, isLoading } = useSubscription();
+  const { isAdmin, isLoading: isLoadingAdmin } = useAdminRole();
   const { user } = useAuth();
   const location = useLocation();
 
   // These routes are always accessible without subscription
-  const ALWAYS_ACCESSIBLE = ['/dashboard', '/tutorial', '/billing', '/settings'];
+  const ALWAYS_ACCESSIBLE = ['/dashboard', '/tutorial', '/billing', '/settings', '/support', '/admin'];
   const isAccessibleRoute = ALWAYS_ACCESSIBLE.some(route => location.pathname.startsWith(route));
 
-  if (isLoading) {
+  if (isLoading || isLoadingAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
@@ -51,7 +53,8 @@ export function SubscriptionGuard({ children }: SubscriptionGuardProps) {
     );
   }
 
-  const isActive = subscription?.status === 'active';
+  // Admin não passa por paywall — mesma regra do backend em requirePaidPlan().
+  const isActive = subscription?.status === 'active' || isAdmin;
 
   if (isActive || isAccessibleRoute) {
     return <>{children}</>;

@@ -1,9 +1,10 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import {
+  corsHeaders,
+  handleCors as sharedHandleCors,
+  requirePaidPlan,
+  requireUserOrInternal,
+} from "../_shared/auth.ts";
 
 // Advanced AI Tools with full intelligence capabilities
 const AI_TOOLS = [
@@ -700,9 +701,15 @@ async function executeToolCall(
 }
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+  const preflight = sharedHandleCors(req);
+  if (preflight) return preflight;
+
+  // Cada chamada aqui gasta token de IA e pode disparar WhatsApp. Aberta,
+  // era uma torneira de custo para qualquer um na internet.
+  const auth = await requireUserOrInternal(req);
+  if (auth.error) return auth.error;
+  const paywall = await requirePaidPlan(auth.ctx);
+  if (paywall) return paywall;
 
   try {
     const { lead_id, message_content, auto_reply_enabled } = await req.json();
@@ -714,16 +721,13 @@ Deno.serve(async (req) => {
       );
     }
 
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const supabase = auth.ctx.supabase;
 
     // Get lead info with qualification data
-    const { data: lead, error: leadError } = await supabase
-      .from("leads")
-      .select("*")
-      .eq("id", lead_id)
-      .single();
+    const leadQuery = supabase.from("leads").select("*").eq("id", lead_id);
+    if (auth.ctx.kind === "user") leadQuery.eq("user_id", auth.ctx.userId);
+
+    const { data: lead, error: leadError } = await leadQuery.single();
 
     if (leadError || !lead) {
       throw new Error("Lead not found");

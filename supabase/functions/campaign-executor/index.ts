@@ -1,18 +1,35 @@
-import { createClient } from "npm:@supabase/supabase-js@2";
-import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+// `npm:@supabase/supabase-js@2/cors` não existe — esse import derrubava a
+// function inteira no boot, então nenhuma campanha chegava a executar.
+import {
+  corsHeaders,
+  handleCors,
+  json,
+  requirePaidPlan,
+  requireUserOrInternal,
+  resolveUserId,
+} from "../_shared/auth.ts";
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  const preflight = handleCors(req);
+  if (preflight) return preflight;
+
+  const auth = await requireUserOrInternal(req);
+  if (auth.error) return auth.error;
+  const paywall = await requirePaidPlan(auth.ctx);
+  if (paywall) return paywall;
 
   try {
-    const { campaign_id, user_id } = await req.json();
-    if (!campaign_id || !user_id) {
-      return new Response(JSON.stringify({ error: "campaign_id e user_id obrigatórios" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    const body = await req.json().catch(() => ({} as Record<string, unknown>));
+    const campaign_id = body.campaign_id;
+    if (!campaign_id) {
+      return json({ error: "campaign_id é obrigatório" }, 400);
     }
 
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, serviceKey);
+    const identity = resolveUserId(auth.ctx, body.user_id);
+    if (identity.error) return identity.error;
+    const user_id = identity.userId;
+
+    const supabase = auth.ctx.supabase;
 
     // Busca campanha
     const { data: campaign, error: cErr } = await supabase

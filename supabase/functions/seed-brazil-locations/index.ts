@@ -1,25 +1,16 @@
 // One-shot seed: pulls IBGE municipalities and states, upserts into brazil_cities / brazil_states.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { corsHeaders, handleCors, json, requireInternal } from "../_shared/auth.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
-
-const json = (data: unknown, status = 200) =>
-  new Response(JSON.stringify(data), {
-    status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
-
+// Reescreve tabelas inteiras a partir do IBGE — só chamada interna.
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const preflight = handleCors(req);
+  if (preflight) return preflight;
+
+  const auth = await requireInternal(req);
+  if (auth.error) return auth.error;
 
   try {
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    );
+    const supabase = auth.ctx.supabase;
 
     // 1. States
     const statesRes = await fetch("https://servicodados.ibge.gov.br/api/v1/localidades/estados");

@@ -1,9 +1,11 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import {
+  assertOwnsInstance,
+  corsHeaders,
+  handleCors,
+  requirePaidPlan,
+  requireUserOrInternal,
+} from "../_shared/auth.ts";
 
 interface WhatsAppGroup {
   id: string;
@@ -24,13 +26,21 @@ interface GroupParticipant {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
-  }
+  const preflight = handleCors(req);
+  if (preflight) return preflight;
+
+  const auth = await requireUserOrInternal(req);
+  if (auth.error) return auth.error;
+  const paywall = await requirePaidPlan(auth.ctx);
+  if (paywall) return paywall;
 
   try {
     const { action, instanceId, groupJids } = await req.json();
+
+    // Listar grupos e extrair participantes de uma instância que não é sua
+    // é vazamento de contato alheio.
+    const ownership = await assertOwnsInstance(auth.ctx, String(instanceId ?? ''));
+    if (ownership) return ownership;
 
     const evolutionApiUrl = Deno.env.get('EVOLUTION_API_URL');
     const evolutionApiKey = Deno.env.get('EVOLUTION_API_KEY');

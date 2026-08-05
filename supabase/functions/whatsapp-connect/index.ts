@@ -1,9 +1,17 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { corsHeaders, getInternalSecret } from "../_shared/auth.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+/**
+ * URL que a Evolution vai chamar quando o lead responder. Leva o segredo
+ * interno na query para o webhook conseguir provar que a chamada é dela.
+ */
+async function buildWebhookUrl(supabaseUrl: string, supabase: any): Promise<string> {
+  const base = `${supabaseUrl}/functions/v1/webhook`;
+  const secret = await getInternalSecret(supabase);
+  return secret ? `${base}?s=${encodeURIComponent(secret)}` : base;
+}
+
+const WEBHOOK_EVENTS = ["MESSAGES_UPSERT", "CONNECTION_UPDATE", "QRCODE_UPDATED"];
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -72,7 +80,7 @@ Deno.serve(async (req) => {
       console.log(`Creating instance: ${instanceName}`);
       
       // Get webhook URL for this instance
-      const webhookUrl = `${supabaseUrl}/functions/v1/webhook`;
+      const webhookUrl = await buildWebhookUrl(supabaseUrl, supabaseService);
       
       const createResponse = await fetch(`${EVOLUTION_API_URL}/instance/create`, {
         method: "POST",
@@ -306,7 +314,7 @@ Deno.serve(async (req) => {
       }
       console.log(`Getting pairing code for: ${instanceName}, phone: ${formattedPhone}`);
       
-      const webhookUrl = `${supabaseUrl}/functions/v1/webhook`;
+      const webhookUrl = await buildWebhookUrl(supabaseUrl, supabaseService);
       
       // Check if instance exists
       const statusCheck = await fetch(`${EVOLUTION_API_URL}/instance/connectionState/${instanceName}`, {
@@ -402,9 +410,30 @@ Deno.serve(async (req) => {
       const statusData = await statusResponse.json();
       const isConnected = statusData.instance?.state === "open";
 
+      // Recadastra o webhook com o segredo na URL. Instâncias criadas antes
+      // desta mudança apontam para a URL sem segredo; esta checagem roda a
+      // cada visita à tela de conexão, então elas se corrigem sozinhas.
+      if (isConnected) {
+        try {
+          const webhookUrl = await buildWebhookUrl(supabaseUrl, supabaseService);
+          await fetch(`${EVOLUTION_API_URL}/webhook/set/${instanceName}`, {
+            method: "POST",
+            headers: { "apikey": EVOLUTION_API_KEY, "Content-Type": "application/json" },
+            body: JSON.stringify({
+              url: webhookUrl,
+              byEvents: false,
+              base64: false,
+              events: WEBHOOK_EVENTS,
+            }),
+          });
+        } catch (e) {
+          console.error("Falha ao recadastrar webhook:", e);
+        }
+      }
+
       await supabaseService
         .from("user_settings")
-        .update({ 
+        .update({
           whatsapp_connected: isConnected,
           whatsapp_instance_id: instanceName,
         })

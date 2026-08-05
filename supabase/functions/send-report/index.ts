@@ -1,47 +1,39 @@
-import { createClient } from "npm:@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { corsHeaders, handleCors, json, requireUserOrInternal } from "../_shared/auth.ts";
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+  const preflight = handleCors(req);
+  if (preflight) return preflight;
+
+  const auth = await requireUserOrInternal(req);
+  if (auth.error) return auth.error;
+  const ctx = auth.ctx;
+  const supabase = ctx.supabase;
 
   try {
-    // Verify Bearer token
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    const body = await req.json().catch(() => ({} as Record<string, unknown>));
+
+    // O cron manda user_id no corpo; o app manda o JWT do dono da conta.
+    // Antes só existia o caminho do hunter_api_token, então o relatório
+    // diário disparado pelo cron caía em 401 e nunca era enviado.
+    let userId: string | null = null;
+
+    if (ctx.kind === "internal") {
+      userId = typeof body.user_id === "string" ? body.user_id : null;
+      if (!userId) return json({ error: "user_id é obrigatório em chamada interna." }, 400);
+    } else {
+      userId = ctx.userId;
     }
 
-    const token = authHeader.replace("Bearer ", "");
-
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-    // Find user by hunter_api_token
     const { data: settings, error: settingsError } = await supabase
       .from("user_settings")
       .select("*")
-      .eq("hunter_api_token", token)
-      .single();
+      .eq("user_id", userId)
+      .maybeSingle();
 
     if (settingsError || !settings) {
-      console.error("Invalid token or user not found:", settingsError);
-      return new Response(JSON.stringify({ error: "Invalid token" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      console.error("Configurações não encontradas:", settingsError);
+      return json({ error: "Configurações do usuário não encontradas." }, 404);
     }
-
-    const userId = settings.user_id;
 
     if (!settings.daily_report_enabled) {
       return new Response(JSON.stringify({ success: true, message: "Reports disabled" }), {

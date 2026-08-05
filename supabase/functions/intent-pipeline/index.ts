@@ -1,9 +1,10 @@
-import { createClient } from "npm:@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import {
+  corsHeaders,
+  handleCors,
+  json,
+  requireUserOrInternal,
+  resolveUserId,
+} from "../_shared/auth.ts";
 
 const POSITIVE_INTENT = /quero|interesse|sim|pode|vamos|quando|como funciona|me conta|topo|top|show|ótimo|gostei|gostaria|falar mais|saber mais|adorei|perfeito|excelente|combinado|bora/i;
 const PRICE_INTENT = /quanto custa|valor|preço|preços|investimento|orçamento|quanto é|quanto fica|proposta|tabela de preços|planos/i;
@@ -12,21 +13,34 @@ const CLOSING_INTENT = /fechado|contratado|vamos em frente|pode começar|aceito|
 const NEGATIVE_INTENT = /não tenho interesse|não quero|não preciso|para de|chega|stop|sair|bloquear|cancelar|spam|me tira da lista|não me mande/i;
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const preflight = handleCors(req);
+  if (preflight) return preflight;
+
+  const auth = await requireUserOrInternal(req);
+  if (auth.error) return auth.error;
 
   try {
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
+    const supabase = auth.ctx.supabase;
 
-    const { lead_id, message, user_id } = await req.json();
-    if (!lead_id || !message || !user_id) {
-      return new Response(JSON.stringify({ error: "Missing params" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    const body = await req.json().catch(() => ({} as Record<string, unknown>));
+    const { lead_id, message } = body;
+    if (!lead_id || !message) {
+      return json({ error: "lead_id e message são obrigatórios" }, 400);
     }
+
+    const identity = resolveUserId(auth.ctx, body.user_id);
+    if (identity.error) return identity.error;
+    const user_id = identity.userId;
+
+    // O lead precisa ser desta conta — o pipeline move estágio e dispara
+    // mensagem, então aceitar lead_id solto seria mexer no funil alheio.
+    const { data: ownedLead } = await supabase
+      .from("leads")
+      .select("id")
+      .eq("id", lead_id)
+      .eq("user_id", user_id)
+      .maybeSingle();
+    if (!ownedLead) return json({ error: "Lead não encontrado." }, 404);
 
     const { data: settings } = await supabase
       .from("user_settings")

@@ -1,18 +1,15 @@
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { corsHeaders, handleCors, requireInternal } from "../_shared/auth.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
-
+// Varre todas as contas e dispara a primeira mensagem — só o cron chama.
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const preflight = handleCors(req);
+  if (preflight) return preflight;
+
+  const auth = await requireInternal(req);
+  if (auth.error) return auth.error;
 
   try {
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
+    const supabase = auth.ctx.supabase;
 
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
 

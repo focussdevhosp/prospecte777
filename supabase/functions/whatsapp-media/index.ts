@@ -1,12 +1,21 @@
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import {
+  assertOwnsInstance,
+  checkRateLimit,
+  corsHeaders,
+  handleCors,
+  rateLimited,
+  requirePaidPlan,
+  requireUserOrInternal,
+} from "../_shared/auth.ts";
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+  const preflight = handleCors(req);
+  if (preflight) return preflight;
+
+  const auth = await requireUserOrInternal(req);
+  if (auth.error) return auth.error;
+  const paywall = await requirePaidPlan(auth.ctx);
+  if (paywall) return paywall;
 
   try {
     const { phone, instance_id, media_type, media_url, caption, base64_audio } = await req.json();
@@ -16,6 +25,14 @@ Deno.serve(async (req) => {
         JSON.stringify({ error: "Missing phone or instance_id" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+    const ownership = await assertOwnsInstance(auth.ctx, String(instance_id));
+    if (ownership) return ownership;
+
+    if (auth.ctx.kind === "user") {
+      const limit = await checkRateLimit(auth.ctx.supabase, auth.ctx.userId, "whatsapp-media", 60, 60);
+      if (!limit.allowed) return rateLimited(limit.resetIn);
     }
 
     const EVOLUTION_API_URL = Deno.env.get("EVOLUTION_API_URL");

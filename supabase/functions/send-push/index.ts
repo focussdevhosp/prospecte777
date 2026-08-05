@@ -1,10 +1,11 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import webpush from "npm:web-push@3.6.7";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import {
+  corsHeaders,
+  handleCors,
+  json,
+  requireUserOrInternal,
+  resolveUserId,
+} from "../_shared/auth.ts";
 
 webpush.setVapidDetails(
   Deno.env.get("VAPID_SUBJECT") ?? "mailto:noreply@prospecte.app",
@@ -13,21 +14,27 @@ webpush.setVapidDetails(
 );
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const preflight = handleCors(req);
+  if (preflight) return preflight;
+
+  const auth = await requireUserOrInternal(req);
+  if (auth.error) return auth.error;
 
   try {
-    const { user_id, title, body, tag, data, icon } = await req.json();
+    const input = await req.json().catch(() => ({} as Record<string, unknown>));
+    const { title, body, tag, data, icon } = input;
 
-    if (!user_id || !title || !body) {
-      return new Response(JSON.stringify({ error: "user_id, title, body required" }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    if (!title || !body) {
+      return json({ error: "title e body são obrigatórios" }, 400);
     }
 
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    );
+    // Sem isto, qualquer um mandava notificação push para o celular
+    // de qualquer usuário do sistema.
+    const identity = resolveUserId(auth.ctx, input.user_id);
+    if (identity.error) return identity.error;
+    const user_id = identity.userId;
+
+    const supabase = auth.ctx.supabase;
 
     const { data: subs, error } = await supabase
       .from("push_subscriptions")

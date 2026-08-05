@@ -1,9 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { corsHeaders, verifyWebhookSecret } from "../_shared/auth.ts";
 
 // Fetch long-term memories for a lead
 async function getLeadMemories(supabase: any, leadId: string): Promise<string> {
@@ -470,6 +466,15 @@ Deno.serve(async (req) => {
     return new Response("Forbidden", { status: 403 });
   }
 
+  // A Evolution chama esta URL com `?s=<segredo>`, gravado na instância no
+  // momento da conexão. Sem isso, qualquer um forjava resposta de lead e
+  // fazia a IA responder (e gastar) por conta alheia.
+  //
+  // Instâncias conectadas antes desta mudança ainda não têm o segredo na
+  // URL; elas são recadastradas sozinhas na próxima checagem de status feita
+  // pelo app. Até lá seguem aceitas, e o log marca cada uma dessas.
+  const authenticated = await verifyWebhookSecret(req);
+
   try {
     const body = await req.json();
     console.log("Webhook received:", JSON.stringify(body).substring(0, 500));
@@ -478,6 +483,10 @@ Deno.serve(async (req) => {
     if (body.object === "page" && body.entry) {
       console.log("Meta Lead Ads webhook received");
       return new Response("OK", { status: 200, headers: corsHeaders });
+    }
+
+    if (!authenticated) {
+      console.warn("[webhook] chamada sem segredo — instância legada aguardando recadastro");
     }
 
     // Support multiple webhook formats from Evolution API

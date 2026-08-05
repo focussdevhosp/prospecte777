@@ -1,9 +1,12 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+import {
+  corsHeaders,
+  handleCors as sharedHandleCors,
+  json,
+  requirePaidPlan,
+  requireUserOrInternal,
+  resolveUserId,
+} from "../_shared/auth.ts";
 
 interface BackgroundJob {
   id: string;
@@ -565,17 +568,36 @@ async function processJob(supabase: any, job: BackgroundJob) {
 }
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+  const preflight = sharedHandleCors(req);
+  if (preflight) return preflight;
+
+  const auth = await requireUserOrInternal(req);
+  if (auth.error) return auth.error;
+  const paywall = await requirePaidPlan(auth.ctx);
+  if (paywall) return paywall;
 
   try {
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const supabase = auth.ctx.supabase;
 
     const body = await req.json().catch(() => ({}));
-    const { action, job_id, user_id } = body;
+    const { action, job_id } = body;
+
+    const identity = resolveUserId(auth.ctx, body.user_id);
+    if (identity.error) return identity.error;
+    const user_id = identity.userId;
+
+    // Toda ação por job_id (pause/resume/cancel/skip/start/status) rodava sem
+    // conferir dono: bastava conhecer o UUID para mexer no processamento de
+    // outra conta. Um guard só, na entrada, cobre todos os casos.
+    if (job_id && auth.ctx.kind === "user") {
+      const { data: owned } = await supabase
+        .from("background_jobs")
+        .select("id")
+        .eq("id", job_id)
+        .eq("user_id", user_id)
+        .maybeSingle();
+      if (!owned) return json({ error: "Job não encontrado." }, 404);
+    }
 
     switch (action) {
       case "create": {

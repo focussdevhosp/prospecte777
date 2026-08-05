@@ -1,9 +1,11 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import {
+  corsHeaders,
+  getSubscription,
+  handleCors,
+  requireUserInternalOrApiKey,
+} from "../_shared/auth.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
 
 // Intelligent follow-up message templates based on context
 const FOLLOW_UP_STRATEGIES = {
@@ -62,49 +64,60 @@ function personalizeMessage(template: string, lead: any, settings: any): string 
 }
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+  const preflight = handleCors(req);
+  if (preflight) return preflight;
+
+  // O pg_cron chama esta função a cada 30 min mandando a anon key no
+  // Authorization. Como o único caminho de auth era procurar essa key em
+  // `hunter_api_token`, toda execução automática morria em 401 — nenhum
+  // follow-up jamais foi disparado pelo agendamento.
+  const auth = await requireUserInternalOrApiKey(req);
+  if (auth.error) return auth.error;
+  const ctx = auth.ctx;
+  const supabase = ctx.supabase;
 
   try {
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    // Chamada interna processa todo mundo; chamada de usuário, só a conta dele.
+    let targets: any[] = [];
+
+    if (ctx.kind === "internal") {
+      const { data } = await supabase
+        .from("user_settings")
+        .select("*")
+        .eq("whatsapp_connected", true);
+      targets = data ?? [];
+    } else {
+      const { data } = await supabase
+        .from("user_settings")
+        .select("*")
+        .eq("user_id", ctx.userId)
+        .maybeSingle();
+      targets = data ? [data] : [];
     }
-
-    const token = authHeader.replace("Bearer ", "");
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-    // Find user by hunter_api_token
-    const { data: settings, error: settingsError } = await supabase
-      .from("user_settings")
-      .select("*")
-      .eq("hunter_api_token", token)
-      .single();
-
-    if (settingsError || !settings) {
-      return new Response(JSON.stringify({ error: "Invalid token" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const userId = settings.user_id;
-    console.log(`Follow-up agent started for user: ${userId}`);
 
     const now = new Date();
     const results = {
+      users_processed: 0,
       checked: 0,
       sent: 0,
       skipped: 0,
       errors: 0,
       leads: [] as any[],
     };
+
+    for (const settings of targets) {
+      const userId = settings.user_id;
+      results.users_processed++;
+
+      // Quem não paga não dispara follow-up automático.
+      const sub = await getSubscription(supabase, userId);
+      if (!sub.active) {
+        console.log(`Pulando ${userId}: ${sub.reason}`);
+        continue;
+      }
+
+      // Cada usuário tem seu teto de envios por execução.
+      let sentForUser = 0;
 
     // Find leads that need follow-up
     const { data: leads, error: leadsError } = await supabase
@@ -114,7 +127,11 @@ Deno.serve(async (req) => {
       .in("stage", ["Contato", "Qualificado", "Proposta", "Negociação"])
       .order("last_contact_at", { ascending: true });
 
-    if (leadsError) throw new Error("Failed to fetch leads");
+    if (leadsError) {
+      console.error(`Falha ao buscar leads de ${userId}:`, leadsError.message);
+      results.errors++;
+      continue;
+    }
 
     // Check if WhatsApp is connected
     const EVOLUTION_API_URL = Deno.env.get("EVOLUTION_API_URL");
@@ -334,6 +351,7 @@ Responda APENAS com a mensagem.`;
       });
 
       results.sent++;
+      sentForUser++;
       results.leads.push({
         id: lead.id,
         business_name: lead.business_name,
@@ -341,11 +359,13 @@ Responda APENAS com a mensagem.`;
         follow_up_number: followUpCount + 1,
       });
 
-      // Limit to 10 follow-ups per run to avoid rate limits
-      if (results.sent >= 10) {
-        console.log("Reached max follow-ups per run (10)");
+      // Teto por usuário, não global: com o teto global, o primeiro usuário
+      // da lista consumia a cota inteira e o resto nunca era atendido.
+      if (sentForUser >= 10) {
+        console.log(`Teto de 10 follow-ups atingido para ${userId}`);
         break;
       }
+    }
     }
 
     console.log(`Follow-up completed: ${results.sent} sent, ${results.skipped} skipped, ${results.errors} errors`);

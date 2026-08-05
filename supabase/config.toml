@@ -1,79 +1,48 @@
 project_id = "oeztpxyprifabkvysroh"
 
-[functions.hunter]
-verify_jwt = false
+# ============================================================
+# verify_jwt
+# ============================================================
+# `verify_jwt = false` desliga a checagem do gateway do Supabase: a
+# requisição chega na function sem nenhuma validação prévia. Só deve ficar
+# desligado quando quem chama NÃO consegue mandar um JWT — cron, webhook de
+# terceiro, ou cliente de API usando token próprio.
+#
+# Todas as funções abaixo autenticam por conta própria em
+# `_shared/auth.ts`. Deixar aqui sem a checagem própria é deixar a função
+# aberta para a internet inteira.
+#
+# As demais funções não aparecem neste arquivo de propósito: elas herdam
+# `verify_jwt = true` e só recebem chamada com JWT válido.
 
-[functions.email-finder]
+# --- Chamadas do pg_cron (mandam x-internal-secret, sem Authorization) ---
+[functions.cron-tasks]
 verify_jwt = false
 
 [functions.scheduled-prospecting]
 verify_jwt = false
 
-[functions.webhook]
-verify_jwt = false
-
 [functions.follow-up]
 verify_jwt = false
 
-[functions.send-report]
+[functions.check-subscriptions]
 verify_jwt = false
 
-[functions.whatsapp-connect]
+# --- Webhooks de terceiros (autenticam por segredo próprio) ---
+# Evolution API -> resposta do lead. Valida `?s=<segredo interno>`.
+[functions.webhook]
 verify_jwt = false
 
-[functions.whatsapp-send]
-verify_jwt = false
-
-[functions.ai-prospecting]
-verify_jwt = false
-
-[functions.firecrawl-scrape]
-verify_jwt = false
-
-[functions.firecrawl-search]
-verify_jwt = false
-
-[functions.firecrawl-map]
-verify_jwt = false
-
-[functions.web-search]
-verify_jwt = false
-
-[functions.whatsapp-ai-reply]
-verify_jwt = false
-
-[functions.whatsapp-media]
-verify_jwt = false
-
-[functions.export-data]
-verify_jwt = false
-
-[functions.job-processor]
-verify_jwt = false
-
-[functions.cron-tasks]
-verify_jwt = false
-
-[functions.whatsapp-groups]
-verify_jwt = false
-
-[functions.generate-service-intelligence]
-verify_jwt = false
-
-[functions.analyze-patterns]
-verify_jwt = false
-
-[functions.generate-proposal]
-verify_jwt = false
-
-[functions.antiban-queue-processor]
-verify_jwt = false
-
+# Cakto -> evento de pagamento. Valida o header x-webhook-secret.
 [functions.cakto-webhook]
 verify_jwt = false
 
-[functions.campaign-executor]
+# --- API pública (autentica por X-API-Key ou Bearer JWT no código) ---
+# Sem esta entrada o gateway exigia JWT e derrubava toda chamada por
+# X-API-Key: o caminho de API key documentado em /api-reference nunca
+# chegou a funcionar.
+[functions.api]
 verify_jwt = false
 
-[functions.admin-users]
+[functions.hunter]
 verify_jwt = false

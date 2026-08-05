@@ -75,9 +75,13 @@ export function useMeetings(filters?: {
     mutationFn: async (meeting: Omit<Meeting, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
       if (!user?.id) throw new Error('User not authenticated');
 
+      // `lead` é a relação carregada no SELECT, não uma coluna de `meetings`.
+      // Mandá-la no insert faz o PostgREST rejeitar a linha inteira.
+      const { lead: _lead, ...columns } = meeting;
+
       const { data, error } = await supabase
         .from('meetings')
-        .insert({ ...meeting, user_id: user.id })
+        .insert({ ...columns, user_id: user.id })
         .select()
         .single();
 
@@ -101,7 +105,7 @@ export function useMeetings(filters?: {
   });
 
   const updateMeeting = useMutation({
-    mutationFn: async ({ id, ...updates }: Partial<Meeting> & { id: string }) => {
+    mutationFn: async ({ id, lead: _lead, ...updates }: Partial<Meeting> & { id: string }) => {
       const { data, error } = await supabase
         .from('meetings')
         .update(updates)

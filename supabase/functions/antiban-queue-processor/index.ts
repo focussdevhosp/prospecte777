@@ -1,9 +1,12 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+import {
+  corsHeaders,
+  handleCors as sharedHandleCors,
+  json,
+  requirePaidPlan,
+  requireUserOrInternal,
+  resolveUserId,
+} from "../_shared/auth.ts";
 
 interface QueueItem {
   id: string;
@@ -587,27 +590,33 @@ async function resetCounters(supabase: any) {
 }
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
-  }
+  const preflight = sharedHandleCors(req);
+  if (preflight) return preflight;
+
+  // A checagem anterior aceitava a requisição se existisse *qualquer*
+  // header authorization OU um user_id no corpo — ou seja, mandar
+  // {"user_id": "<uuid de alguém>"} já bastava para operar a fila alheia.
+  const auth = await requireUserOrInternal(req);
+  if (auth.error) return auth.error;
+  const paywall = await requirePaidPlan(auth.ctx);
+  if (paywall) return paywall;
 
   try {
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const supabase = auth.ctx.supabase;
 
     const body = await req.json().catch(() => ({}));
-    const { action, user_id, batch_id, items } = body;
+    const { action, batch_id, items } = body;
 
-    // Check auth for non-cron actions
-    if (action !== "reset_counters" && action !== "cron") {
-      const authHeader = req.headers.get("authorization");
-      if (!authHeader && !user_id) {
-        return new Response(
-          JSON.stringify({ error: "Unauthorized" }),
-          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
+    // Ações de manutenção rodam sem dono; o resto é sempre escopado.
+    const isMaintenance = action === "reset_counters" || action === "cron";
+    let user_id: string | null = null;
+
+    if (!isMaintenance) {
+      const identity = resolveUserId(auth.ctx, body.user_id);
+      if (identity.error) return identity.error;
+      user_id = identity.userId;
+    } else if (auth.ctx.kind !== "internal") {
+      return json({ error: "Ação de manutenção exige chamada interna." }, 403);
     }
 
     switch (action) {

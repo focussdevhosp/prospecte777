@@ -74,9 +74,13 @@ export function useUserSettings() {
     mutationFn: async (updates: Partial<UserSettings>) => {
       if (!user?.id) throw new Error('User not authenticated');
 
+      // toDbFormat devolve um mapa dinâmico (camelCase -> snake_case); o
+      // cliente tipado não consegue provar que as chaves são colunas reais.
+      const payload = toDbFormat(updates) as never;
+
       const { data, error } = await supabase
         .from('user_settings')
-        .update(toDbFormat(updates))
+        .update(payload)
         .eq('user_id', user.id)
         .select()
         .single();

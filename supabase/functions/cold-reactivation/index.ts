@@ -1,9 +1,9 @@
-import { createClient } from "npm:@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import {
+  corsHeaders,
+  handleCors,
+  requirePaidPlan,
+  requireUserOrInternal,
+} from "../_shared/auth.ts";
 
 // Inline niche reactivation templates (can't import from src/)
 const REACTIVATION_TEMPLATES: Record<string, string> = {
@@ -18,19 +18,29 @@ const REACTIVATION_TEMPLATES: Record<string, string> = {
 };
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const preflight = handleCors(req);
+  if (preflight) return preflight;
+
+  const auth = await requireUserOrInternal(req);
+  if (auth.error) return auth.error;
+  const paywall = await requirePaidPlan(auth.ctx);
+  if (paywall) return paywall;
 
   try {
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
+    const supabase = auth.ctx.supabase;
 
-    const { data: usersWithReactivation } = await supabase
+    // O cron varre todas as contas; um usuário logado só pode disparar a
+    // reativação da própria — senão uma chamada manual mandaria mensagem
+    // pela conta de todo mundo.
+    const usersQuery = supabase
       .from("user_settings")
       .select("user_id, whatsapp_instance_id, onboarding_niche, auto_reactivation_enabled")
       .eq("auto_reactivation_enabled", true)
       .eq("whatsapp_connected", true);
+
+    if (auth.ctx.kind === "user") usersQuery.eq("user_id", auth.ctx.userId);
+
+    const { data: usersWithReactivation } = await usersQuery;
 
     const twentyDaysAgo = new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString();
     const results: any[] = [];

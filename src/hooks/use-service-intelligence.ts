@@ -161,8 +161,13 @@ export function useServiceIntelligence() {
 
       if (!service) return;
 
-      const updates: Record<string, number> = {};
-      
+      const updates: {
+        total_sent?: number;
+        total_responses?: number;
+        total_meetings?: number;
+        conversion_rate?: number;
+      } = {};
+
       if (metric === 'sent') {
         updates.total_sent = (service.total_sent || 0) + 1;
       } else if (metric === 'response') {

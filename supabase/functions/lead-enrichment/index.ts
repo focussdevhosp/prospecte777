@@ -1,13 +1,11 @@
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
-
-const json = (data: unknown, status = 200) =>
-  new Response(JSON.stringify(data), {
-    status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
+import {
+  checkRateLimit,
+  corsHeaders,
+  handleCors,
+  json,
+  rateLimited,
+  requireUserOrInternal,
+} from "../_shared/auth.ts";
 
 // ── ViaCEP ──────────────────────────────────────────────
 async function lookupCep(cep: string) {
@@ -167,7 +165,16 @@ async function enrichLead(lead: { phone?: string; website?: string; address?: st
 
 // ── Router ──────────────────────────────────────────────
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const preflight = handleCors(req);
+  if (preflight) return preflight;
+
+  const auth = await requireUserOrInternal(req);
+  if (auth.error) return auth.error;
+
+  if (auth.ctx.kind === "user") {
+    const limit = await checkRateLimit(auth.ctx.supabase, auth.ctx.userId, "lead-enrichment", 120, 60);
+    if (!limit.allowed) return rateLimited(limit.resetIn);
+  }
 
   try {
     const { action, ...params } = await req.json();
