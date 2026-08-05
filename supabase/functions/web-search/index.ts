@@ -1,15 +1,40 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import {
+  checkRateLimit,
+  corsHeaders,
+  handleCors,
+  json,
+  rateLimited,
+  requirePaidPlan,
+  requireUserOrInternal,
+} from "../_shared/auth.ts";
+import { captureLeads } from "../_shared/engine.ts";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
-};
+// ============================================================
+// BUSCA DE LEADS
+// ============================================================
+// Esta é a função que a tela de Captura usa de verdade.
+//
+// Antes: SerpAPI global (ou raspagem do DuckDuckGo como plano B), telefone
+// tirado do texto do snippet com regex e dedup por string de dígitos.
+// O que chegava na tela vinha cheio de página de agregador, "Os 10 melhores
+// restaurantes de X" virando nome de empresa, e CNPJ formatado passando por
+// telefone.
+//
+// Agora: OpenStreetMap como fonte primária (cadastro estruturado, telefone e
+// endereço do próprio negócio, sem chave de API), SerpAPI/Serper por cima se
+// houver chave, DuckDuckGo completando — e tudo passa pela peneira de
+// `_shared/leads.ts` antes de virar resultado.
+//
+// O formato da resposta é o mesmo de antes, de propósito: a tela não precisa
+// mudar para receber dado melhor.
 
 interface ExtendedSearchResult {
   title: string;
   link: string;
   snippet: string;
   phone?: string;
+  phone_display?: string;
+  phone_kind?: string;
   email?: string;
   position: number;
   rating?: number;
@@ -20,238 +45,109 @@ interface ExtendedSearchResult {
   photo_url?: string;
   thumbnail?: string;
   category?: string;
-}
-
-const SUBNICHES: Record<string, string[]> = {
-  "restaurantes": ["restaurante", "lanchonete", "pizzaria", "hamburgueria", "cafeteria", "padaria", "churrascaria"],
-  "salão de beleza": ["salão de beleza", "cabeleireiro", "manicure", "estética", "sobrancelha", "depilação"],
-  "academia": ["academia", "crossfit", "pilates", "personal trainer", "estúdio fitness"],
-  "clínica": ["clínica médica", "consultório médico", "dermatologista", "fisioterapia", "nutricionista"],
-  "dentista": ["dentista", "clínica odontológica", "ortodontista", "implante dentário"],
-  "advogado": ["advogado", "escritório de advocacia", "consultoria jurídica"],
-  "pet shop": ["pet shop", "banho e tosa", "clínica veterinária"],
-  "oficina": ["oficina mecânica", "auto center", "funilaria"],
-  "loja": ["loja de roupas", "boutique", "calçados"],
-  "imobiliária": ["imobiliária", "corretor de imóveis"],
-  "hotel": ["hotel", "pousada", "hospedagem"],
-  "escola": ["escola", "curso", "escola de idiomas"],
-  "farmácia": ["farmácia", "drogaria"],
-  "barbearia": ["barbearia", "barber shop"],
-};
-
-function getSearchVariations(niche: string): string[] {
-  const nicheLower = niche.toLowerCase().trim();
-  for (const [key, variations] of Object.entries(SUBNICHES)) {
-    if (nicheLower.includes(key) || key.includes(nicheLower)) return variations;
-  }
-  for (const [_, variations] of Object.entries(SUBNICHES)) {
-    if (variations.some(v => nicheLower.includes(v) || v.includes(nicheLower))) return variations;
-  }
-  return [niche];
-}
-
-function extractPhones(text: string): string[] {
-  const phones: string[] = [];
-  const patterns = [
-    /\+?55\s?\(?\d{2}\)?\s*9?\d{4}[-.\s]?\d{4}/g,
-    /\(?\d{2}\)?\s*9?\d{4}[-.\s]?\d{4}/g,
-  ];
-  for (const pattern of patterns) {
-    const matches = text.match(pattern);
-    if (matches) phones.push(...matches);
-  }
-  return phones;
-}
-
-function extractEmail(text: string): string | undefined {
-  const match = text.match(/[\w.-]+@[\w.-]+\.\w+/);
-  return match ? match[0] : undefined;
-}
-
-// ── SerpAPI (Google Maps / Google Search) ──────────────
-async function searchWithSerpApi(
-  query: string,
-  location: string,
-  numResults: number,
-  expandSearch: boolean,
-  apiKey: string
-): Promise<{ results: ExtendedSearchResult[]; searchInfo: any }> {
-  const all: ExtendedSearchResult[] = [];
-  const seenPhones = new Set<string>();
-  const seenNames = new Set<string>();
-  const terms = expandSearch ? getSearchVariations(query) : [query];
-  console.log(`SerpAPI: ${terms.length} term(s), location="${location}"`);
-
-  for (const term of terms) {
-    if (numResults > 0 && all.length >= numResults) break;
-
-    // Google Maps engine returns rich local results with phone/rating/address
-    const url = new URL('https://serpapi.com/search.json');
-    url.searchParams.set('engine', 'google_maps');
-    url.searchParams.set('q', location ? `${term} ${location}` : term);
-    url.searchParams.set('type', 'search');
-    url.searchParams.set('hl', 'pt-br');
-    url.searchParams.set('google_domain', 'google.com.br');
-    url.searchParams.set('api_key', apiKey);
-
-    try {
-      const res = await fetch(url.toString());
-      if (!res.ok) {
-        console.warn(`SerpAPI ${res.status} for "${term}"`);
-        continue;
-      }
-      const data = await res.json();
-      const local = data.local_results || data.place_results || [];
-      const items = Array.isArray(local) ? local : [local];
-
-      for (const item of items) {
-        if (!item) continue;
-        const phone = item.phone || '';
-        const normalizedPhone = String(phone).replace(/\D/g, '');
-        const name = String(item.title || '').trim();
-        const nameKey = name.toLowerCase();
-
-        if (!phone && !item.website) continue;
-        if (normalizedPhone && seenPhones.has(normalizedPhone)) continue;
-        if (nameKey && seenNames.has(nameKey)) continue;
-        if (normalizedPhone) seenPhones.add(normalizedPhone);
-        if (nameKey) seenNames.add(nameKey);
-
-        all.push({
-          title: name || 'Empresa',
-          link: item.website || item.link || '',
-          website: item.website,
-          snippet: item.description || item.address || '',
-          phone: phone || undefined,
-          rating: typeof item.rating === 'number' ? item.rating : undefined,
-          reviews_count: typeof item.reviews === 'number' ? item.reviews : undefined,
-          address: item.address,
-          google_maps_url: item.link,
-          thumbnail: item.thumbnail,
-          category: item.type,
-          position: all.length + 1,
-        });
-
-        if (numResults > 0 && all.length >= numResults) break;
-      }
-      await new Promise(r => setTimeout(r, 150));
-    } catch (e) {
-      console.error(`SerpAPI error "${term}":`, e);
-    }
-  }
-
-  return {
-    results: all,
-    searchInfo: {
-      query, location,
-      search_type: 'serpapi_google_maps',
-      total_results: all.length,
-      search_terms_used: terms.length,
-    },
-  };
-}
-
-// ── DuckDuckGo fallback ──────────────────────────────
-async function searchWithDuckDuckGo(
-  query: string,
-  location: string,
-  numResults: number,
-  expandSearch: boolean
-): Promise<{ results: ExtendedSearchResult[]; searchInfo: any }> {
-  const all: ExtendedSearchResult[] = [];
-  const seenPhones = new Set<string>();
-  const terms = expandSearch ? getSearchVariations(query) : [query];
-
-  for (const term of terms) {
-    if (numResults > 0 && all.length >= numResults) break;
-    const fullQuery = location ? `${term} ${location} telefone contato` : `${term} telefone contato`;
-    try {
-      const resp = await fetch(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(fullQuery)}`, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36',
-          'Accept': 'text/html',
-          'Accept-Language': 'pt-BR,pt;q=0.9',
-        },
-      });
-      if (!resp.ok) continue;
-      const html = await resp.text();
-      const blocks = html.split('class="result__body"');
-      for (let i = 1; i < blocks.length; i++) {
-        const b = blocks[i];
-        const title = (b.match(/class="result__a"[^>]*>([^<]+)</)?.[1] || '').trim();
-        const snippetRaw = b.match(/class="result__snippet"[^>]*>([\s\S]*?)<\/a>/)?.[1] || '';
-        const snippet = snippetRaw.replace(/<[^>]+>/g, '').trim();
-        const phones = extractPhones(`${title} ${snippet}`);
-        if (!phones.length) continue;
-        const nk = phones[0].replace(/\D/g, '');
-        if (seenPhones.has(nk)) continue;
-        seenPhones.add(nk);
-        all.push({
-          title: title || 'Empresa', link: '', snippet,
-          phone: phones[0], email: extractEmail(snippet),
-          position: all.length + 1,
-        });
-      }
-      await new Promise(r => setTimeout(r, 250));
-    } catch (_e) { /* skip */ }
-  }
-
-  return { results: all, searchInfo: { query, location, search_type: 'duckduckgo_free', total_results: all.length, search_terms_used: terms.length } };
+  quality_score?: number;
+  quality_reasons?: string[];
+  source?: string;
 }
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+  const preflight = handleCors(req);
+  if (preflight) return preflight;
+
+  const auth = await requireUserOrInternal(req);
+  if (auth.error) return auth.error;
+  const paywall = await requirePaidPlan(auth.ctx);
+  if (paywall) return paywall;
+
+  // Cada busca dispara várias requisições externas; sem teto, uma tela
+  // aberta em loop derruba a cota das fontes para todo mundo.
+  if (auth.ctx.kind === "user") {
+    const limit = await checkRateLimit(auth.ctx.supabase, auth.ctx.userId, "web-search", 40, 60);
+    if (!limit.allowed) return rateLimited(limit.resetIn);
+  }
 
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
-    const authHeader = req.headers.get('Authorization');
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader! } }
+    const {
+      query,
+      location,
+      num_results = 0,
+      min_quality = 0,
+    } = await req.json();
+
+    if (!query) return json({ error: "Query é obrigatória" }, 400);
+
+    // Chave do usuário tem prioridade sobre a global: quem paga SerpAPI
+    // merece usar a cota dele, não competir pela nossa.
+    let serpApiKey = Deno.env.get("SERPAPI_API_KEY") ?? null;
+    let serperApiKey: string | null = null;
+
+    if (auth.ctx.kind === "user") {
+      const { data: settings } = await auth.ctx.supabase
+        .from("user_settings")
+        .select("serpapi_api_key, serper_api_key")
+        .eq("user_id", auth.ctx.userId)
+        .maybeSingle();
+
+      if (settings?.serper_api_key) serperApiKey = settings.serper_api_key;
+      if (settings?.serpapi_api_key) serpApiKey = settings.serpapi_api_key;
+    }
+
+    const maxResults = num_results > 0 ? num_results : 200;
+
+    const report = await captureLeads({
+      niche: query,
+      location: location || "Brasil",
+      maxResults,
+      minQuality: min_quality,
+      serpApiKey,
+      serperApiKey,
     });
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-    }
 
-    const { query, location, num_results = 0, expand_search = true } = await req.json();
-    if (!query) {
-      return new Response(JSON.stringify({ error: 'Query é obrigatória' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-    }
+    const results: ExtendedSearchResult[] = report.leads.map((lead, i) => ({
+      title: lead.business_name,
+      link: lead.website ?? lead.google_maps_url ?? "",
+      website: lead.website ?? undefined,
+      snippet: lead.address ?? "",
+      address: lead.address ?? undefined,
+      phone: lead.phone,
+      phone_display: lead.phone_display,
+      phone_kind: lead.phone_kind,
+      email: lead.email ?? undefined,
+      rating: lead.rating ?? undefined,
+      reviews_count: lead.reviews_count ?? undefined,
+      google_maps_url: lead.google_maps_url ?? undefined,
+      category: lead.subtype ?? undefined,
+      quality_score: lead.quality_score,
+      quality_reasons: lead.quality_reasons,
+      source: lead.source ?? undefined,
+      position: i + 1,
+    }));
 
-    console.log(`web-search: query="${query}" loc="${location || 'Brasil'}" expand=${expand_search}`);
+    console.log(
+      `web-search "${query}" em "${location}": ${report.total_raw} brutos -> ` +
+      `${results.length} válidos. Descartes: ${JSON.stringify(report.discarded)}`,
+    );
 
-    // Prefer SerpAPI (real Google Maps data). Fallback to DuckDuckGo scrape.
-    const serpKey = Deno.env.get('SERPAPI_API_KEY');
-    let result;
-    let apiUsed = 'duckduckgo_free';
-    if (serpKey) {
-      try {
-        result = await searchWithSerpApi(query, location || 'Brasil', num_results, expand_search, serpKey);
-        apiUsed = 'serpapi_google_maps';
-        if (!result.results.length) {
-          console.log('SerpAPI returned 0, falling back to DuckDuckGo');
-          result = await searchWithDuckDuckGo(query, location || 'Brasil', num_results, expand_search);
-          apiUsed = 'duckduckgo_fallback';
-        }
-      } catch (e) {
-        console.error('SerpAPI failed, falling back:', e);
-        result = await searchWithDuckDuckGo(query, location || 'Brasil', num_results, expand_search);
-      }
-    } else {
-      result = await searchWithDuckDuckGo(query, location || 'Brasil', num_results, expand_search);
-    }
-
-    console.log(`Found ${result.results.length} results via ${apiUsed}`);
-
-    return new Response(JSON.stringify({
+    return json({
       success: true,
-      results: result.results,
-      total: result.results.length,
-      search_info: { ...result.searchInfo, api_used: apiUsed },
-    }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      results,
+      total: results.length,
+      search_info: {
+        query,
+        location,
+        total_results: results.length,
+        // O usuário passa a ver de onde veio cada lead e por que os outros
+        // foram descartados, em vez de só um número.
+        sources: report.sources,
+        discarded: report.discarded,
+        total_raw: report.total_raw,
+      },
+    });
   } catch (error) {
-    console.error('Web search error:', error);
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    console.error("Web search error:", error);
+    return json(
+      { error: error instanceof Error ? error.message : "Erro desconhecido" },
+      500,
+    );
   }
 });

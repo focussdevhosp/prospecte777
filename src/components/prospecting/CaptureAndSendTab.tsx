@@ -248,7 +248,9 @@ export function CaptureAndSendTab() {
               google_maps_url: result.google_maps_url || (result.link?.includes('maps.google') ? result.link : undefined),
               photo_url: result.photo_url || result.thumbnail,
               status: 'pending' as const,
-              qualityScore: calculateQualityScore({
+              // O servidor agora pontua com a mesma régua para todas as
+              // fontes; o cálculo local vira só reserva.
+              qualityScore: result.quality_score ?? calculateQualityScore({
                 title: result.title,
                 phone: result.phone,
                 website: result.website || result.link,
