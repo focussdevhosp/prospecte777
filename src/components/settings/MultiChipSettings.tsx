@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useUserSettings } from '@/hooks/use-user-settings';
+import { useChipUsage } from '@/hooks/use-chip-usage';
 import { useToast } from '@/hooks/use-toast';
 import {
   Smartphone,
@@ -31,6 +32,7 @@ interface ChipInstance {
 
 export function MultiChipSettings() {
   const { settings, updateSettings } = useUserSettings();
+  const { forInstance, totalSent } = useChipUsage();
   const { toast } = useToast();
   const [addChipOpen, setAddChipOpen] = useState(false);
   const [newChipLabel, setNewChipLabel] = useState('');
@@ -246,6 +248,21 @@ export function MultiChipSettings() {
                     <div>
                       <p className="text-sm font-medium">{chip.label}</p>
                       <p className="text-xs text-muted-foreground font-mono">{chip.instance_id}</p>
+                      {/* Volume real de hoje. Sem isto, a rotação era um
+                          botão sem retorno: não dava para saber se estava
+                          distribuindo nada. */}
+                      {(() => {
+                        const stats = forInstance(chip.instance_id);
+                        if (!stats) return null;
+                        return (
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {stats.sent_count} enviada{stats.sent_count === 1 ? '' : 's'} hoje
+                            {stats.failed_count > 0 && (
+                              <span className="text-destructive"> · {stats.failed_count} falha{stats.failed_count === 1 ? '' : 's'}</span>
+                            )}
+                          </p>
+                        );
+                      })()}
                     </div>
                   </div>
                   <div className="flex items-center gap-2">

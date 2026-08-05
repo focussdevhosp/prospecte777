@@ -37,7 +37,7 @@ interface TestResult {
   duration?: number;
 }
 
-export default function TestsPage() {
+export default function DiagnosticsPage() {
   const { settings } = useUserSettings();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -355,7 +355,7 @@ export default function TestsPage() {
 
   return (
     <DashboardLayout
-      title="Testes e Diagnóstico"
+      title="Diagnóstico do Sistema"
       description="Teste todas as funcionalidades da plataforma"
     >
       <div className="space-y-6">

@@ -158,6 +158,12 @@ export interface Lead {
   deal_value: number | null;
   tasks: any[] | null;
   notes: string | null;
+  // Estado do agente SDR nesta conversa
+  agent_status: 'active' | 'paused' | 'handoff' | 'opted_out';
+  agent_paused_reason: string | null;
+  agent_paused_at: string | null;
+  agent_replies_today: number;
+  agent_replies_date: string | null;
   // Social URLs
   instagram_url: string | null;
   facebook_url: string | null;

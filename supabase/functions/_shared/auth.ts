@@ -326,7 +326,13 @@ export function resolveUserId(
   return { userId: ctx.userId, error: null };
 }
 
-/** Confirma que a instância de WhatsApp pertence mesmo a quem está chamando. */
+/**
+ * Confirma que a instância de WhatsApp pertence mesmo a quem está chamando.
+ *
+ * Precisa olhar também `extra_chip_instances`: com a rotação ligada, o envio
+ * sai por um chip secundário, cujo instance_id não é o `whatsapp_instance_id`
+ * da conta. Checar só a coluna principal barraria os próprios chips do dono.
+ */
 export async function assertOwnsInstance(
   ctx: AuthContext,
   instanceId: string,
@@ -336,15 +342,29 @@ export async function assertOwnsInstance(
 
   const { data, error } = await ctx.supabase
     .from("user_settings")
-    .select("user_id")
-    .eq("whatsapp_instance_id", instanceId)
+    .select("whatsapp_instance_id, extra_chip_instances")
+    .eq("user_id", ctx.userId)
     .maybeSingle();
 
   if (error) {
     console.error("[auth] erro ao verificar dono da instância:", error.message);
     return json({ error: "Não foi possível validar a conexão de WhatsApp." }, 500);
   }
-  if (!data || data.user_id !== ctx.userId) {
+
+  if (!data) {
+    return json({ error: "Esta conexão de WhatsApp não pertence à sua conta." }, 403);
+  }
+
+  const owned = new Set<string>();
+  if (data.whatsapp_instance_id) owned.add(String(data.whatsapp_instance_id));
+
+  const extras = Array.isArray(data.extra_chip_instances) ? data.extra_chip_instances : [];
+  for (const chip of extras) {
+    const id = (chip as Record<string, unknown>)?.instance_id;
+    if (id) owned.add(String(id));
+  }
+
+  if (!owned.has(instanceId)) {
     return json({ error: "Esta conexão de WhatsApp não pertence à sua conta." }, 403);
   }
   return null;

@@ -2690,6 +2690,18 @@ export type Database = {
         Returns: boolean
       }
       is_lead_owner: { Args: { p_lead_id: string }; Returns: boolean }
+      get_chip_usage_today: {
+        Args: { p_user_id: string }
+        Returns: {
+          instance_id: string
+          sent_count: number
+          failed_count: number
+        }[]
+      }
+      has_active_subscription: {
+        Args: { p_user_id: string }
+        Returns: boolean
+      }
       is_phone_blacklisted: {
         Args: { p_phone: string; p_user_id: string }
         Returns: boolean

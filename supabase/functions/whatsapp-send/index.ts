@@ -9,6 +9,7 @@ import {
   requirePaidPlan,
   requireUserOrInternal,
 } from "../_shared/auth.ts";
+import { loadChips, pickChip, recordChipSend } from "../_shared/chips.ts";
 
 const MAX_MESSAGE_LENGTH = 4096;
 
@@ -43,10 +44,12 @@ Deno.serve(async (req) => {
   if (paywall) return paywall;
 
   try {
-    const { phone, message, instance_id, ab_test_id, ab_variant } = await req.json();
+    const body = await req.json();
+    const { phone, message, ab_test_id, ab_variant, rotation_index } = body;
+    let instance_id: string | null = body.instance_id ?? null;
 
-    if (!phone || !message || !instance_id) {
-      return json({ error: "phone, message e instance_id são obrigatórios." }, 400);
+    if (!phone || !message) {
+      return json({ error: "phone e message são obrigatórios." }, 400);
     }
 
     if (typeof message !== "string" || message.trim().length === 0) {
@@ -61,6 +64,49 @@ Deno.serve(async (req) => {
       return json({ error: `Número inválido: ${phone}` }, 400);
     }
 
+    // Descobre de quem é o envio antes de escolher o chip.
+    let ownerId: string | null = ctx.kind === "user" ? ctx.userId : null;
+
+    if (!ownerId && instance_id) {
+      const { data } = await ctx.supabase
+        .from("user_settings")
+        .select("user_id")
+        .eq("whatsapp_instance_id", instance_id)
+        .maybeSingle();
+      ownerId = data?.user_id ?? null;
+    }
+
+    if (!ownerId && typeof body.user_id === "string") {
+      ownerId = body.user_id;
+    }
+
+    // ---- Rotação de chips ----
+    // Sem `instance_id` explícito, o chip é escolhido pela estratégia que o
+    // usuário configurou. Antes essa configuração era gravada e ignorada:
+    // todo envio saía pelo chip principal, mesmo com três cadastrados.
+    let chosenChip: string | null = instance_id;
+
+    if (ownerId) {
+      const { chips, strategy, enabled } = await loadChips(ctx.supabase, ownerId);
+
+      if (enabled && chips.length > 0 && !instance_id) {
+        const pick = pickChip(chips, strategy, Number(rotation_index) || 0);
+        if (pick) {
+          chosenChip = pick.instance_id;
+          console.log(`[chips] ${strategy}: enviando por ${pick.label} (${pick.instance_id}), ${pick.sent_today} hoje`);
+        }
+      }
+
+      // Sem rotação e sem instância no corpo, cai no chip principal.
+      if (!chosenChip && chips.length > 0) chosenChip = chips[0].instance_id;
+    }
+
+    if (!chosenChip) {
+      return json({ error: "Nenhum chip de WhatsApp disponível. Conecte em Configurações." }, 409);
+    }
+
+    instance_id = chosenChip;
+
     // A instância precisa ser desta conta — sem isso qualquer um manda
     // mensagem pelo chip de outro cliente e queima o número dele.
     const ownership = await assertOwnsInstance(ctx, String(instance_id));
@@ -74,14 +120,6 @@ Deno.serve(async (req) => {
     // O destinatário pediu para não receber mais? Respeitar é obrigação
     // legal (LGPD) e é o que mantém o chip vivo. A checagem roda no banco
     // com o telefone normalizado, senão formatos diferentes escapam.
-    const ownerId = ctx.kind === "user"
-      ? ctx.userId
-      : (await ctx.supabase
-          .from("user_settings")
-          .select("user_id")
-          .eq("whatsapp_instance_id", String(instance_id))
-          .maybeSingle()).data?.user_id ?? null;
-
     const { data: blocked } = ownerId
       ? await ctx.supabase.rpc("is_phone_blacklisted", {
         p_user_id: ownerId,
@@ -140,6 +178,8 @@ Deno.serve(async (req) => {
       const errorText = await sendResponse.text();
       console.error("Evolution send error:", errorText);
 
+      if (ownerId) await recordChipSend(ctx.supabase, ownerId, instance_id, true);
+
       if (errorText.includes("Connection Closed")) {
         return json(
           { error: "Conexão WhatsApp perdida. Reconecte em Configurações.", needsReconnect: true },
@@ -150,6 +190,10 @@ Deno.serve(async (req) => {
     }
 
     const sendData = await sendResponse.json();
+
+    // Contabiliza no chip que atendeu — é o que alimenta a estratégia por
+    // saúde e o painel de uso por número.
+    if (ownerId) await recordChipSend(ctx.supabase, ownerId, instance_id, false);
 
     if (ab_test_id && ab_variant) {
       try {
@@ -174,7 +218,13 @@ Deno.serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ success: true, message_id: sendData.key?.id || null }),
+      JSON.stringify({
+        success: true,
+        message_id: sendData.key?.id || null,
+        // Devolve o chip usado para a tela conseguir mostrar por qual
+        // número cada mensagem saiu.
+        instance_id,
+      }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (error) {

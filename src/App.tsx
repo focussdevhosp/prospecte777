@@ -42,7 +42,7 @@ const SettingsReports = lazy(() => import("./pages/settings/SettingsReports"));
 const SettingsMeetings = lazy(() => import("./pages/settings/SettingsMeetings"));
 const SettingsWebhook = lazy(() => import("./pages/settings/SettingsWebhook"));
 const TutorialPage = lazy(() => import("./pages/Tutorial"));
-const TestsPage = lazy(() => import("./pages/Tests"));
+const DiagnosticsPage = lazy(() => import("./pages/Diagnostics"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const CNPJRadarPage = lazy(() => import("./pages/CNPJRadar"));
 const SDRAgentPage = lazy(() => import("./pages/SDRAgent"));
@@ -138,7 +138,12 @@ const App = () => (
                     <Route path="meetings" element={<SettingsMeetings />} />
                     <Route path="webhook" element={<SettingsWebhook />} />
                   </Route>
-                  <Route path="/tests" element={<ProtectedRoute><TestsPage /></ProtectedRoute>} />
+                  {/* Era /tests, sem link em lugar nenhum e com cara de
+                      ferramenta de desenvolvedor. É justamente a tela que
+                      responde "meu WhatsApp está funcionando?" — agora tem
+                      nome de gente e link no Suporte. */}
+                  <Route path="/diagnostico" element={<ProtectedRoute><DiagnosticsPage /></ProtectedRoute>} />
+                  <Route path="/tests" element={<Navigate to="/diagnostico" replace />} />
                   <Route path="/cnpj-radar" element={<ProtectedRoute><CNPJRadarPage /></ProtectedRoute>} />
                   <Route path="/instagram-extractor" element={<Navigate to="/social-extractor" replace />} />
                   <Route path="/sdr-agent" element={<ProtectedRoute><SDRAgentPage /></ProtectedRoute>} />

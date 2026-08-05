@@ -13,6 +13,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useLeads } from '@/hooks/use-leads';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -129,29 +130,38 @@ export function CNPJRadarTab() {
     setSingleLoading(true);
     setSingleResult(null);
     try {
-      const res = await fetch(`https://publica.cnpj.ws/cnpj/${digits}`);
-      if (!res.ok) throw new Error('CNPJ não encontrado');
-      const data = await res.json();
+      // Também pela edge function: ela consulta cache primeiro (cnpj_cache),
+      // tem fallback para a BrasilAPI e não gasta o limite público a cada
+      // clique do usuário.
+      const { data, error } = await supabase.functions.invoke('cnpj-radar', {
+        body: { action: 'lookup', cnpj: digits },
+      });
+
+      if (error) throw error;
+      if (!data || data.error) throw new Error(data?.error || 'CNPJ não encontrado');
+
+      const est = data.estabelecimento ?? {};
       const mapped: CNPJResult = {
         cnpj: digits,
         razao_social: data.razao_social || '',
-        nome_fantasia: data.estabelecimento?.nome_fantasia || '',
-        situacao_cadastral: data.estabelecimento?.situacao_cadastral || '',
-        cnae_fiscal_descricao: data.estabelecimento?.atividade_principal?.descricao || data.cnae_fiscal_descricao || '',
-        cnae_fiscal: data.estabelecimento?.atividade_principal?.id || 0,
-        logradouro: data.estabelecimento?.logradouro || '',
-        numero: data.estabelecimento?.numero || '',
-        complemento: data.estabelecimento?.complemento || '',
-        bairro: data.estabelecimento?.bairro || '',
-        municipio: data.estabelecimento?.cidade?.nome || '',
-        uf: data.estabelecimento?.estado?.sigla || '',
-        cep: data.estabelecimento?.cep || '',
-        ddd_telefone_1: data.estabelecimento?.ddd1 && data.estabelecimento?.telefone1
-          ? `${data.estabelecimento.ddd1}${data.estabelecimento.telefone1}` : '',
-        email: data.estabelecimento?.email || '',
-        data_inicio_atividade: data.estabelecimento?.data_inicio_atividade || '',
-        porte: data.porte?.descricao || '',
-        descricao_tipo_de_logradouro: data.estabelecimento?.tipo_logradouro || '',
+        nome_fantasia: est.nome_fantasia || data.nome_fantasia || '',
+        situacao_cadastral: est.situacao_cadastral || data.situacao_cadastral || '',
+        cnae_fiscal_descricao: est.atividade_principal?.descricao || data.cnae_fiscal_descricao || '',
+        cnae_fiscal: est.atividade_principal?.id || data.cnae_fiscal || 0,
+        logradouro: est.logradouro || data.logradouro || '',
+        numero: est.numero || data.numero || '',
+        complemento: est.complemento || data.complemento || '',
+        bairro: est.bairro || data.bairro || '',
+        municipio: est.cidade?.nome || data.municipio || '',
+        uf: est.estado?.sigla || data.uf || '',
+        cep: est.cep || data.cep || '',
+        ddd_telefone_1: est.ddd1 && est.telefone1
+          ? `${est.ddd1}${est.telefone1}`
+          : data.ddd_telefone_1 || '',
+        email: est.email || data.email || '',
+        data_inicio_atividade: est.data_inicio_atividade || data.data_inicio_atividade || '',
+        porte: data.porte?.descricao || data.porte || '',
+        descricao_tipo_de_logradouro: est.tipo_logradouro || '',
       };
       setSingleResult(mapped);
     } catch (err: any) {
@@ -170,47 +180,28 @@ export function CNPJRadarTab() {
     setMassResults([]);
     setSelectedIds(new Set());
     try {
-      const params = new URLSearchParams();
-      if (estado) params.set('uf', estado);
-      if (cidade) params.set('municipio', cidade.toUpperCase());
-      if (cnae) params.set('cnae', cnae.replace(/\D/g, ''));
-      if (porte) params.set('porte', porte);
+      // A busca era feita direto do navegador contra a API pública de CNPJ:
+      // sem chave, batendo o limite público em minutos, sem cache e refém do
+      // CORS — que, quando bloqueia, falha silenciosamente no cliente. Agora
+      // vai pela edge function, que tem retry, duas fontes com fallback e
+      // valida o telefone antes de devolver.
+      const { data, error } = await supabase.functions.invoke('cnpj-radar', {
+        body: {
+          action: 'search',
+          filters: {
+            uf: estado,
+            municipio: cidade || undefined,
+            cnae: cnae || undefined,
+            porte: porte || undefined,
+            limit: quantidade[0],
+            only_with_phone: true,
+          },
+        },
+      });
 
-      const results: CNPJResult[] = [];
-      const maxPages = Math.ceil(quantidade[0] / 20);
+      if (error) throw error;
 
-      for (let page = 1; page <= maxPages && results.length < quantidade[0]; page++) {
-        params.set('pagina', String(page));
-        const res = await fetch(`https://publica.cnpj.ws/cnpj/s?${params.toString()}`);
-        if (!res.ok) break;
-        const data = await res.json();
-        if (!data || !Array.isArray(data) || data.length === 0) break;
-
-        for (const item of data) {
-          if (results.length >= quantidade[0]) break;
-          results.push({
-            cnpj: item.cnpj || '',
-            razao_social: item.razao_social || '',
-            nome_fantasia: item.nome_fantasia || '',
-            situacao_cadastral: item.situacao_cadastral || 'Ativa',
-            cnae_fiscal_descricao: item.cnae_fiscal_descricao || '',
-            cnae_fiscal: item.cnae_fiscal || 0,
-            logradouro: item.logradouro || '',
-            numero: item.numero || '',
-            complemento: item.complemento || '',
-            bairro: item.bairro || '',
-            municipio: item.municipio || '',
-            uf: item.uf || estado,
-            cep: item.cep || '',
-            ddd_telefone_1: item.ddd_telefone_1 || '',
-            email: item.email || '',
-            data_inicio_atividade: item.data_inicio_atividade || '',
-            porte: item.porte || '',
-            descricao_tipo_de_logradouro: item.descricao_tipo_de_logradouro || '',
-          });
-        }
-      }
-
+      const results: CNPJResult[] = data?.results ?? [];
       setMassResults(results);
       if (results.length === 0) {
         toast({ title: 'Nenhuma empresa encontrada', description: 'Tente outros filtros.' });

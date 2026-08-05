@@ -18,6 +18,8 @@ import { useMeetings } from '@/hooks/use-meetings';
 import { useActivityLog } from '@/hooks/use-activity-log';
 import { Lead, LeadTask, LeadNote } from '@/types/database';
 import { stageColors } from '@/constants/lead-icons';
+import { AgentControlCard } from '@/components/crm/AgentControlCard';
+import type { AgentStatus } from '@/hooks/use-agent-control';
 import { enrichmentApi } from '@/lib/api/enrichment';
 import { formatDistanceToNow, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -204,6 +206,20 @@ export default function CRMContactDetailPage() {
                   <span className="text-xs text-muted-foreground ml-1">({lead.reviews_count})</span>
                 </div>
               )}
+              <Separator className="my-4" />
+              {/* Estado da IA nesta conversa. Sem isto, o handoff acontecia
+                  e quem abrisse o contato não fazia ideia de que o agente
+                  tinha saído — nem de como trazê-lo de volta. */}
+              <div className="text-left">
+                <AgentControlCard
+                  leadId={lead.id}
+                  status={(lead.agent_status as AgentStatus) ?? 'active'}
+                  reason={lead.agent_paused_reason}
+                  pausedAt={lead.agent_paused_at}
+                  repliesToday={lead.agent_replies_today ?? 0}
+                />
+              </div>
+
               <Separator className="my-4" />
               <div className="text-xs text-muted-foreground space-y-1 text-left">
                 <p>Fonte: <Badge variant="outline" className="text-xs">{lead.source}</Badge></p>

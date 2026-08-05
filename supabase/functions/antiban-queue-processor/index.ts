@@ -7,6 +7,7 @@ import {
   requireUserOrInternal,
   resolveUserId,
 } from "../_shared/auth.ts";
+import { loadChips, pickChip, recordChipSend } from "../_shared/chips.ts";
 
 interface QueueItem {
   id: string;
@@ -322,6 +323,15 @@ async function processQueue(supabase: any, userId: string, batchId?: string) {
     return { error: "WhatsApp não conectado" };
   }
 
+  // Chips disponíveis para rotação. É aqui que ela mais importa: o disparo
+  // em massa é justamente o que estoura o limite de um número só. Antes a
+  // configuração de rotação era ignorada e tudo saía pelo chip principal.
+  const { chips, strategy, enabled: rotationEnabled } = await loadChips(supabase, userId);
+  console.log(
+    `[AntiBan] rotação ${rotationEnabled ? `ligada (${strategy})` : "desligada"}, ` +
+    `${chips.length} chip(s) disponível(is)`,
+  );
+
   // Get or create antiban config
   let { data: config } = await supabase
     .from("antiban_config")
@@ -415,18 +425,30 @@ async function processQueue(supabase: any, userId: string, batchId?: string) {
       break;
     }
 
+    // Escolhe o chip desta mensagem. `processed` avança o round-robin sem
+    // precisar guardar estado entre execuções.
+    const chip = rotationEnabled
+      ? pickChip(chips, strategy, processed)
+      : null;
+    const instanceId = chip?.instance_id ?? userSettings.whatsapp_instance_id;
+
     // Process item
     const result = await processQueueItem(
-      supabase, 
-      item, 
-      { ...config, ...currentConfig }, 
-      userSettings.whatsapp_instance_id
+      supabase,
+      item,
+      { ...config, ...currentConfig },
+      instanceId
     );
 
     if (result.success) {
       processed++;
+      await recordChipSend(supabase, userId, instanceId, false);
+      // Mantém o contador local em dia para a estratégia por saúde
+      // equilibrar dentro do próprio lote, não só entre execuções.
+      if (chip) chip.sent_today++;
     } else {
       failed++;
+      await recordChipSend(supabase, userId, instanceId, true);
     }
 
     // Random delay between messages
