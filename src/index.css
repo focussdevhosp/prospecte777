@@ -12,159 +12,227 @@
   font-display: swap;
 }
 
-/* NexaProspect — Premium Dark SaaS Design System */
+/* ============================================================
+   SISTEMA VISUAL — "AURORA"
+   ============================================================
+   Reconstruído a partir da marca. O logo é um pássaro em degradê
+   magenta → violeta → laranja, e o `gradient-primary` sempre carregou
+   essas cores. O tema, porém, era "Midnight Indigo": índigo frio.
+   Resultado: botão com a cor da marca ao lado de um app inteiro de outra
+   cor — e, no escuro, o gradiente virava cinza-azul, que não combinava
+   com nenhum dos dois.
+
+   Aqui a interface passa a sair da própria marca:
+
+     violeta-magenta  identidade, ação primária
+     laranja quente   ênfase, dinheiro, conquista
+     neutro morno     fundo e texto (cinza puro brigava com o quente)
+
+   Regras do sistema:
+   - Neutros têm um leve viés quente para assentar com a marca.
+   - Elevação é degrau nomeado (surface-1..4), não sombra improvisada.
+   - Cada papel semântico tem par de contraste testado nos dois temas.
+   ============================================================ */
 
 @layer base {
   :root {
-    /* Midnight Indigo — Light Mode (clean, refined) */
-    --background: 240 30% 99%;
-    --foreground: 240 40% 8%;
+    /* ---- Base ---- */
+    --background: 30 25% 98.5%;
+    --foreground: 280 25% 11%;
 
     --card: 0 0% 100%;
-    --card-foreground: 240 40% 8%;
+    --card-foreground: 280 25% 11%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 240 40% 8%;
+    --popover-foreground: 280 25% 11%;
 
-    --primary: 243 75% 58%;
+    /* ---- Marca ---- */
+    --primary: 288 72% 48%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 240 20% 96%;
-    --secondary-foreground: 240 40% 12%;
+    /* Laranja da ponta da asa: ênfase e valor, nunca decoração */
+    --brand-accent: 22 92% 54%;
+    --brand-accent-foreground: 0 0% 100%;
 
-    --muted: 240 20% 96%;
-    --muted-foreground: 240 10% 42%;
+    --secondary: 285 20% 96%;
+    --secondary-foreground: 280 25% 16%;
 
-    --accent: 243 75% 96%;
-    --accent-foreground: 243 75% 40%;
+    --muted: 285 16% 95.5%;
+    --muted-foreground: 280 8% 44%;
 
-    --destructive: 0 72% 50%;
+    --accent: 288 60% 96%;
+    --accent-foreground: 288 72% 38%;
+
+    --destructive: 358 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 240 16% 90%;
-    --input: 240 16% 92%;
-    --ring: 243 75% 58%;
+    --border: 285 14% 89%;
+    --input: 285 14% 91%;
+    --ring: 288 72% 48%;
 
     --radius: 0.75rem;
 
-    /* Status */
-    --success: 152 62% 40%;
+    /* ---- Elevação: degraus nomeados ---- */
+    --surface-1: 30 25% 98.5%;
+    --surface-2: 0 0% 100%;
+    --surface-3: 285 22% 97%;
+    --surface-4: 285 20% 94%;
+
+    --shadow-sm: 0 1px 2px 0 hsl(280 25% 11% / 0.05);
+    --shadow-md: 0 2px 8px -2px hsl(280 25% 11% / 0.08), 0 1px 3px -1px hsl(280 25% 11% / 0.06);
+    --shadow-lg: 0 12px 28px -8px hsl(280 25% 11% / 0.12), 0 4px 10px -4px hsl(280 25% 11% / 0.07);
+    --shadow-glow: 0 0 0 1px hsl(var(--primary) / 0.12), 0 8px 24px -6px hsl(var(--primary) / 0.22);
+
+    /* ---- Semântica ---- */
+    --success: 152 58% 36%;
     --success-foreground: 0 0% 100%;
-    --warning: 38 95% 50%;
-    --warning-foreground: 0 0% 12%;
-    --info: 243 75% 58%;
+    --warning: 34 92% 46%;
+    --warning-foreground: 0 0% 100%;
+    --info: 262 68% 55%;
     --info-foreground: 0 0% 100%;
 
-    /* Temperature */
-    --temp-hot: 8 82% 55%;
-    --temp-warm: 32 92% 52%;
-    --temp-cold: 243 75% 60%;
+    /* ---- Temperatura do lead ---- */
+    /* Quente usa o laranja da marca de propósito: é o estado que o usuário
+       precisa enxergar do outro lado da sala. */
+    --temp-hot: 22 92% 52%;
+    --temp-warm: 42 90% 48%;
+    --temp-cold: 240 12% 58%;
 
-    /* Funnel stages */
-    --stage-new: 243 75% 58%;
-    --stage-contact: 260 68% 60%;
-    --stage-negotiation: 38 92% 55%;
-    --stage-proposal: 210 82% 58%;
-    --stage-won: 152 62% 42%;
-    --stage-lost: 0 65% 55%;
+    /* ---- Estágios do funil ---- */
+    /* Progressão de matiz frio -> quente, então a posição no funil é
+       legível pela cor mesmo sem ler o rótulo. */
+    --stage-new: 240 60% 60%;
+    --stage-contact: 262 66% 58%;
+    --stage-proposal: 288 68% 54%;
+    --stage-negotiation: 330 74% 54%;
+    --stage-won: 152 58% 40%;
+    --stage-lost: 280 6% 55%;
 
-    /* Sidebar */
-    --sidebar-background: 240 25% 98%;
-    --sidebar-foreground: 240 30% 18%;
-    --sidebar-primary: 243 75% 58%;
+    /* ---- Sidebar ---- */
+    --sidebar-background: 285 22% 97%;
+    --sidebar-foreground: 280 20% 24%;
+    --sidebar-primary: 288 72% 48%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 243 75% 95%;
-    --sidebar-accent-foreground: 243 75% 40%;
-    --sidebar-border: 240 16% 90%;
-    --sidebar-ring: 243 75% 58%;
+    --sidebar-accent: 288 55% 94%;
+    --sidebar-accent-foreground: 288 72% 36%;
+    --sidebar-border: 285 14% 89%;
+    --sidebar-ring: 288 72% 48%;
 
-    /* Charts */
-    --chart-1: 243 75% 58%;
-    --chart-2: 260 68% 62%;
-    --chart-3: 210 82% 58%;
-    --chart-4: 32 92% 55%;
-    --chart-5: 152 62% 45%;
+    /* ---- Gráficos ----
+       Ordem categórica fixa, nunca ciclada. Cada passo foi escolhido pelo
+       validador de paleta (seis checagens: faixa de luminosidade, piso de
+       croma, separação sob daltonismo, piso de visão normal e contraste
+       contra a superfície) — não no olho.
 
-    /* Premium tokens */
-    --glow: 243 84% 68%;
-    --surface: 240 30% 99%;
-    --surface-elevated: 0 0% 100%;
+       Duas decisões que parecem arbitrárias e não são:
+       - Verde e rosa ficam longe um do outro na ordem: é o par que a
+         deuteranopia não separa.
+       - A luminosidade alterna entre vizinhas, porque diferença de
+         luminosidade é o que ainda distingue as séries para quem não
+         enxerga a diferença de matiz. */
+    --chart-1: 288 72% 46.5%;   /* magenta da marca */
+    --chart-2: 22 88% 52.5%;    /* laranja */
+    --chart-3: 152 58% 30.5%;   /* verde */
+    --chart-4: 240 60% 65%;     /* azul-violeta */
+    --chart-5: 330 70% 49%;     /* rosa */
+    --chart-6: 42 88% 38.5%;    /* âmbar */
+
+    --glow: 288 82% 62%;
+
+    /* ---- Movimento ---- */
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+    --duration-fast: 140ms;
+    --duration-base: 220ms;
+    --duration-slow: 380ms;
   }
 
   .dark {
-    /* Midnight Indigo — Dark Mode (#0a0a1a → #141432 → #1e1e5a → #4f46e5) */
-    --background: 240 44% 6%;
-    --foreground: 240 20% 96%;
+    /* Fundo com viés violeta em vez de preto neutro: dá profundidade sem
+       o azulado do tema anterior. */
+    --background: 285 30% 6%;
+    --foreground: 285 15% 95%;
 
-    --card: 240 40% 9%;
-    --card-foreground: 240 20% 96%;
+    --card: 285 26% 9%;
+    --card-foreground: 285 15% 95%;
 
-    --popover: 240 40% 9%;
-    --popover-foreground: 240 20% 96%;
+    --popover: 285 28% 8%;
+    --popover-foreground: 285 15% 95%;
 
-    --primary: 243 82% 68%;
-    --primary-foreground: 240 44% 6%;
+    /* No escuro a primária sobe em luminosidade e cai em saturação —
+       magenta saturado sobre fundo escuro vibra e cansa a vista. */
+    --primary: 288 78% 68%;
+    --primary-foreground: 285 30% 6%;
 
-    --secondary: 240 36% 14%;
-    --secondary-foreground: 240 20% 96%;
+    --brand-accent: 22 94% 62%;
+    --brand-accent-foreground: 285 30% 6%;
 
-    --muted: 240 30% 12%;
-    --muted-foreground: 240 12% 68%;
+    --secondary: 285 22% 15%;
+    --secondary-foreground: 285 15% 95%;
 
-    --accent: 240 40% 16%;
-    --accent-foreground: 243 92% 82%;
+    --muted: 285 20% 13%;
+    --muted-foreground: 285 10% 65%;
 
-    --destructive: 0 68% 55%;
+    --accent: 288 30% 18%;
+    --accent-foreground: 288 82% 82%;
+
+    --destructive: 358 68% 58%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 240 28% 16%;
-    --input: 240 28% 16%;
-    --ring: 243 82% 68%;
+    --border: 285 18% 17%;
+    --input: 285 18% 18%;
+    --ring: 288 78% 68%;
 
-    /* Status - Dark */
-    --success: 152 62% 55%;
-    --success-foreground: 240 44% 6%;
-    --warning: 38 92% 62%;
-    --warning-foreground: 240 44% 6%;
-    --info: 243 82% 68%;
-    --info-foreground: 240 44% 6%;
+    --surface-1: 285 30% 6%;
+    --surface-2: 285 26% 9%;
+    --surface-3: 285 24% 12%;
+    --surface-4: 285 22% 16%;
 
-    /* Temperature - Dark */
-    --temp-hot: 8 78% 65%;
-    --temp-warm: 32 90% 62%;
-    --temp-cold: 243 82% 72%;
+    --shadow-sm: 0 1px 2px 0 hsl(0 0% 0% / 0.4);
+    --shadow-md: 0 2px 8px -2px hsl(0 0% 0% / 0.5), 0 1px 3px -1px hsl(0 0% 0% / 0.4);
+    --shadow-lg: 0 12px 28px -8px hsl(0 0% 0% / 0.6), 0 4px 10px -4px hsl(0 0% 0% / 0.45);
+    --shadow-glow: 0 0 0 1px hsl(var(--primary) / 0.25), 0 8px 28px -6px hsl(var(--primary) / 0.32);
 
-    /* Stages - Dark */
-    --stage-new: 243 82% 70%;
-    --stage-contact: 260 72% 72%;
-    --stage-negotiation: 38 92% 62%;
-    --stage-proposal: 210 82% 65%;
-    --stage-won: 152 62% 55%;
-    --stage-lost: 0 65% 62%;
+    --success: 152 55% 52%;
+    --success-foreground: 285 30% 6%;
+    --warning: 38 92% 60%;
+    --warning-foreground: 285 30% 6%;
+    --info: 262 74% 70%;
+    --info-foreground: 285 30% 6%;
 
-    /* Sidebar - Dark */
-    --sidebar-background: 240 48% 4%;
-    --sidebar-foreground: 240 18% 88%;
-    --sidebar-primary: 243 82% 68%;
-    --sidebar-primary-foreground: 240 44% 6%;
-    --sidebar-accent: 240 40% 12%;
-    --sidebar-accent-foreground: 243 92% 82%;
-    --sidebar-border: 240 28% 12%;
-    --sidebar-ring: 243 82% 68%;
+    --temp-hot: 22 94% 62%;
+    --temp-warm: 42 90% 60%;
+    --temp-cold: 240 14% 65%;
 
-    /* Charts - Dark */
-    --chart-1: 243 82% 70%;
-    --chart-2: 260 72% 72%;
-    --chart-3: 210 82% 65%;
-    --chart-4: 32 92% 62%;
-    --chart-5: 152 62% 55%;
+    --stage-new: 240 66% 70%;
+    --stage-contact: 262 70% 70%;
+    --stage-proposal: 288 74% 68%;
+    --stage-negotiation: 330 78% 68%;
+    --stage-won: 152 55% 52%;
+    --stage-lost: 285 8% 52%;
 
-    /* Premium tokens */
-    --glow: 243 92% 72%;
-    --surface: 240 48% 5%;
-    --surface-elevated: 240 40% 9%;
+    --sidebar-background: 285 32% 5%;
+    --sidebar-foreground: 285 12% 82%;
+    --sidebar-primary: 288 78% 68%;
+    --sidebar-primary-foreground: 285 30% 6%;
+    --sidebar-accent: 285 24% 13%;
+    --sidebar-accent-foreground: 288 82% 82%;
+    --sidebar-border: 285 18% 13%;
+    --sidebar-ring: 288 78% 68%;
+
+    /* O modo escuro tem faixa própria (mais estreita) e foi validado
+       separadamente contra a superfície escura — não é o claro invertido. */
+    --chart-1: 288 72% 56.5%;   /* magenta da marca */
+    --chart-2: 22 88% 49.5%;    /* laranja */
+    --chart-3: 152 62% 28%;     /* verde */
+    --chart-4: 240 60% 68.5%;   /* azul-violeta */
+    --chart-5: 330 70% 52%;     /* rosa */
+    --chart-6: 42 88% 38.5%;    /* âmbar */
+
+    --glow: 288 88% 72%;
   }
 }
+
 
 @layer base {
   * {
@@ -260,30 +328,68 @@
 }
 
 @layer utilities {
-  /* Gradients */
+  /* ---- Degradê da marca ----
+     Um só, derivado dos tokens, igual nos dois temas. Antes eram dois
+     degradês diferentes: claro copiava o logo (violeta→magenta→laranja) e
+     escuro virava cinza→azul, que não tinha relação com nada. */
   .gradient-primary {
-    background: linear-gradient(135deg, hsl(262 72% 55%) 0%, hsl(328 78% 55%) 55%, hsl(24 92% 58%) 100%);
+    background: linear-gradient(
+      135deg,
+      hsl(var(--stage-contact)) 0%,
+      hsl(var(--primary)) 45%,
+      hsl(var(--brand-accent)) 100%
+    );
   }
 
-  .text-gradient {
-    background: linear-gradient(135deg, hsl(262 72% 55%) 0%, hsl(328 78% 55%) 50%, hsl(24 92% 58%) 100%);
+  .text-gradient,
+  .text-gradient-primary {
+    background: linear-gradient(
+      135deg,
+      hsl(var(--stage-contact)) 0%,
+      hsl(var(--primary)) 45%,
+      hsl(var(--brand-accent)) 100%
+    );
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
-  .dark .gradient-primary {
-    background: linear-gradient(135deg, hsl(220 20% 8%) 0%, hsl(210 20% 60%) 55%, hsl(200 92% 68%) 100%);
-  }
-  .dark .text-gradient {
-    background: linear-gradient(135deg, hsl(210 30% 85%) 0%, hsl(200 92% 68%) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
+  /* ---- Elevação ----
+     Degraus nomeados em vez de sombra escolhida caso a caso. */
+  .surface-1 { background-color: hsl(var(--surface-1)); }
+  .surface-2 { background-color: hsl(var(--surface-2)); }
+  .surface-3 { background-color: hsl(var(--surface-3)); }
+  .surface-4 { background-color: hsl(var(--surface-4)); }
+
+  .elevation-sm { box-shadow: var(--shadow-sm); }
+  .elevation-md { box-shadow: var(--shadow-md); }
+  .elevation-lg { box-shadow: var(--shadow-lg); }
 
   .glow-primary {
-    box-shadow: 0 0 24px hsl(var(--glow) / 0.2), 0 0 48px hsl(var(--glow) / 0.08);
+    box-shadow: var(--shadow-glow);
+  }
+
+  /* Card interativo: sobe um degrau e ganha borda da marca no hover.
+     Um comportamento só, aplicado em todas as telas. */
+  .card-interactive {
+    transition:
+      border-color var(--duration-base) var(--ease-out),
+      box-shadow var(--duration-base) var(--ease-out),
+      transform var(--duration-base) var(--ease-out);
+  }
+  .card-interactive:hover {
+    border-color: hsl(var(--primary) / 0.35);
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
+  }
+
+  /* Quem prefere menos movimento não recebe o deslocamento. */
+  @media (prefers-reduced-motion: reduce) {
+    .card-interactive,
+    .card-interactive:hover {
+      transition: none;
+      transform: none;
+    }
   }
 
   /* Safe area */
@@ -386,15 +492,11 @@
     opacity: 0.4;
   }
 
-  /* Gradient text variants */
-  .text-gradient-primary {
-    background: linear-gradient(135deg, hsl(var(--primary)), hsl(239 84% 80%));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
+  /* .text-gradient-primary já é definido acima junto com .text-gradient —
+     esta segunda definição usava um azul (239 84% 80%) fora da paleta e,
+     por vir depois, era a que valia. */
   .text-gradient-success {
-    background: linear-gradient(135deg, hsl(var(--success)), hsl(160 84% 45%));
+    background: linear-gradient(135deg, hsl(var(--success)), hsl(152 62% 52%));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;

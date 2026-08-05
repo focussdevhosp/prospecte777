@@ -10,7 +10,7 @@ import {
 } from 'recharts';
 import { DollarSign, TrendingUp, Target, Users, Loader2, ArrowUpRight, ArrowDownRight, Flame } from 'lucide-react';
 
-const COLORS = ['#6366f1', '#f59e0b', '#ef4444', '#10b981', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316'];
+const COLORS = ['hsl(var(--chart-4))', 'hsl(var(--chart-6))', 'hsl(var(--destructive))', 'hsl(var(--chart-3))', 'hsl(var(--chart-1))', 'hsl(var(--chart-5))', '#06b6d4', 'hsl(var(--chart-2))'];
 
 const fmt = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(v);
 
@@ -58,8 +58,8 @@ export default function CRMAnalyticsPage() {
     const warm = leads.filter(l => l.temperature === 'morno').length;
     const cold = leads.filter(l => l.temperature === 'frio').length;
     return [
-      { name: 'Quente', value: hot, fill: '#ef4444' },
-      { name: 'Morno', value: warm, fill: '#f59e0b' },
+      { name: 'Quente', value: hot, fill: 'hsl(var(--destructive))' },
+      { name: 'Morno', value: warm, fill: 'hsl(var(--chart-6))' },
       { name: 'Frio', value: cold, fill: '#3b82f6' },
     ];
   }, [leads]);
@@ -273,8 +273,8 @@ export default function CRMAnalyticsPage() {
                 <YAxis tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
                 <Tooltip contentStyle={{ borderRadius: '12px', border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }} />
                 <Legend wrapperStyle={{ fontSize: 12 }} />
-                <Bar dataKey="total" name="Total Leads" fill="#6366f1" radius={[6, 6, 0, 0]} />
-                <Bar dataKey="conversion" name="Conversão %" fill="#10b981" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="total" name="Total Leads" fill="hsl(var(--chart-4))" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="conversion" name="Conversão %" fill="hsl(var(--chart-3))" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>

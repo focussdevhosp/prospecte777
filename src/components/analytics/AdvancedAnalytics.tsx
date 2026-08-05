@@ -38,23 +38,18 @@ import {
 import { format, subDays, startOfDay, eachDayOfInterval, parseISO, getHours, getDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import {
+  CHART_SERIES,
+  STAGE_COLORS,
+  TEMPERATURE_COLORS,
+  seriesColor,
+} from '@/lib/chart-colors';
 
-const COLORS = ['#10b981', '#0ea5e9', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
-
-const STAGE_COLORS: Record<string, string> = {
-  'Contato': '#6366f1',
-  'Qualificado': '#0ea5e9',
-  'Proposta': '#22c55e',
-  'Negociação': '#f59e0b',
-  'Ganho': '#16a34a',
-  'Perdido': '#ef4444',
-};
-
-const TEMP_COLORS = {
-  quente: '#ef4444',
-  morno: '#f59e0b',
-  frio: '#0ea5e9',
-};
+// Cores vêm do sistema (validadas para daltonismo e com passo próprio no
+// modo escuro). O array de hex que estava aqui não mudava com o tema e
+// colocava verde e vermelho lado a lado no funil.
+const COLORS = CHART_SERIES;
+const TEMP_COLORS = TEMPERATURE_COLORS;
 
 const DAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
@@ -315,15 +310,15 @@ export function AdvancedAnalytics() {
               <AreaChart data={leadsOverTime}>
                 <defs>
                   <linearGradient id="colorLeadsAnalytics" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#10b981" stopOpacity={0.35}/>
-                    <stop offset="100%" stopColor="#10b981" stopOpacity={0}/>
+                    <stop offset="0%" stopColor="hsl(var(--chart-3))" stopOpacity={0.35}/>
+                    <stop offset="100%" stopColor="hsl(var(--chart-3))" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.5} />
                 <XAxis dataKey="date" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} interval="preserveStartEnd" axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
                 <Tooltip contentStyle={tooltipStyle} />
-                <Area type="monotone" dataKey="leads" stroke="#10b981" strokeWidth={2.5} fillOpacity={1} fill="url(#colorLeadsAnalytics)" dot={false} activeDot={{ r: 5, fill: '#10b981', stroke: '#fff', strokeWidth: 2 }} />
+                <Area type="monotone" dataKey="leads" stroke="hsl(var(--chart-3))" strokeWidth={2.5} fillOpacity={1} fill="url(#colorLeadsAnalytics)" dot={false} activeDot={{ r: 5, fill: 'hsl(var(--chart-3))', stroke: 'hsl(var(--card))', strokeWidth: 2 }} />
               </AreaChart>
             </ResponsiveContainer>
           </CardContent>
@@ -539,9 +534,9 @@ export function AdvancedAnalytics() {
                 iconType="circle"
                 iconSize={8}
               />
-              <Bar dataKey="leads" name="Leads" fill="#10b981" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="messages" name="Mensagens" fill="#0ea5e9" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="responses" name="Respostas" fill="#f59e0b" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="leads" name="Leads" fill="hsl(var(--chart-3))" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="messages" name="Mensagens" fill="hsl(var(--chart-4))" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="responses" name="Respostas" fill="hsl(var(--chart-6))" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>

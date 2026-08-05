@@ -35,9 +35,14 @@ import {
   Users,
   MessageSquare,
   ThumbsUp,
+  Percent,
 } from 'lucide-react';
+import { CHART_SERIES, CHART_TOOLTIP_STYLE } from '@/lib/chart-colors';
 
-const COLORS = ['#10b981', '#0ea5e9', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
+// Ordem categórica do sistema. O array anterior repetia a mesma cor em
+// duas posições (verde no índice 0 e no 6), então dois nichos diferentes
+// saíam idênticos assim que a lista passava de seis.
+const COLORS = CHART_SERIES;
 
 interface NicheMetrics {
   niche: string;
@@ -276,43 +281,67 @@ export function NichePerformanceAnalytics() {
 
       {/* Performance Comparison */}
       <div className="grid gap-6 lg:grid-cols-2">
+        {/* Volume e conversão eram um gráfico só, com duas escalas de Y
+            (contagem à esquerda, porcentagem à direita). Isso convida a
+            comparar a altura da barra com a altura da linha, e elas não são
+            comparáveis: dá para mover a linha só mudando a escala. Dois
+            gráficos, cada um com sua escala, dizem a verdade. */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Target className="h-5 w-5" />
-              Performance por Nicho
+              Volume por nicho
             </CardTitle>
-            <CardDescription>Volume de leads e taxa de conversão</CardDescription>
+            <CardDescription>Quantos leads cada nicho trouxe</CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <ComposedChart data={performanceData} margin={{ left: -10 }}>
+              <BarChart data={performanceData} margin={{ left: -10 }}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                <XAxis 
-                  dataKey="name" 
-                  tick={{ fontSize: 11 }} 
+                <XAxis
+                  dataKey="name"
+                  tick={{ fontSize: 11 }}
                   angle={-45}
                   textAnchor="end"
                   height={80}
                 />
-                <YAxis yAxisId="left" tick={{ fontSize: 12 }} />
-                <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 12 }} unit="%" />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: 'hsl(var(--card))', 
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '8px',
-                  }}
-                  formatter={(value: number, name: string) => {
-                    if (name === 'leads') return [value, 'Leads'];
-                    if (name === 'conversao') return [`${value}%`, 'Conversão'];
-                    return [value, name];
-                  }}
+                <YAxis tick={{ fontSize: 12 }} />
+                <Tooltip
+                  contentStyle={CHART_TOOLTIP_STYLE}
+                  formatter={(value: number) => [value, 'Leads']}
                 />
-                <Legend />
-                <Bar yAxisId="left" dataKey="leads" fill="#10b981" name="Leads" radius={[4, 4, 0, 0]} />
-                <Line yAxisId="right" type="monotone" dataKey="conversao" stroke="#f59e0b" strokeWidth={2} name="Conversão %" />
-              </ComposedChart>
+                <Bar dataKey="leads" fill="hsl(var(--chart-1))" name="Leads" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Percent className="h-5 w-5" />
+              Conversão por nicho
+            </CardTitle>
+            <CardDescription>Percentual que virou negócio fechado</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={performanceData} margin={{ left: -10 }}>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                <XAxis
+                  dataKey="name"
+                  tick={{ fontSize: 11 }}
+                  angle={-45}
+                  textAnchor="end"
+                  height={80}
+                />
+                <YAxis tick={{ fontSize: 12 }} unit="%" />
+                <Tooltip
+                  contentStyle={CHART_TOOLTIP_STYLE}
+                  formatter={(value: number) => [`${value}%`, 'Conversão']}
+                />
+                <Bar dataKey="conversao" fill="hsl(var(--chart-2))" name="Conversão" radius={[4, 4, 0, 0]} />
+              </BarChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
@@ -345,8 +374,8 @@ export function NichePerformanceAnalytics() {
                   }}
                 />
                 <Legend />
-                <Bar dataKey="leads" fill="#0ea5e9" name="Total Leads" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="ganhos" fill="#10b981" name="Ganhos" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="leads" fill="hsl(var(--chart-4))" name="Total Leads" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="ganhos" fill="hsl(var(--chart-3))" name="Ganhos" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>

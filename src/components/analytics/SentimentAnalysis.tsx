@@ -20,9 +20,9 @@ import {
 } from 'recharts';
 
 const SENTIMENT_COLORS = {
-  positive: '#22c55e',
-  neutral: '#f59e0b',
-  negative: '#ef4444',
+  positive: 'hsl(var(--chart-3))',
+  neutral: 'hsl(var(--chart-6))',
+  negative: 'hsl(var(--destructive))',
 };
 
 const SENTIMENT_ICONS = {
