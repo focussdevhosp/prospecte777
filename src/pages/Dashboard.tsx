@@ -17,6 +17,7 @@ import { ProspectionChart } from '@/components/dashboard/ProspectionChart';
 import { ConversionFunnelChart } from '@/components/dashboard/ConversionFunnelChart';
 import { RecentActivity } from '@/components/dashboard/RecentActivity';
 import { RecentLeadsTable } from '@/components/dashboard/RecentLeadsTable';
+import { HandoffQueue } from '@/components/dashboard/HandoffQueue';
 import {
   Users,
   TrendingUp,
@@ -171,6 +172,13 @@ export default function DashboardPage() {
           iconBg="bg-warning/8"
           delay={150}
         />
+      </div>
+
+      {/* Leads em que a IA saiu de cena e alguém precisa entrar — fica
+          acima dos gráficos porque é a única coisa aqui que custa dinheiro
+          a cada minuto parada. */}
+      <div className="mb-4">
+        <HandoffQueue />
       </div>
 
       {/* 4-column grid: chart, funnel, activity, leads */}

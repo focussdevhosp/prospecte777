@@ -596,6 +596,7 @@ export type Database = {
       }
       chat_messages: {
         Row: {
+          external_id: string | null
           content: string
           created_at: string
           id: string
@@ -606,6 +607,7 @@ export type Database = {
           whatsapp_message_id: string | null
         }
         Insert: {
+          external_id?: string | null
           content: string
           created_at?: string
           id?: string
@@ -616,6 +618,7 @@ export type Database = {
           whatsapp_message_id?: string | null
         }
         Update: {
+          external_id?: string | null
           content?: string
           created_at?: string
           id?: string
@@ -1156,6 +1159,11 @@ export type Database = {
       }
       leads: {
         Row: {
+          agent_paused_at: string | null
+          agent_paused_reason: string | null
+          agent_replies_date: string | null
+          agent_replies_today: number
+          agent_status: string
           address: string | null
           ai_memory_summary: string | null
           analyzed_needs: Json | null
@@ -1215,6 +1223,11 @@ export type Database = {
           website: string | null
         }
         Insert: {
+          agent_paused_at?: string | null
+          agent_paused_reason?: string | null
+          agent_replies_date?: string | null
+          agent_replies_today?: number
+          agent_status?: string
           address?: string | null
           ai_memory_summary?: string | null
           analyzed_needs?: Json | null
@@ -1274,6 +1287,11 @@ export type Database = {
           website?: string | null
         }
         Update: {
+          agent_paused_at?: string | null
+          agent_paused_reason?: string | null
+          agent_replies_date?: string | null
+          agent_replies_today?: number
+          agent_status?: string
           address?: string | null
           ai_memory_summary?: string | null
           analyzed_needs?: Json | null
@@ -1704,6 +1722,33 @@ export type Database = {
           updated_at?: string
           url?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      pending_replies: {
+        Row: {
+          first_seen_at: string
+          last_seen_at: string
+          lead_id: string
+          message_count: number
+          processing: boolean
+          user_id: string
+        }
+        Insert: {
+          first_seen_at?: string
+          last_seen_at?: string
+          lead_id: string
+          message_count?: number
+          processing?: boolean
+          user_id: string
+        }
+        Update: {
+          first_seen_at?: string
+          last_seen_at?: string
+          lead_id?: string
+          message_count?: number
+          processing?: boolean
+          user_id?: string
         }
         Relationships: []
       }

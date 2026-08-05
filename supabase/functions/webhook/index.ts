@@ -1,5 +1,17 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders, verifyWebhookSecret } from "../_shared/auth.ts";
+import {
+  agentGate,
+  classifyInbound,
+  countReply,
+  debounceInbound,
+  handoff,
+  loadMemory,
+  optOut,
+  recordInbound,
+  releaseDebounce,
+  withinBusinessHours,
+} from "../_shared/agent.ts";
 
 // Fetch long-term memories for a lead
 async function getLeadMemories(supabase: any, leadId: string): Promise<string> {
@@ -475,6 +487,14 @@ Deno.serve(async (req) => {
   // pelo app. Até lá seguem aceitas, e o log marca cada uma dessas.
   const authenticated = await verifyWebhookSecret(req);
 
+  // Guardados fora do try para o tratamento de erro conseguir destravar a
+  // conversa se algo estourar no meio do processamento.
+  let leadForCleanup: string | null = null;
+  const supabase = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+  );
+
   try {
     const body = await req.json();
     console.log("Webhook received:", JSON.stringify(body).substring(0, 500));
@@ -520,10 +540,6 @@ Deno.serve(async (req) => {
     }
 
     console.log(`Processing message from ${phone}: "${message.substring(0, 100)}..."`);
-
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Find lead by phone number (try with and without country code)
     let lead = null;
@@ -630,25 +646,95 @@ Deno.serve(async (req) => {
       settings = userSettings;
     }
 
-    // Save incoming message
-    await supabase.from("chat_messages").insert({
-      lead_id: lead.id,
-      sender_type: "lead",
-      content: message,
-      status: "delivered",
-    });
+    // ============================================================
+    // PORTARIA DO AGENTE
+    // ============================================================
+    // Tudo aqui roda antes de gastar um token de IA. A ordem importa:
+    // uma mensagem gravada duas vezes ou um "pare" ignorado custa muito
+    // mais caro que uma resposta atrasada.
+
+    // 1. Dedup — a Evolution reentrega o webhook quando não recebe 200 a
+    //    tempo, e a mesma mensagem virava duas respostas.
+    const externalId = body.data?.key?.id ?? body.message_id ?? null;
+    const isNew = await recordInbound(supabase, lead.id, message, externalId);
+
+    if (!isNew) {
+      return new Response(JSON.stringify({ status: "duplicate_ignored" }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     // Update lead's last response time and message count
     const messageCountUpdate = (lead.total_messages_exchanged || 0) + 1;
     await supabase
       .from("leads")
-      .update({ 
+      .update({
         last_response_at: new Date().toISOString(),
         follow_up_count: 0, // Reset follow-up count since they responded
         first_contact_at: lead.first_contact_at || new Date().toISOString(),
         total_messages_exchanged: messageCountUpdate,
       })
       .eq("id", lead.id);
+
+    // 2. Intenção — lida por regra, não por IA. "Pare de mandar mensagem"
+    //    não pode depender de o modelo estar no ar ou de a cota ter
+    //    acabado: é obrigação legal e é o que mantém o chip vivo.
+    const intent = classifyInbound(message);
+
+    if (intent.kind === "opt_out") {
+      await optOut(supabase, lead.id, intent.keyword);
+      console.log(`[webhook] opt-out de ${lead.business_name}: "${intent.keyword}"`);
+      return new Response(JSON.stringify({ status: "opted_out" }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (intent.kind === "handoff") {
+      await handoff(supabase, lead.id, intent.reason);
+      console.log(`[webhook] handoff de ${lead.business_name}: ${intent.reason}`);
+      // Silêncio de propósito: quem responde agora é o dono da conta, que
+      // acabou de ser notificado. A IA insistindo aqui é o que estraga
+      // negócio fechado e irrita cliente bravo.
+      return new Response(JSON.stringify({ status: "handoff", reason: intent.reason }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // 3. Travas de conversa: pausado pelo dono, teto diário do lead,
+    //    agente falando sozinho.
+    const gate = await agentGate(supabase, lead.id);
+    if (!gate.allowed) {
+      console.log(`[webhook] agente calado para ${lead.business_name}: ${gate.reason}`);
+      return new Response(JSON.stringify({ status: "skipped", reason: gate.reason }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // 4. Horário comercial — mensagem automática às 3h da manhã é o
+    //    caminho mais curto para uma denúncia.
+    if (!withinBusinessHours(settings)) {
+      console.log(`[webhook] fora do horário, ${lead.business_name} responde depois`);
+      return new Response(JSON.stringify({ status: "outside_business_hours" }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // 5. Rajada — espera o lead terminar de escrever e responde o assunto
+    //    inteiro de uma vez, em vez de uma resposta por linha.
+    const burst = await debounceInbound(supabase, lead.id, userId);
+    if (!burst.shouldReply) {
+      return new Response(JSON.stringify({ status: "batched" }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    leadForCleanup = lead.id;
+    if (burst.aggregated) message = burst.aggregated;
 
     // Fire intent-pipeline for automatic stage movement (fire-and-forget)
     if (userId && lead.id && message) {
@@ -675,7 +761,9 @@ Deno.serve(async (req) => {
     const conversationContext = await analyzeConversation(messages, LOVABLE_API_KEY);
 
     // Get long-term memory for this lead
-    const longTermMemory = await getLeadMemories(supabase, lead.id);
+    // Memória filtrada por confiança e limitada por seção — a versão antiga
+    // despejava 50 registros sem ordem, inchando o prompt com ruído antigo.
+    const longTermMemory = await loadMemory(supabase, lead.id);
     console.log(`Long-term memory for ${lead.id}: ${longTermMemory.length} chars`);
 
     // Extract and save new memories from this conversation (async, don't wait)
@@ -953,16 +1041,24 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Contabiliza a resposta no teto diário e libera a conversa para a
+    // próxima rajada.
+    await countReply(supabase, lead.id);
+    await releaseDebounce(supabase, lead.id);
+
     // Log activity
     await supabase.from("activity_log").insert({
       user_id: userId,
       lead_id: lead.id,
       activity_type: "message_received",
-      description: `Mensagem recebida e respondida automaticamente`,
-      metadata: { 
+      description: burst.messageCount > 1
+        ? `${burst.messageCount} mensagens agrupadas e respondidas em uma`
+        : `Mensagem recebida e respondida automaticamente`,
+      metadata: {
         message_preview: message.substring(0, 100),
         response_preview: responseMessage.substring(0, 100),
         meeting_scheduled: meetingScheduled,
+        batched_messages: burst.messageCount,
       },
     });
 
@@ -971,11 +1067,21 @@ Deno.serve(async (req) => {
         success: true,
         response: responseMessage,
         meeting_scheduled: meetingScheduled,
+        batched_messages: burst.messageCount,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
     console.error("Webhook error:", error);
+
+    // Sem isto, um erro no meio do caminho deixa a conversa marcada como
+    // "processando" para sempre e o agente nunca mais responde este lead.
+    try {
+      if (leadForCleanup) await releaseDebounce(supabase, leadForCleanup);
+    } catch (e) {
+      console.error("Falha ao liberar debounce:", e);
+    }
+
     return new Response(
       JSON.stringify({ error: error.message || "Internal server error" }),
       {

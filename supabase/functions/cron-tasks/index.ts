@@ -281,6 +281,19 @@ Deno.serve(async (req) => {
     if (!task || task === "cleanup") {
       const { data: pruned } = await supabase.rpc("prune_rate_limits");
       results.rate_limits_pruned = pruned || 0;
+
+      // Memória do lead só crescia; sem expurgo o prompt do agente vai
+      // ficando maior e mais caro a cada conversa.
+      const { data: memoryPruned } = await supabase.rpc("prune_lead_memory");
+      results.lead_memory_pruned = memoryPruned || 0;
+
+      // Conversa que travou em "processando" nunca mais recebe resposta.
+      const stale = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+      const { count } = await supabase
+        .from("pending_replies")
+        .delete({ count: "exact" })
+        .lt("last_seen_at", stale);
+      results.stale_pending_replies = count || 0;
     }
 
     console.log("Cron tasks completed:", results);
