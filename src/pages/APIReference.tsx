@@ -462,10 +462,10 @@ const endpoints: Endpoint[] = [
 ];
 
 const methodColors: Record<string, string> = {
-  GET: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30',
-  POST: 'bg-blue-500/10 text-blue-600 border-blue-500/30',
-  PUT: 'bg-amber-500/10 text-amber-600 border-amber-500/30',
-  DELETE: 'bg-red-500/10 text-red-600 border-red-500/30',
+  GET: 'bg-success/10 text-success border-success/30',
+  POST: 'bg-info/10 text-info border-info/30',
+  PUT: 'bg-warning/10 text-warning border-warning/30',
+  DELETE: 'bg-destructive/10 text-destructive border-destructive/30',
 };
 
 const categoryIcons: Record<string, any> = {
@@ -578,7 +578,7 @@ export default function APIReferencePage() {
                 <code>{BASE_URL}</code>
               </pre>
               <Button variant="ghost" size="sm" onClick={() => copyToClipboard(BASE_URL, -1)}>
-                {copiedIdx === -1 ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                {copiedIdx === -1 ? <Check className="h-4 w-4 text-success" /> : <Copy className="h-4 w-4" />}
               </Button>
             </div>
           </CardContent>
@@ -645,7 +645,7 @@ export default function APIReferencePage() {
                               onClick={() => copyToClipboard(generateCurl(ep), globalIdx)}
                             >
                               {copiedIdx === globalIdx ? (
-                                <Check className="h-4 w-4 mr-1 text-green-500" />
+                                <Check className="h-4 w-4 mr-1 text-success" />
                               ) : (
                                 <Copy className="h-4 w-4 mr-1" />
                               )}

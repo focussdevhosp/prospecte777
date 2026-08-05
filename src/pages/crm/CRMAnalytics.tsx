@@ -102,8 +102,8 @@ export default function CRMAnalyticsPage() {
       label: 'Pipeline Total',
       value: fmt(metrics.totalPipeline),
       icon: DollarSign,
-      color: 'text-emerald-500',
-      bg: 'bg-emerald-500/10',
+      color: 'text-success',
+      bg: 'bg-success/10',
       trend: null,
     },
     {
@@ -118,16 +118,16 @@ export default function CRMAnalyticsPage() {
       label: 'Taxa de Conversão',
       value: `${metrics.conversionRate.toFixed(1)}%`,
       icon: Target,
-      color: 'text-purple-500',
-      bg: 'bg-purple-500/10',
+      color: 'text-primary',
+      bg: 'bg-primary/10',
       trend: null,
     },
     {
       label: 'Ticket Médio',
       value: fmt(metrics.avgTicket),
       icon: Users,
-      color: 'text-amber-500',
-      bg: 'bg-amber-500/10',
+      color: 'text-warning',
+      bg: 'bg-warning/10',
       trend: null,
     },
   ];
@@ -149,7 +149,7 @@ export default function CRMAnalyticsPage() {
                   <kpi.icon className={`h-5 w-5 ${kpi.color}`} />
                 </div>
                 {kpi.trend !== null && (
-                  <Badge variant="outline" className={`text-[10px] ${kpi.trend >= 0 ? 'text-emerald-500 border-emerald-500/20' : 'text-red-500 border-red-500/20'}`}>
+                  <Badge variant="outline" className={`text-[10px] ${kpi.trend >= 0 ? 'text-success border-success/20' : 'text-destructive border-destructive/20'}`}>
                     {kpi.trend >= 0 ? <ArrowUpRight className="h-3 w-3 mr-0.5" /> : <ArrowDownRight className="h-3 w-3 mr-0.5" />}
                     {Math.abs(kpi.trend)}
                   </Badge>
@@ -166,8 +166,8 @@ export default function CRMAnalyticsPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
         <Card className="border-border/50">
           <CardContent className="pt-3 pb-3 flex items-center gap-3">
-            <div className="h-8 w-8 rounded-lg bg-red-500/10 flex items-center justify-center">
-              <Flame className="h-4 w-4 text-red-500" />
+            <div className="h-8 w-8 rounded-lg bg-destructive/10 flex items-center justify-center">
+              <Flame className="h-4 w-4 text-destructive" />
             </div>
             <div>
               <p className="text-lg font-bold">{metrics.hotLeads}</p>

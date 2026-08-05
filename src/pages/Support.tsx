@@ -145,12 +145,12 @@ export default function SupportPage() {
                           </div>
                           <div className="flex items-center gap-1">
                             {ticket.status === 'open' ? (
-                              <Badge variant="outline" className="text-[10px] text-amber-400 border-amber-400/30">
+                              <Badge variant="outline" className="text-[10px] text-warning border-warning/30">
                                 <Clock className="h-3 w-3 mr-0.5" />
                                 Aberto
                               </Badge>
                             ) : (
-                              <Badge variant="outline" className="text-[10px] text-emerald-400 border-emerald-400/30">
+                              <Badge variant="outline" className="text-[10px] text-success border-success/30">
                                 <CheckCircle2 className="h-3 w-3 mr-0.5" />
                                 Resolvido
                               </Badge>

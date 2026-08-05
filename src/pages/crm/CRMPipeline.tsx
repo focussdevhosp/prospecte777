@@ -24,12 +24,12 @@ import {
 } from 'lucide-react';
 
 const stageConfig: Record<LeadStage, { color: string; gradient: string; bg: string; emoji: string }> = {
-  'Contato': { color: 'text-blue-500', gradient: 'from-blue-500 to-blue-600', bg: 'bg-blue-500/10', emoji: '📞' },
-  'Qualificado': { color: 'text-amber-500', gradient: 'from-amber-500 to-amber-600', bg: 'bg-amber-500/10', emoji: '⭐' },
-  'Proposta': { color: 'text-purple-500', gradient: 'from-purple-500 to-purple-600', bg: 'bg-purple-500/10', emoji: '📋' },
-  'Negociação': { color: 'text-orange-500', gradient: 'from-orange-500 to-orange-600', bg: 'bg-orange-500/10', emoji: '🤝' },
-  'Ganho': { color: 'text-emerald-500', gradient: 'from-emerald-500 to-emerald-600', bg: 'bg-emerald-500/10', emoji: '🏆' },
-  'Perdido': { color: 'text-red-500', gradient: 'from-red-500 to-red-600', bg: 'bg-red-500/10', emoji: '❌' },
+  'Contato': { color: 'text-info', gradient: 'from-info to-info', bg: 'bg-info/10', emoji: '📞' },
+  'Qualificado': { color: 'text-warning', gradient: 'from-warning to-warning', bg: 'bg-warning/10', emoji: '⭐' },
+  'Proposta': { color: 'text-primary', gradient: 'from-primary to-primary', bg: 'bg-primary/10', emoji: '📋' },
+  'Negociação': { color: 'text-brand', gradient: 'from-brand to-brand', bg: 'bg-brand/10', emoji: '🤝' },
+  'Ganho': { color: 'text-success', gradient: 'from-success to-success', bg: 'bg-success/10', emoji: '🏆' },
+  'Perdido': { color: 'text-destructive', gradient: 'from-destructive to-destructive', bg: 'bg-destructive/10', emoji: '❌' },
 };
 
 function hashColor(name: string): string {
@@ -44,9 +44,9 @@ function getInitials(name: string) {
 }
 
 const tempConfig: Record<LeadTemperature, { icon: React.ReactNode; label: string; className: string }> = {
-  quente: { icon: <Flame className="h-3 w-3" />, label: 'Quente', className: 'bg-red-500/10 text-red-500 border-red-500/20' },
-  morno: { icon: <ThermometerSun className="h-3 w-3" />, label: 'Morno', className: 'bg-amber-500/10 text-amber-500 border-amber-500/20' },
-  frio: { icon: <Snowflake className="h-3 w-3" />, label: 'Frio', className: 'bg-blue-500/10 text-blue-500 border-blue-500/20' },
+  quente: { icon: <Flame className="h-3 w-3" />, label: 'Quente', className: 'bg-destructive/10 text-destructive border-destructive/20' },
+  morno: { icon: <ThermometerSun className="h-3 w-3" />, label: 'Morno', className: 'bg-warning/10 text-warning border-warning/20' },
+  frio: { icon: <Snowflake className="h-3 w-3" />, label: 'Frio', className: 'bg-info/10 text-info border-info/20' },
 };
 
 const fmt = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(v);
@@ -97,7 +97,7 @@ function LeadCard({ lead, onDragStart, isDragging, onClick }: {
               </p>
             )}
             {lead.deal_value ? (
-              <span className="text-[11px] font-semibold text-emerald-500 flex items-center gap-0.5 shrink-0 ml-auto">
+              <span className="text-[11px] font-semibold text-success flex items-center gap-0.5 shrink-0 ml-auto">
                 {fmtCompact(lead.deal_value)}
               </span>
             ) : null}
@@ -110,15 +110,15 @@ function LeadCard({ lead, onDragStart, isDragging, onClick }: {
           {lead.phone && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <a href={`https://wa.me/${lead.phone.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} className="h-6 w-6 rounded-md bg-emerald-500/10 flex items-center justify-center hover:bg-emerald-500/20 transition-colors">
-                  <MessageCircle className="h-3 w-3 text-emerald-500" />
+                <a href={`https://wa.me/${lead.phone.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} className="h-6 w-6 rounded-md bg-success/10 flex items-center justify-center hover:bg-success/20 transition-colors">
+                  <MessageCircle className="h-3 w-3 text-success" />
                 </a>
               </TooltipTrigger>
               <TooltipContent>WhatsApp</TooltipContent>
             </Tooltip>
           )}
           {lead.lead_score > 0 && (
-            <Badge variant="outline" className={`text-[9px] px-1.5 py-0 h-5 ${lead.lead_score > 60 ? 'text-emerald-500 border-emerald-500/20' : lead.lead_score > 30 ? 'text-amber-500 border-amber-500/20' : 'text-red-500 border-red-500/20'}`}>
+            <Badge variant="outline" className={`text-[9px] px-1.5 py-0 h-5 ${lead.lead_score > 60 ? 'text-success border-success/20' : lead.lead_score > 30 ? 'text-warning border-warning/20' : 'text-destructive border-destructive/20'}`}>
               {lead.lead_score}pts
             </Badge>
           )}
@@ -262,7 +262,7 @@ export default function CRMPipelinePage() {
           <p className="text-sm text-muted-foreground mt-0.5">Gerencie seus deals e acompanhe o funil de vendas</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          <div className="flex items-center gap-1.5 bg-emerald-500/10 text-emerald-600 px-3 py-1.5 rounded-lg text-sm">
+          <div className="flex items-center gap-1.5 bg-success/10 text-success px-3 py-1.5 rounded-lg text-sm">
             <DollarSign className="h-3.5 w-3.5" />
             <span className="font-semibold">{fmt(totalPipeline)}</span>
           </div>

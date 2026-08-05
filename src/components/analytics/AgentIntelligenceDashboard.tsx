@@ -61,10 +61,10 @@ export function AgentIntelligenceDashboard() {
   };
 
   const priorityColors: Record<string, string> = {
-    urgent: "bg-red-500",
-    high: "bg-orange-500",
-    medium: "bg-yellow-500",
-    low: "bg-blue-500",
+    urgent: "bg-destructive",
+    high: "bg-brand",
+    medium: "bg-warning",
+    low: "bg-info",
   };
 
   const signalTypeLabels: Record<string, string> = {
@@ -87,7 +87,7 @@ export function AgentIntelligenceDashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Escalações Pendentes</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-orange-500" />
+            <AlertTriangle className="h-4 w-4 text-brand" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{escalations?.length || 0}</div>
@@ -100,7 +100,7 @@ export function AgentIntelligenceDashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Leads Quentes</CardTitle>
-            <Flame className="h-4 w-4 text-red-500" />
+            <Flame className="h-4 w-4 text-destructive" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{hotLeads?.length || 0}</div>
@@ -113,7 +113,7 @@ export function AgentIntelligenceDashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Propostas Geradas</CardTitle>
-            <FileText className="h-4 w-4 text-blue-500" />
+            <FileText className="h-4 w-4 text-info" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{proposals?.length || 0}</div>
@@ -126,7 +126,7 @@ export function AgentIntelligenceDashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Nichos Analisados</CardTitle>
-            <Brain className="h-4 w-4 text-purple-500" />
+            <Brain className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{patterns?.length || 0}</div>
@@ -167,7 +167,7 @@ export function AgentIntelligenceDashboard() {
           {escalations?.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
-                <CheckCircle className="h-12 w-12 text-green-500 mb-4" />
+                <CheckCircle className="h-12 w-12 text-success mb-4" />
                 <p className="text-muted-foreground">Nenhuma escalação pendente</p>
               </CardContent>
             </Card>
@@ -250,7 +250,7 @@ export function AgentIntelligenceDashboard() {
                       </div>
                       <div className="text-right">
                         <div className="flex items-center gap-2">
-                          <Flame className="h-4 w-4 text-orange-500" />
+                          <Flame className="h-4 w-4 text-brand" />
                           <span className="font-bold text-lg">{item.close_probability}%</span>
                         </div>
                         <p className="text-xs text-muted-foreground">Probabilidade</p>
@@ -369,7 +369,7 @@ export function AgentIntelligenceDashboard() {
 
                     {pattern.conversion_rate > 0 && (
                       <div className="flex items-center gap-2">
-                        <TrendingUp className="h-4 w-4 text-green-500" />
+                        <TrendingUp className="h-4 w-4 text-success" />
                         <span className="text-sm">
                           Taxa de conversão: {pattern.conversion_rate.toFixed(1)}%
                         </span>

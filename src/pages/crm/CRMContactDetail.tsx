@@ -178,28 +178,28 @@ export default function CRMContactDetailPage() {
               <p className="text-sm text-muted-foreground">{lead.niche || 'Sem nicho'}</p>
               <div className="flex items-center justify-center gap-2 mt-3">
                 <Badge className={`${stageColors[lead.stage]} text-white`}>{lead.stage}</Badge>
-                {lead.temperature === 'quente' && <Badge variant="outline" className="text-red-500 border-red-500/30"><Flame className="h-3 w-3 mr-1" />Quente</Badge>}
-                {lead.temperature === 'morno' && <Badge variant="outline" className="text-amber-500 border-amber-500/30"><ThermometerSun className="h-3 w-3 mr-1" />Morno</Badge>}
-                {lead.temperature === 'frio' && <Badge variant="outline" className="text-blue-500 border-blue-500/30"><Snowflake className="h-3 w-3 mr-1" />Frio</Badge>}
+                {lead.temperature === 'quente' && <Badge variant="outline" className="text-destructive border-destructive/30"><Flame className="h-3 w-3 mr-1" />Quente</Badge>}
+                {lead.temperature === 'morno' && <Badge variant="outline" className="text-warning border-warning/30"><ThermometerSun className="h-3 w-3 mr-1" />Morno</Badge>}
+                {lead.temperature === 'frio' && <Badge variant="outline" className="text-info border-info/30"><Snowflake className="h-3 w-3 mr-1" />Frio</Badge>}
                 <Badge variant="outline">{lead.lead_score} pts</Badge>
               </div>
               <Separator className="my-4" />
               <div className="space-y-2 text-left text-sm">
-                <a href={`https://wa.me/${lead.phone.replace(/\D/g, '')}`} target="_blank" className="flex items-center gap-2 text-green-600 hover:underline"><Phone className="h-4 w-4" />{lead.phone}</a>
+                <a href={`https://wa.me/${lead.phone.replace(/\D/g, '')}`} target="_blank" className="flex items-center gap-2 text-success hover:underline"><Phone className="h-4 w-4" />{lead.phone}</a>
                 {lead.email && <a href={`mailto:${lead.email}`} className="flex items-center gap-2 hover:underline"><Mail className="h-4 w-4" />{lead.email}</a>}
                 {lead.website && <a href={lead.website} target="_blank" className="flex items-center gap-2 hover:underline"><Globe className="h-4 w-4" />{lead.website}</a>}
                 {lead.location && <p className="flex items-center gap-2 text-muted-foreground"><MapPin className="h-4 w-4" />{lead.location}</p>}
               </div>
               <div className="flex items-center justify-center gap-2 mt-3">
-                {lead.instagram_url && <a href={lead.instagram_url} target="_blank"><Instagram className="h-5 w-5 text-pink-500" /></a>}
-                {lead.facebook_url && <a href={lead.facebook_url} target="_blank"><Facebook className="h-5 w-5 text-blue-600" /></a>}
-                {lead.linkedin_url && <a href={lead.linkedin_url} target="_blank"><Linkedin className="h-5 w-5 text-blue-700" /></a>}
-                {lead.twitter_url && <a href={lead.twitter_url} target="_blank"><Twitter className="h-5 w-5 text-sky-500" /></a>}
+                {lead.instagram_url && <a href={lead.instagram_url} target="_blank"><Instagram className="h-5 w-5 text-brand" /></a>}
+                {lead.facebook_url && <a href={lead.facebook_url} target="_blank"><Facebook className="h-5 w-5 text-info" /></a>}
+                {lead.linkedin_url && <a href={lead.linkedin_url} target="_blank"><Linkedin className="h-5 w-5 text-info" /></a>}
+                {lead.twitter_url && <a href={lead.twitter_url} target="_blank"><Twitter className="h-5 w-5 text-info" /></a>}
               </div>
               {lead.rating && (
                 <div className="flex items-center justify-center gap-1 mt-3">
                   {Array.from({ length: 5 }).map((_, i) => (
-                    <Star key={i} className={`h-4 w-4 ${i < Math.round(lead.rating!) ? 'text-yellow-500 fill-yellow-500' : 'text-muted'}`} />
+                    <Star key={i} className={`h-4 w-4 ${i < Math.round(lead.rating!) ? 'text-warning fill-warning' : 'text-muted'}`} />
                   ))}
                   <span className="text-xs text-muted-foreground ml-1">({lead.reviews_count})</span>
                 </div>
@@ -236,10 +236,10 @@ export default function CRMContactDetailPage() {
                   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map((item, i) => (
                     <div key={i} className="flex items-start gap-3 pb-3 border-b last:border-0">
                       <div className={`h-8 w-8 rounded-full flex items-center justify-center shrink-0 ${
-                        item.type === 'message' ? 'bg-green-500/10' : item.type === 'meeting' ? 'bg-blue-500/10' : 'bg-muted'
+                        item.type === 'message' ? 'bg-success/10' : item.type === 'meeting' ? 'bg-info/10' : 'bg-muted'
                       }`}>
-                        {item.type === 'message' && <MessageCircle className="h-4 w-4 text-green-500" />}
-                        {item.type === 'meeting' && <Calendar className="h-4 w-4 text-blue-500" />}
+                        {item.type === 'message' && <MessageCircle className="h-4 w-4 text-success" />}
+                        {item.type === 'meeting' && <Calendar className="h-4 w-4 text-info" />}
                         {item.type === 'activity' && <FileText className="h-4 w-4 text-muted-foreground" />}
                       </div>
                       <div className="flex-1 min-w-0">
@@ -328,8 +328,8 @@ export default function CRMContactDetailPage() {
                           msg.sender_type === 'lead'
                             ? 'bg-muted rounded-bl-sm'
                             : msg.sender_type === 'agent'
-                            ? 'bg-purple-500 text-white rounded-br-sm'
-                            : 'bg-green-500 text-white rounded-br-sm'
+                            ? 'bg-primary text-white rounded-br-sm'
+                            : 'bg-success text-white rounded-br-sm'
                         }`}>
                           {msg.sender_type === 'agent' && (
                             <div className="flex items-center gap-1 mb-1 opacity-70">

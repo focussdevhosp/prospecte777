@@ -30,7 +30,7 @@ const defaultRules: AutomationRule[] = [
     name: 'Primeira Mensagem Automática',
     description: 'Envia uma mensagem de apresentação quando um novo lead é criado',
     icon: <MessageCircle className="h-5 w-5" />,
-    iconBg: 'bg-emerald-500/10 text-emerald-500',
+    iconBg: 'bg-success/10 text-success',
     enabled: false,
     category: 'messaging',
     settingsKey: 'auto_first_message_enabled',
@@ -40,7 +40,7 @@ const defaultRules: AutomationRule[] = [
     name: 'Follow-up Automático',
     description: 'Envia follow-up após X dias sem resposta do lead',
     icon: <Clock className="h-5 w-5" />,
-    iconBg: 'bg-amber-500/10 text-amber-500',
+    iconBg: 'bg-warning/10 text-warning',
     enabled: false,
     category: 'messaging',
     settingsKey: 'auto_followup_enabled',
@@ -50,7 +50,7 @@ const defaultRules: AutomationRule[] = [
     name: 'Pipeline Inteligente',
     description: 'Move leads automaticamente entre estágios baseado em interações',
     icon: <Move className="h-5 w-5" />,
-    iconBg: 'bg-purple-500/10 text-purple-500',
+    iconBg: 'bg-primary/10 text-primary',
     enabled: false,
     category: 'pipeline',
     settingsKey: 'auto_pipeline_enabled',
@@ -60,7 +60,7 @@ const defaultRules: AutomationRule[] = [
     name: 'Lead Scoring Automático',
     description: 'Calcula e atualiza o score do lead baseado em comportamento',
     icon: <TrendingUp className="h-5 w-5" />,
-    iconBg: 'bg-blue-500/10 text-blue-500',
+    iconBg: 'bg-info/10 text-info',
     enabled: false,
     category: 'scoring',
     settingsKey: 'auto_lead_scoring',
@@ -70,7 +70,7 @@ const defaultRules: AutomationRule[] = [
     name: 'Reativação de Leads Frios',
     description: 'Re-engaja leads inativos há mais de 14 dias com mensagem personalizada',
     icon: <Flame className="h-5 w-5" />,
-    iconBg: 'bg-red-500/10 text-red-500',
+    iconBg: 'bg-destructive/10 text-destructive',
     enabled: false,
     category: 'messaging',
     settingsKey: 'auto_reactivation_enabled',
@@ -80,7 +80,7 @@ const defaultRules: AutomationRule[] = [
     name: 'Agente SDR (IA)',
     description: 'Responde automaticamente leads usando IA contextual',
     icon: <Bot className="h-5 w-5" />,
-    iconBg: 'bg-indigo-500/10 text-indigo-500',
+    iconBg: 'bg-info/10 text-info',
     enabled: false,
     category: 'messaging',
     settingsKey: 'sdr_agent_enabled',
@@ -150,8 +150,8 @@ export default function CRMAutomationsPage() {
         </Card>
         <Card className="border-border/50">
           <CardContent className="pt-3 pb-3 flex items-center gap-3">
-            <div className="h-9 w-9 rounded-xl bg-emerald-500/10 flex items-center justify-center">
-              <MessageCircle className="h-4 w-4 text-emerald-500" />
+            <div className="h-9 w-9 rounded-xl bg-success/10 flex items-center justify-center">
+              <MessageCircle className="h-4 w-4 text-success" />
             </div>
             <div>
               <p className="text-lg font-bold">{rules.filter(r => r.category === 'messaging' && r.enabled).length}</p>
@@ -161,8 +161,8 @@ export default function CRMAutomationsPage() {
         </Card>
         <Card className="border-border/50">
           <CardContent className="pt-3 pb-3 flex items-center gap-3">
-            <div className="h-9 w-9 rounded-xl bg-purple-500/10 flex items-center justify-center">
-              <Move className="h-4 w-4 text-purple-500" />
+            <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center">
+              <Move className="h-4 w-4 text-primary" />
             </div>
             <div>
               <p className="text-lg font-bold">{rules.filter(r => r.category === 'pipeline' && r.enabled).length}</p>
@@ -172,8 +172,8 @@ export default function CRMAutomationsPage() {
         </Card>
         <Card className="border-border/50">
           <CardContent className="pt-3 pb-3 flex items-center gap-3">
-            <div className="h-9 w-9 rounded-xl bg-blue-500/10 flex items-center justify-center">
-              <TrendingUp className="h-4 w-4 text-blue-500" />
+            <div className="h-9 w-9 rounded-xl bg-info/10 flex items-center justify-center">
+              <TrendingUp className="h-4 w-4 text-info" />
             </div>
             <div>
               <p className="text-lg font-bold">{rules.filter(r => r.category === 'scoring' && r.enabled).length}</p>
@@ -218,7 +218,7 @@ export default function CRMAutomationsPage() {
                   </div>
                   <p className="text-xs text-muted-foreground leading-relaxed">{rule.description}</p>
                   <div className="flex items-center gap-2 mt-3">
-                    <Badge variant="outline" className={`text-[10px] ${rule.enabled ? 'text-emerald-500 border-emerald-500/20' : 'text-muted-foreground'}`}>
+                    <Badge variant="outline" className={`text-[10px] ${rule.enabled ? 'text-success border-success/20' : 'text-muted-foreground'}`}>
                       {rule.enabled ? '● Ativa' : '○ Inativa'}
                     </Badge>
                     <Badge variant="outline" className="text-[10px]">
@@ -243,8 +243,8 @@ export default function CRMAutomationsPage() {
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="flex items-start gap-3">
-              <div className="h-8 w-8 rounded-lg bg-blue-500/10 flex items-center justify-center shrink-0 mt-0.5">
-                <span className="text-sm font-bold text-blue-500">1</span>
+              <div className="h-8 w-8 rounded-lg bg-info/10 flex items-center justify-center shrink-0 mt-0.5">
+                <span className="text-sm font-bold text-info">1</span>
               </div>
               <div>
                 <p className="text-sm font-medium">Gatilho</p>
@@ -252,8 +252,8 @@ export default function CRMAutomationsPage() {
               </div>
             </div>
             <div className="flex items-start gap-3">
-              <div className="h-8 w-8 rounded-lg bg-purple-500/10 flex items-center justify-center shrink-0 mt-0.5">
-                <span className="text-sm font-bold text-purple-500">2</span>
+              <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                <span className="text-sm font-bold text-primary">2</span>
               </div>
               <div>
                 <p className="text-sm font-medium">Condição</p>
@@ -261,8 +261,8 @@ export default function CRMAutomationsPage() {
               </div>
             </div>
             <div className="flex items-start gap-3">
-              <div className="h-8 w-8 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0 mt-0.5">
-                <span className="text-sm font-bold text-emerald-500">3</span>
+              <div className="h-8 w-8 rounded-lg bg-success/10 flex items-center justify-center shrink-0 mt-0.5">
+                <span className="text-sm font-bold text-success">3</span>
               </div>
               <div>
                 <p className="text-sm font-medium">Ação</p>

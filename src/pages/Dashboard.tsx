@@ -136,40 +136,44 @@ export default function DashboardPage() {
       </div>
 
       <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {/* `change` só aparece quando existe medição real. Dois destes
+            cartões mostravam +125% e +12% escritos no código — número
+            inventado apresentado como crescimento medido. */}
         <KPICard
-          icon={<Users className="h-4 w-4 text-primary" />}
+          icon={<Users className="h-4 w-4" />}
           label="Total de Leads"
           value={totalLeads}
-          change={metrics?.leadsThisMonth ? Math.round((metrics.leadsThisMonth / Math.max(totalLeads - metrics.leadsThisMonth, 1)) * 100) : 0}
+          change={
+            metrics?.leadsThisMonth
+              ? Math.round((metrics.leadsThisMonth / Math.max(totalLeads - metrics.leadsThisMonth, 1)) * 100)
+              : undefined
+          }
           changeLabel={`+${metrics?.leadsThisMonth || 0} este mês`}
-          iconBg="bg-primary/8"
+          tone="primary"
           delay={0}
         />
         <KPICard
-          icon={<Send className="h-4 w-4 text-info" />}
-          label="Mensagens Enviadas"
+          icon={<Send className="h-4 w-4" />}
+          label="Leads Contatados"
           value={contactedLeads}
-          change={125}
-          changeLabel={`+${contactedLeads} este mês`}
-          iconBg="bg-info/8"
+          changeLabel={`${contactedLeads} de ${totalLeads} leads`}
+          tone="info"
           delay={50}
         />
         <KPICard
-          icon={<MessageSquare className="h-4 w-4 text-success" />}
-          label="Taxa de Resposta"
+          icon={<MessageSquare className="h-4 w-4" />}
+          label="Taxa de Conversão"
           value={`${metrics?.conversionRate?.toFixed(1) || '0.0'}%`}
-          change={0}
-          changeLabel="0% este mês"
-          iconBg="bg-success/8"
+          changeLabel={`${wonLeads} fechados`}
+          tone="success"
           delay={100}
         />
         <KPICard
-          icon={<TrendingUp className="h-4 w-4 text-warning" />}
-          label="Conversões"
+          icon={<TrendingUp className="h-4 w-4" />}
+          label="Negócios Ganhos"
           value={wonLeads}
-          change={12}
           changeLabel={`+${wonLeads} este mês`}
-          iconBg="bg-warning/8"
+          tone="brand"
           delay={150}
         />
       </div>

@@ -92,12 +92,12 @@ const plans = [
 ];
 
 const EVENT_LABELS: Record<string, { label: string; color: string; icon: typeof CheckCircle2 }> = {
-  purchase_approved: { label: 'Pagamento aprovado', color: 'text-emerald-500', icon: CheckCircle2 },
-  subscription_created: { label: 'Assinatura criada', color: 'text-emerald-500', icon: CheckCircle2 },
-  subscription_renewed: { label: 'Assinatura renovada', color: 'text-emerald-500', icon: CheckCircle2 },
+  purchase_approved: { label: 'Pagamento aprovado', color: 'text-success', icon: CheckCircle2 },
+  subscription_created: { label: 'Assinatura criada', color: 'text-success', icon: CheckCircle2 },
+  subscription_renewed: { label: 'Assinatura renovada', color: 'text-success', icon: CheckCircle2 },
   subscription_canceled: { label: 'Assinatura cancelada', color: 'text-destructive', icon: XCircle },
-  subscription_renewal_refused: { label: 'Renovação recusada', color: 'text-orange-500', icon: AlertTriangle },
-  refund: { label: 'Reembolso', color: 'text-orange-500', icon: AlertTriangle },
+  subscription_renewal_refused: { label: 'Renovação recusada', color: 'text-brand', icon: AlertTriangle },
+  refund: { label: 'Reembolso', color: 'text-brand', icon: AlertTriangle },
   chargeback: { label: 'Chargeback', color: 'text-destructive', icon: XCircle },
   purchase_refused: { label: 'Pagamento recusado', color: 'text-destructive', icon: XCircle },
 };
@@ -170,18 +170,18 @@ export default function BillingPage() {
             </div>
 
             {isPastDue && (
-              <div className="flex items-center gap-2.5 p-3 mb-5 rounded-xl bg-orange-500/10 border border-orange-500/20">
-                <AlertTriangle className="h-4 w-4 text-orange-500 shrink-0" />
-                <p className="text-sm text-orange-400">Pagamento pendente. Regularize para manter o acesso.</p>
+              <div className="flex items-center gap-2.5 p-3 mb-5 rounded-xl bg-brand/10 border border-brand/20">
+                <AlertTriangle className="h-4 w-4 text-brand shrink-0" />
+                <p className="text-sm text-brand">Pagamento pendente. Regularize para manter o acesso.</p>
               </div>
             )}
 
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {[
-                { icon: MessageSquare, label: 'Disparos', value: isActive ? 'Ilimitados ∞' : '50/mês', color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
-                { icon: Smartphone, label: 'Chips WhatsApp', value: `${chipsConnected} conectado(s)`, color: 'text-sky-500', bg: 'bg-sky-500/10' },
-                { icon: Star, label: 'Leads Capturados', value: `${leadsCount.toLocaleString()}`, color: 'text-amber-500', bg: 'bg-amber-500/10' },
-                { icon: CreditCard, label: 'Valor', value: subscription?.amount ? `R$ ${(subscription.amount / 100).toFixed(0)}/mês` : 'Gratuito', color: 'text-violet-500', bg: 'bg-violet-500/10' },
+                { icon: MessageSquare, label: 'Disparos', value: isActive ? 'Ilimitados ∞' : '50/mês', color: 'text-success', bg: 'bg-success/10' },
+                { icon: Smartphone, label: 'Chips WhatsApp', value: `${chipsConnected} conectado(s)`, color: 'text-info', bg: 'bg-info/10' },
+                { icon: Star, label: 'Leads Capturados', value: `${leadsCount.toLocaleString()}`, color: 'text-warning', bg: 'bg-warning/10' },
+                { icon: CreditCard, label: 'Valor', value: subscription?.amount ? `R$ ${(subscription.amount / 100).toFixed(0)}/mês` : 'Gratuito', color: 'text-primary', bg: 'bg-primary/10' },
               ].map((stat) => (
                 <div key={stat.label} className="flex items-center gap-3 p-3.5 rounded-xl bg-background/60 backdrop-blur-sm border border-border/50">
                   <div className={cn("p-2 rounded-lg", stat.bg)}>

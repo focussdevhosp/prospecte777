@@ -33,14 +33,14 @@ function hashColor(name: string) {
 }
 
 function ScoreBadge({ score }: { score: number }) {
-  const cls = score <= 30 ? 'bg-red-500/10 text-red-600' : score <= 60 ? 'bg-amber-500/10 text-amber-600' : 'bg-green-500/10 text-green-600';
+  const cls = score <= 30 ? 'bg-destructive/10 text-destructive' : score <= 60 ? 'bg-warning/10 text-warning' : 'bg-success/10 text-success';
   return <Badge variant="outline" className={`text-xs ${cls}`}>{score}</Badge>;
 }
 
 const tempIcons: Record<LeadTemperature, React.ReactNode> = {
-  quente: <Flame className="h-3 w-3 text-red-500" />,
-  morno: <ThermometerSun className="h-3 w-3 text-amber-500" />,
-  frio: <Snowflake className="h-3 w-3 text-blue-500" />,
+  quente: <Flame className="h-3 w-3 text-destructive" />,
+  morno: <ThermometerSun className="h-3 w-3 text-warning" />,
+  frio: <Snowflake className="h-3 w-3 text-info" />,
 };
 
 const commonTags = ['VIP', 'Urgente', 'Retorno', 'Sem Site', 'Interessado', 'Indicação', 'Recontato', 'Alto Valor'];
@@ -226,21 +226,21 @@ export default function CRMContactsPage() {
           </div>
         </div>
         <div className="flex items-center gap-2 p-2.5 rounded-xl bg-muted/30 border border-border/30">
-          <Flame className="h-4 w-4 text-red-500" />
+          <Flame className="h-4 w-4 text-destructive" />
           <div>
             <p className="text-sm font-bold">{hotCount}</p>
             <p className="text-[10px] text-muted-foreground">Quentes</p>
           </div>
         </div>
         <div className="flex items-center gap-2 p-2.5 rounded-xl bg-muted/30 border border-border/30">
-          <DollarSign className="h-4 w-4 text-emerald-500" />
+          <DollarSign className="h-4 w-4 text-success" />
           <div>
             <p className="text-sm font-bold">{new Intl.NumberFormat('pt-BR', { notation: 'compact', style: 'currency', currency: 'BRL' }).format(totalValue)}</p>
             <p className="text-[10px] text-muted-foreground">Pipeline</p>
           </div>
         </div>
         <div className="flex items-center gap-2 p-2.5 rounded-xl bg-muted/30 border border-border/30">
-          <Tag className="h-4 w-4 text-purple-500" />
+          <Tag className="h-4 w-4 text-primary" />
           <div>
             <p className="text-sm font-bold">{allTags.length}</p>
             <p className="text-[10px] text-muted-foreground">Tags</p>
@@ -555,8 +555,8 @@ export default function CRMContactsPage() {
                             onError={(e) => { e.currentTarget.style.display = 'none'; }}
                           />
                         )}
-                        {lead.website && <Globe className="h-3 w-3 text-emerald-500" />}
-                        {lead.email && <Mail className="h-3 w-3 text-emerald-500" />}
+                        {lead.website && <Globe className="h-3 w-3 text-success" />}
+                        {lead.email && <Mail className="h-3 w-3 text-success" />}
                       </div>
                     </TableCell>
                     <TableCell><div className="flex items-center gap-1">{tempIcons[lead.temperature]}<span className="text-xs capitalize">{lead.temperature}</span></div></TableCell>
@@ -613,7 +613,7 @@ export default function CRMContactsPage() {
                     <TableCell onClick={e => e.stopPropagation()}>
                       <div className="flex items-center gap-1">
                         <Button variant="ghost" size="icon" className="h-7 w-7" asChild>
-                          <a href={`https://wa.me/${lead.phone.replace(/\D/g, '')}`} target="_blank"><MessageCircle className="h-3.5 w-3.5 text-green-500" /></a>
+                          <a href={`https://wa.me/${lead.phone.replace(/\D/g, '')}`} target="_blank"><MessageCircle className="h-3.5 w-3.5 text-success" /></a>
                         </Button>
                         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => navigate(`/crm/contacts/${lead.id}`)}><Eye className="h-3.5 w-3.5" /></Button>
                       </div>

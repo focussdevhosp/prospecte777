@@ -34,7 +34,7 @@ export function NotificationSettings() {
   const getPermissionStatus = () => {
     switch (permission) {
       case 'granted':
-        return { icon: Check, text: 'Ativadas', variant: 'default' as const, color: 'text-emerald-500' };
+        return { icon: Check, text: 'Ativadas', variant: 'default' as const, color: 'text-success' };
       case 'denied':
         return { icon: BellOff, text: 'Bloqueadas', variant: 'destructive' as const, color: 'text-destructive' };
       default:

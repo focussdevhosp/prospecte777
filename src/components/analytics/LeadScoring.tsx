@@ -37,8 +37,8 @@ export function LeadScoring() {
   const [isScoring, setIsScoring] = useState(false);
 
   const getScoreColor = (score: number) => {
-    if (score >= 70) return 'text-emerald-500';
-    if (score >= 40) return 'text-amber-500';
+    if (score >= 70) return 'text-success';
+    if (score >= 40) return 'text-warning';
     return 'text-muted-foreground';
   };
 

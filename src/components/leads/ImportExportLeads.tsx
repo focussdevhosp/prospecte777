@@ -478,18 +478,18 @@ export function ImportExportLeads() {
             
             {/* Result */}
             {importResult && (
-              <Alert className={importResult.success > 0 ? 'border-green-500/50 bg-green-500/10' : 'border-destructive/50'}>
+              <Alert className={importResult.success > 0 ? 'border-success/50 bg-success/10' : 'border-destructive/50'}>
                 <Check className="h-4 w-4" />
                 <AlertTitle>Importação Concluída</AlertTitle>
                 <AlertDescription>
                   <div className="mt-2 space-y-1 text-sm">
                     <p className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-green-500" />
+                      <Check className="h-4 w-4 text-success" />
                       {importResult.success} leads importados com sucesso
                     </p>
                     {importResult.duplicates > 0 && (
                       <p className="flex items-center gap-2">
-                        <Info className="h-4 w-4 text-yellow-500" />
+                        <Info className="h-4 w-4 text-warning" />
                         {importResult.duplicates} duplicatas ignoradas
                       </p>
                     )}

@@ -229,7 +229,7 @@ export function OnboardingWizard() {
           {/* Progress bar with gradient */}
           <div className="relative h-1.5 bg-muted rounded-full overflow-hidden">
             <motion.div
-              className="absolute inset-y-0 left-0 bg-gradient-to-r from-primary via-primary/80 to-violet-400 rounded-full"
+              className="absolute inset-y-0 left-0 bg-gradient-to-r from-primary via-primary/80 to-primary rounded-full"
               initial={{ width: 0 }}
               animate={{ width: `${progress}%` }}
               transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
@@ -334,13 +334,13 @@ export function OnboardingWizard() {
                 {/* Step 3: WhatsApp */}
                 {step === 3 && (
                   <div className="text-center space-y-6">
-                    <div className="p-6 rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
-                      <Phone className="h-12 w-12 mx-auto mb-4 text-emerald-500" />
+                    <div className="p-6 rounded-2xl bg-success/10 border border-success/20">
+                      <Phone className="h-12 w-12 mx-auto mb-4 text-success" />
                       <h3 className="font-bold mb-2">Conecte seu WhatsApp</h3>
                       <p className="text-sm text-muted-foreground mb-4">Para enviar mensagens automáticas</p>
                       <Button
                         onClick={() => { handleSkip(); navigate('/settings/connections'); }}
-                        className="bg-emerald-600 hover:bg-emerald-700"
+                        className="bg-success hover:bg-success"
                       >
                         <Phone className="h-4 w-4 mr-2" /> Conectar Agora
                       </Button>

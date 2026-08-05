@@ -236,7 +236,7 @@ export function NichePerformanceAnalytics() {
                   <p className="text-xs text-muted-foreground">Leads</p>
                 </div>
                 <div>
-                  <p className="text-lg font-semibold text-green-500">{bestNiche.conversionRate.toFixed(1)}%</p>
+                  <p className="text-lg font-semibold text-success">{bestNiche.conversionRate.toFixed(1)}%</p>
                   <p className="text-xs text-muted-foreground">Conversão</p>
                 </div>
                 <div>
@@ -249,15 +249,15 @@ export function NichePerformanceAnalytics() {
         )}
 
         {bestLocation && (
-          <Card className="bg-gradient-to-br from-blue-500/10 to-transparent border-blue-500/20">
+          <Card className="bg-gradient-to-br from-info/10 to-transparent border-info/20">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Melhor Localização</p>
                   <p className="text-2xl font-bold truncate">{bestLocation.location}</p>
                 </div>
-                <div className="p-3 rounded-xl bg-blue-500/20">
-                  <MapPin className="h-6 w-6 text-blue-500" />
+                <div className="p-3 rounded-xl bg-info/20">
+                  <MapPin className="h-6 w-6 text-info" />
                 </div>
               </div>
               <div className="mt-4 grid grid-cols-3 gap-4 text-center">
@@ -266,7 +266,7 @@ export function NichePerformanceAnalytics() {
                   <p className="text-xs text-muted-foreground">Leads</p>
                 </div>
                 <div>
-                  <p className="text-lg font-semibold text-green-500">{bestLocation.conversionRate.toFixed(1)}%</p>
+                  <p className="text-lg font-semibold text-success">{bestLocation.conversionRate.toFixed(1)}%</p>
                   <p className="text-xs text-muted-foreground">Conversão</p>
                 </div>
                 <div>
@@ -417,17 +417,17 @@ export function NichePerformanceAnalytics() {
                   </div>
                   <div className="flex gap-1 h-2">
                     <div 
-                      className="bg-red-500 rounded-l" 
+                      className="bg-destructive rounded-l" 
                       style={{ width: `${niche.totalLeads > 0 ? (niche.hotLeads / niche.totalLeads) * 100 : 0}%` }}
                       title="Quentes"
                     />
                     <div 
-                      className="bg-yellow-500" 
+                      className="bg-warning" 
                       style={{ width: `${niche.totalLeads > 0 ? (niche.warmLeads / niche.totalLeads) * 100 : 0}%` }}
                       title="Mornos"
                     />
                     <div 
-                      className="bg-blue-500 rounded-r" 
+                      className="bg-info rounded-r" 
                       style={{ width: `${niche.totalLeads > 0 ? (niche.coldLeads / niche.totalLeads) * 100 : 0}%` }}
                       title="Frios"
                     />
@@ -439,15 +439,15 @@ export function NichePerformanceAnalytics() {
           
           <div className="flex items-center justify-center gap-6 mt-6 pt-4 border-t">
             <div className="flex items-center gap-2 text-sm">
-              <div className="w-3 h-3 rounded bg-red-500" />
+              <div className="w-3 h-3 rounded bg-destructive" />
               <span className="text-muted-foreground">Quentes</span>
             </div>
             <div className="flex items-center gap-2 text-sm">
-              <div className="w-3 h-3 rounded bg-yellow-500" />
+              <div className="w-3 h-3 rounded bg-warning" />
               <span className="text-muted-foreground">Mornos</span>
             </div>
             <div className="flex items-center gap-2 text-sm">
-              <div className="w-3 h-3 rounded bg-blue-500" />
+              <div className="w-3 h-3 rounded bg-info" />
               <span className="text-muted-foreground">Frios</span>
             </div>
           </div>
@@ -458,7 +458,7 @@ export function NichePerformanceAnalytics() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Zap className="h-5 w-5 text-yellow-500" />
+            <Zap className="h-5 w-5 text-warning" />
             Insights Automáticos
           </CardTitle>
           <CardDescription>Recomendações baseadas nos seus dados</CardDescription>
@@ -466,11 +466,11 @@ export function NichePerformanceAnalytics() {
         <CardContent>
           <div className="grid gap-3 md:grid-cols-2">
             {bestNiche && bestNiche.conversionRate > 0 && (
-              <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/20">
+              <div className="p-4 rounded-lg bg-success/10 border border-success/20">
                 <div className="flex items-start gap-3">
-                  <ThumbsUp className="h-5 w-5 text-green-500 mt-0.5" />
+                  <ThumbsUp className="h-5 w-5 text-success mt-0.5" />
                   <div>
-                    <p className="font-medium text-green-700 dark:text-green-400">Nicho de Alta Performance</p>
+                    <p className="font-medium text-success dark:text-success">Nicho de Alta Performance</p>
                     <p className="text-sm text-muted-foreground mt-1">
                       <strong>{bestNiche.niche}</strong> tem a melhor taxa de conversão ({bestNiche.conversionRate.toFixed(1)}%). 
                       Considere aumentar a prospecção neste nicho.
@@ -481,11 +481,11 @@ export function NichePerformanceAnalytics() {
             )}
 
             {bestLocation && bestLocation.conversionRate > 0 && (
-              <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
+              <div className="p-4 rounded-lg bg-info/10 border border-info/20">
                 <div className="flex items-start gap-3">
-                  <MapPin className="h-5 w-5 text-blue-500 mt-0.5" />
+                  <MapPin className="h-5 w-5 text-info mt-0.5" />
                   <div>
-                    <p className="font-medium text-blue-700 dark:text-blue-400">Região Promissora</p>
+                    <p className="font-medium text-info dark:text-info">Região Promissora</p>
                     <p className="text-sm text-muted-foreground mt-1">
                       <strong>{bestLocation.location}</strong> apresenta excelentes resultados. 
                       Foque sua prospecção nesta região para maximizar conversões.
@@ -496,11 +496,11 @@ export function NichePerformanceAnalytics() {
             )}
 
             {nicheMetrics.some(n => n.responseRate < 20 && n.totalLeads >= 5) && (
-              <div className="p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
+              <div className="p-4 rounded-lg bg-warning/10 border border-warning/20">
                 <div className="flex items-start gap-3">
-                  <MessageSquare className="h-5 w-5 text-yellow-500 mt-0.5" />
+                  <MessageSquare className="h-5 w-5 text-warning mt-0.5" />
                   <div>
-                    <p className="font-medium text-yellow-700 dark:text-yellow-400">Baixa Taxa de Resposta</p>
+                    <p className="font-medium text-warning dark:text-warning">Baixa Taxa de Resposta</p>
                     <p className="text-sm text-muted-foreground mt-1">
                       Alguns nichos têm baixa taxa de resposta. Considere revisar suas mensagens 
                       ou testar diferentes abordagens com A/B testing.
@@ -511,11 +511,11 @@ export function NichePerformanceAnalytics() {
             )}
 
             {nicheMetrics.length >= 3 && (
-              <div className="p-4 rounded-lg bg-purple-500/10 border border-purple-500/20">
+              <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
                 <div className="flex items-start gap-3">
-                  <Star className="h-5 w-5 text-purple-500 mt-0.5" />
+                  <Star className="h-5 w-5 text-primary mt-0.5" />
                   <div>
-                    <p className="font-medium text-purple-700 dark:text-purple-400">Diversificação</p>
+                    <p className="font-medium text-primary dark:text-primary">Diversificação</p>
                     <p className="text-sm text-muted-foreground mt-1">
                       Você está prospectando em {nicheMetrics.length} nichos diferentes. 
                       Continue diversificando para encontrar novas oportunidades.

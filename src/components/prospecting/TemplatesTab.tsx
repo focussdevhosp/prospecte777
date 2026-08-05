@@ -112,9 +112,9 @@ export function TemplatesTab() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
           { label: 'Templates', value: templates.length, icon: MessageSquareText, color: 'text-primary', bg: 'bg-primary/10' },
-          { label: 'Nichos', value: new Set(templates.map(t => t.niche)).size, icon: Sparkles, color: 'text-violet-500', bg: 'bg-violet-500/10' },
-          { label: 'Taxa Média', value: `${avgResponseRate.toFixed(1)}%`, icon: TrendingUp, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
-          { label: 'Total Usos', value: templates.reduce((s, t) => s + (t.usage_count || 0), 0), icon: BarChart3, color: 'text-amber-500', bg: 'bg-amber-500/10' },
+          { label: 'Nichos', value: new Set(templates.map(t => t.niche)).size, icon: Sparkles, color: 'text-primary', bg: 'bg-primary/10' },
+          { label: 'Taxa Média', value: `${avgResponseRate.toFixed(1)}%`, icon: TrendingUp, color: 'text-success', bg: 'bg-success/10' },
+          { label: 'Total Usos', value: templates.reduce((s, t) => s + (t.usage_count || 0), 0), icon: BarChart3, color: 'text-warning', bg: 'bg-warning/10' },
         ].map(stat => (
           <div key={stat.label} className="flex items-center gap-2.5 p-3 rounded-xl bg-muted/30 border border-border/30">
             <div className={cn("p-2 rounded-lg", stat.bg)}>
@@ -255,7 +255,7 @@ export function TemplatesTab() {
 
                 <div className="flex items-center justify-between pt-3 border-t border-border/30">
                   <div className="flex items-center gap-1.5">
-                    <TrendingUp className="h-3 w-3 text-emerald-500" />
+                    <TrendingUp className="h-3 w-3 text-success" />
                     <span className="text-[11px] text-muted-foreground font-medium">
                       {template.response_rate?.toFixed(1) || 0}% resposta
                     </span>

@@ -264,7 +264,7 @@ export function AutomationsPanel() {
                               {automation.requiresWhatsApp && !settings?.whatsapp_connected && (
                                 <Badge
                                   variant="outline"
-                                  className="text-[10px] text-amber-600 border-amber-300"
+                                  className="text-[10px] text-warning border-warning"
                                 >
                                   Requer WhatsApp
                                 </Badge>
@@ -272,7 +272,7 @@ export function AutomationsPanel() {
                               {automation.requiresDeepSeek && !(settings as any)?.deepseek_api_key && (
                                 <Badge
                                   variant="outline"
-                                  className="text-[10px] text-amber-600 border-amber-300"
+                                  className="text-[10px] text-warning border-warning"
                                 >
                                   Requer DeepSeek API
                                 </Badge>
@@ -302,7 +302,7 @@ export function AutomationsPanel() {
                           <span
                             className={cn(
                               "text-[11px] font-medium",
-                              isEnabled ? "text-emerald-600" : "text-muted-foreground"
+                              isEnabled ? "text-success" : "text-muted-foreground"
                             )}
                           >
                             {isEnabled ? "Ativo" : "Inativo"}

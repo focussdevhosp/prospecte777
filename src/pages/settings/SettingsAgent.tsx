@@ -125,17 +125,17 @@ export default function SettingsAgent() {
         className={cn(
           "flex items-center gap-4 p-5 rounded-xl border transition-all",
           settings?.auto_prospecting_enabled
-            ? "bg-emerald-500/5 border-emerald-500/20"
+            ? "bg-success/5 border-success/20"
             : "bg-muted/30 border-border"
         )}
       >
         <div className={cn(
           "h-11 w-11 rounded-xl flex items-center justify-center shrink-0 transition-all duration-300",
-          settings?.auto_prospecting_enabled ? "bg-emerald-500/10" : "bg-muted"
+          settings?.auto_prospecting_enabled ? "bg-success/10" : "bg-muted"
         )}>
           <Zap className={cn(
             "h-5 w-5 transition-colors",
-            settings?.auto_prospecting_enabled ? "text-emerald-500" : "text-muted-foreground"
+            settings?.auto_prospecting_enabled ? "text-success" : "text-muted-foreground"
           )} />
         </div>
         <div className="flex-1">

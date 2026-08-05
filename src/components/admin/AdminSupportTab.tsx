@@ -65,8 +65,8 @@ export function AdminSupportTab() {
         <Card className="border-border/50">
           <CardContent className="pt-5 pb-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-amber-500/10">
-                <Clock className="h-4 w-4 text-amber-400" />
+              <div className="p-2 rounded-lg bg-warning/10">
+                <Clock className="h-4 w-4 text-warning" />
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Tickets Abertos</p>
@@ -78,8 +78,8 @@ export function AdminSupportTab() {
         <Card className="border-border/50">
           <CardContent className="pt-5 pb-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-emerald-500/10">
-                <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+              <div className="p-2 rounded-lg bg-success/10">
+                <CheckCircle2 className="h-4 w-4 text-success" />
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Tickets Fechados</p>
@@ -126,7 +126,7 @@ export function AdminSupportTab() {
                         </div>
                         <div className="flex items-center gap-1">
                           {ticket.status === 'open' ? (
-                            <Badge variant="outline" className="text-[10px] text-amber-400 border-amber-400/30">Aberto</Badge>
+                            <Badge variant="outline" className="text-[10px] text-warning border-warning/30">Aberto</Badge>
                           ) : (
                             <Badge variant="outline" className="text-[10px] text-muted-foreground">Fechado</Badge>
                           )}

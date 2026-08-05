@@ -338,7 +338,7 @@ export default function TestsPage() {
       case 'running':
         return <Loader2 className="h-5 w-5 animate-spin text-primary" />;
       case 'success':
-        return <CheckCircle2 className="h-5 w-5 text-green-500" />;
+        return <CheckCircle2 className="h-5 w-5 text-success" />;
       case 'error':
         return <XCircle className="h-5 w-5 text-destructive" />;
       default:
@@ -361,9 +361,9 @@ export default function TestsPage() {
       <div className="space-y-6">
         {/* System Status Overview */}
         <div className="grid gap-4 md:grid-cols-4">
-          <Card className={systemStatus.supabase ? 'border-green-500/30' : 'border-destructive/30'}>
+          <Card className={systemStatus.supabase ? 'border-success/30' : 'border-destructive/30'}>
             <CardContent className="p-4 flex items-center gap-3">
-              <Database className={`h-8 w-8 ${systemStatus.supabase ? 'text-green-500' : 'text-destructive'}`} />
+              <Database className={`h-8 w-8 ${systemStatus.supabase ? 'text-success' : 'text-destructive'}`} />
               <div>
                 <p className="font-medium">Banco de Dados</p>
                 <p className="text-sm text-muted-foreground">Supabase</p>
@@ -371,9 +371,9 @@ export default function TestsPage() {
             </CardContent>
           </Card>
           
-          <Card className={systemStatus.whatsapp ? 'border-green-500/30' : 'border-yellow-500/30'}>
+          <Card className={systemStatus.whatsapp ? 'border-success/30' : 'border-warning/30'}>
             <CardContent className="p-4 flex items-center gap-3">
-              <Smartphone className={`h-8 w-8 ${systemStatus.whatsapp ? 'text-green-500' : 'text-yellow-500'}`} />
+              <Smartphone className={`h-8 w-8 ${systemStatus.whatsapp ? 'text-success' : 'text-warning'}`} />
               <div>
                 <p className="font-medium">WhatsApp</p>
                 <p className="text-sm text-muted-foreground">
@@ -383,9 +383,9 @@ export default function TestsPage() {
             </CardContent>
           </Card>
           
-          <Card className="border-green-500/30">
+          <Card className="border-success/30">
             <CardContent className="p-4 flex items-center gap-3">
-              <Search className="h-8 w-8 text-green-500" />
+              <Search className="h-8 w-8 text-success" />
               <div>
                 <p className="font-medium">Busca de Leads</p>
                 <p className="text-sm text-muted-foreground">SerpAPI</p>
@@ -393,9 +393,9 @@ export default function TestsPage() {
             </CardContent>
           </Card>
           
-          <Card className="border-green-500/30">
+          <Card className="border-success/30">
             <CardContent className="p-4 flex items-center gap-3">
-              <Bot className="h-8 w-8 text-green-500" />
+              <Bot className="h-8 w-8 text-success" />
               <div>
                 <p className="font-medium">Inteligência Artificial</p>
                 <p className="text-sm text-muted-foreground">DeepSeek</p>
@@ -481,8 +481,8 @@ export default function TestsPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 {!settings?.whatsapp_connected ? (
-                  <div className="p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/30 text-center">
-                    <AlertCircle className="h-8 w-8 text-yellow-500 mx-auto mb-2" />
+                  <div className="p-4 rounded-lg bg-warning/10 border border-warning/30 text-center">
+                    <AlertCircle className="h-8 w-8 text-warning mx-auto mb-2" />
                     <p className="font-medium">WhatsApp não conectado</p>
                     <p className="text-sm text-muted-foreground mb-3">
                       Conecte seu WhatsApp em Configurações antes de testar.

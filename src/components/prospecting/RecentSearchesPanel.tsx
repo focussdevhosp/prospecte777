@@ -7,9 +7,9 @@ import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 
 const statusStyles: Record<string, string> = {
-  completed: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20',
-  running: 'bg-sky-500/15 text-sky-400 border-sky-500/20',
-  failed: 'bg-rose-500/15 text-rose-400 border-rose-500/20',
+  completed: 'bg-success/15 text-success border-success/20',
+  running: 'bg-info/15 text-info border-info/20',
+  failed: 'bg-destructive/15 text-destructive border-destructive/20',
   cancelled: 'bg-muted text-muted-foreground border-border',
 };
 

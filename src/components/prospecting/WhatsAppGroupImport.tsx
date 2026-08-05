@@ -465,8 +465,8 @@ export function WhatsAppGroupImport({ onLeadsImported, disabled }: WhatsAppGroup
         <CardContent className="p-0">
           <div className="px-6 pt-6 pb-4 border-b border-border/30">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-emerald-500/10 ring-2 ring-emerald-500/20">
-                <MessageCircle className="h-5 w-5 text-emerald-500" />
+              <div className="p-2.5 rounded-xl bg-success/10 ring-2 ring-success/20">
+                <MessageCircle className="h-5 w-5 text-success" />
               </div>
               <div>
                 <h3 className="font-semibold text-base">Extrair de Grupos WhatsApp</h3>
@@ -540,12 +540,12 @@ export function WhatsAppGroupImport({ onLeadsImported, disabled }: WhatsAppGroup
               </div>
               <div className="h-4 w-px bg-border" />
               <div className="flex items-center gap-1.5">
-                <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                <div className="w-2 h-2 rounded-full bg-success" />
                 <span className="font-medium text-sm">{totalNew}</span>
                 <span className="text-xs text-muted-foreground">novos</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <div className="w-2 h-2 rounded-full bg-amber-500" />
+                <div className="w-2 h-2 rounded-full bg-warning" />
                 <span className="font-medium text-sm">{duplicateCount}</span>
                 <span className="text-xs text-muted-foreground">existentes</span>
               </div>
@@ -603,7 +603,7 @@ export function WhatsAppGroupImport({ onLeadsImported, disabled }: WhatsAppGroup
                 <Briefcase className="h-4 w-4 text-primary" />
                 <span className="font-medium text-sm">Serviço a Oferecer</span>
                 {!selectedService && selectedContacts.length > 0 && (
-                  <Badge variant="outline" className="text-[10px] text-amber-600 border-amber-300">Obrigatório para disparo</Badge>
+                  <Badge variant="outline" className="text-[10px] text-warning border-warning">Obrigatório para disparo</Badge>
                 )}
               </div>
 
@@ -677,11 +677,11 @@ export function WhatsAppGroupImport({ onLeadsImported, disabled }: WhatsAppGroup
                           onClick={(e) => e.stopPropagation()}
                           disabled={selectableInGroup.length === 0}
                         />
-                        <MessageCircle className="h-4 w-4 text-emerald-500 shrink-0" />
+                        <MessageCircle className="h-4 w-4 text-success shrink-0" />
                         <span className="font-medium flex-1 truncate text-sm">{groupName}</span>
                         <div className="flex items-center gap-1.5">
                           {contacts.some(c => c.isDuplicate) && (
-                            <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5 bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                            <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5 bg-warning text-warning dark:bg-warning/30 dark:text-warning">
                               {contacts.filter(c => c.isDuplicate).length} dup
                             </Badge>
                           )}
@@ -714,7 +714,7 @@ export function WhatsAppGroupImport({ onLeadsImported, disabled }: WhatsAppGroup
                                 </p>
                               </div>
                               {contact.isDuplicate && (
-                                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5 bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5 bg-warning text-warning dark:bg-warning/30 dark:text-warning">
                                   Existente
                                 </Badge>
                               )}
@@ -773,7 +773,7 @@ export function WhatsAppGroupImport({ onLeadsImported, disabled }: WhatsAppGroup
         <DialogContent className="max-w-lg max-h-[85vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <MessageCircle className="h-5 w-5 text-emerald-500" />
+              <MessageCircle className="h-5 w-5 text-success" />
               Selecionar Grupos do WhatsApp
             </DialogTitle>
           </DialogHeader>

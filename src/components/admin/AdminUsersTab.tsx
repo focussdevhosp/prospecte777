@@ -31,9 +31,9 @@ import { useQueryClient } from '@tanstack/react-query';
 
 const statCards = [
   { key: 'total_users', label: 'Total Usuários', icon: Users, color: 'text-primary', bg: 'bg-primary/10', gradient: 'from-primary/20 to-primary/5' },
-  { key: 'connected_whatsapp', label: 'WhatsApp Conectado', icon: Smartphone, color: 'text-emerald-400', bg: 'bg-emerald-500/10', gradient: 'from-emerald-500/20 to-emerald-500/5' },
-  { key: 'total_leads', label: 'Total Leads', icon: Target, color: 'text-blue-400', bg: 'bg-blue-500/10', gradient: 'from-blue-500/20 to-blue-500/5' },
-  { key: 'total_messages', label: 'Total Mensagens', icon: MessageSquare, color: 'text-violet-400', bg: 'bg-violet-500/10', gradient: 'from-violet-500/20 to-violet-500/5' },
+  { key: 'connected_whatsapp', label: 'WhatsApp Conectado', icon: Smartphone, color: 'text-success', bg: 'bg-success/10', gradient: 'from-success/20 to-success/5' },
+  { key: 'total_leads', label: 'Total Leads', icon: Target, color: 'text-info', bg: 'bg-info/10', gradient: 'from-info/20 to-info/5' },
+  { key: 'total_messages', label: 'Total Mensagens', icon: MessageSquare, color: 'text-primary', bg: 'bg-primary/10', gradient: 'from-primary/20 to-primary/5' },
 ] as const;
 
 export function AdminUsersTab() {
@@ -172,8 +172,8 @@ export function AdminUsersTab() {
           <Card className="border-border/50">
             <CardContent className="pt-5 pb-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-emerald-500/10">
-                  <UserCheck className="h-4 w-4 text-emerald-400" />
+                <div className="p-2 rounded-lg bg-success/10">
+                  <UserCheck className="h-4 w-4 text-success" />
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Taxa de Conexão WhatsApp</p>
@@ -189,8 +189,8 @@ export function AdminUsersTab() {
           <Card className="border-border/50">
             <CardContent className="pt-5 pb-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-blue-500/10">
-                  <TrendingUp className="h-4 w-4 text-blue-400" />
+                <div className="p-2 rounded-lg bg-info/10">
+                  <TrendingUp className="h-4 w-4 text-info" />
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Leads por Usuário (média)</p>
@@ -206,8 +206,8 @@ export function AdminUsersTab() {
           <Card className="border-border/50">
             <CardContent className="pt-5 pb-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-violet-500/10">
-                  <Zap className="h-4 w-4 text-violet-400" />
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <Zap className="h-4 w-4 text-primary" />
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Msgs por Usuário (média)</p>
@@ -287,7 +287,7 @@ export function AdminUsersTab() {
                           <Tooltip>
                             <TooltipTrigger>
                               {u.whatsapp_connected ? (
-                                <CheckCircle2 className="h-4 w-4 text-emerald-400 mx-auto" />
+                                <CheckCircle2 className="h-4 w-4 text-success mx-auto" />
                               ) : (
                                 <XCircle className="h-4 w-4 text-muted-foreground/50 mx-auto" />
                               )}
@@ -299,7 +299,7 @@ export function AdminUsersTab() {
                           {u.is_blocked ? (
                             <Badge variant="destructive" className="text-[10px]">Bloqueado</Badge>
                           ) : (
-                            <Badge variant="outline" className="text-[10px] text-emerald-400 border-emerald-400/30">Ativo</Badge>
+                            <Badge variant="outline" className="text-[10px] text-success border-success/30">Ativo</Badge>
                           )}
                         </TableCell>
                         <TableCell>
@@ -345,7 +345,7 @@ export function AdminUsersTab() {
                                   <Button
                                     variant="ghost"
                                     size="icon"
-                                    className={`h-8 w-8 ${u.is_blocked ? 'text-emerald-400 hover:text-emerald-500' : 'text-muted-foreground hover:text-amber-500'}`}
+                                    className={`h-8 w-8 ${u.is_blocked ? 'text-success hover:text-success' : 'text-muted-foreground hover:text-warning'}`}
                                     onClick={() => setBlockTarget({ id: u.id, email: u.email, action: u.is_blocked ? 'unblock' : 'block' })}
                                   >
                                     {u.is_blocked ? <Unlock className="h-4 w-4" /> : <Ban className="h-4 w-4" />}
@@ -412,9 +412,9 @@ export function AdminUsersTab() {
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
               {blockTarget?.action === 'block' ? (
-                <><Ban className="h-5 w-5 text-amber-500" /> Bloquear usuário?</>
+                <><Ban className="h-5 w-5 text-warning" /> Bloquear usuário?</>
               ) : (
-                <><Unlock className="h-5 w-5 text-emerald-500" /> Desbloquear usuário?</>
+                <><Unlock className="h-5 w-5 text-success" /> Desbloquear usuário?</>
               )}
             </AlertDialogTitle>
             <AlertDialogDescription>
@@ -427,7 +427,7 @@ export function AdminUsersTab() {
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleBlockAction}
-              className={blockTarget?.action === 'block' ? 'bg-amber-600 text-white hover:bg-amber-700' : 'bg-emerald-600 text-white hover:bg-emerald-700'}
+              className={blockTarget?.action === 'block' ? 'bg-warning text-white hover:bg-warning' : 'bg-success text-white hover:bg-success'}
               disabled={isBlockingUser || isUnblockingUser}
             >
               {(isBlockingUser || isUnblockingUser) && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}

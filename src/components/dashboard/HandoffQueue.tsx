@@ -54,11 +54,11 @@ export function HandoffQueue() {
   }
 
   return (
-    <Card className="border-amber-500/40">
+    <Card className="border-warning/40">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center justify-between text-base">
           <span className="flex items-center gap-2">
-            <Hand className="h-4 w-4 text-amber-500" />
+            <Hand className="h-4 w-4 text-warning" />
             Esperando você
           </span>
           <Badge variant="secondary">{leads.length}</Badge>

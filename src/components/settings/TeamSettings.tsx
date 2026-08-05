@@ -117,7 +117,7 @@ export function TeamSettings() {
                         <p className="text-sm text-muted-foreground">
                           {team.owner_id === user?.id ? (
                             <span className="flex items-center gap-1">
-                              <Crown className="h-3 w-3 text-amber-500" />
+                              <Crown className="h-3 w-3 text-warning" />
                               Proprietário
                             </span>
                           ) : (
@@ -198,7 +198,7 @@ function TeamManagement({ team }: { team: Team }) {
   const getRoleIcon = (role: string) => {
     switch (role) {
       case 'owner':
-        return <Crown className="h-4 w-4 text-amber-500" />;
+        return <Crown className="h-4 w-4 text-warning" />;
       case 'admin':
         return <Shield className="h-4 w-4 text-primary" />;
       default:
@@ -209,7 +209,7 @@ function TeamManagement({ team }: { team: Team }) {
   const getRoleBadge = (role: string) => {
     switch (role) {
       case 'owner':
-        return <Badge variant="default" className="bg-amber-500/20 text-amber-700 dark:text-amber-400">Proprietário</Badge>;
+        return <Badge variant="default" className="bg-warning/20 text-warning dark:text-warning">Proprietário</Badge>;
       case 'admin':
         return <Badge variant="default" className="bg-primary/20 text-primary">Admin</Badge>;
       default:

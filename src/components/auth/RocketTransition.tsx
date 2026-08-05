@@ -98,7 +98,7 @@ export function RocketTransition({ isActive, onComplete }: RocketTransitionProps
             {/* Main flame */}
             <div 
               className={`
-                bg-gradient-to-b from-amber-500 via-orange-500 to-transparent rounded-full animate-pulse
+                bg-gradient-to-b from-warning via-brand to-transparent rounded-full animate-pulse
                 ${phase === 'approaching' ? 'w-6 h-12' : ''}
                 ${phase === 'docking' ? 'w-8 h-16' : ''}
                 ${phase === 'shaking' ? 'w-10 h-20' : ''}
@@ -110,7 +110,7 @@ export function RocketTransition({ isActive, onComplete }: RocketTransitionProps
             {/* Inner flame */}
             <div 
               className={`
-                -mt-8 bg-gradient-to-b from-yellow-300 via-amber-400 to-transparent rounded-full animate-pulse
+                -mt-8 bg-gradient-to-b from-warning via-warning to-transparent rounded-full animate-pulse
                 ${phase === 'approaching' ? 'w-3 h-6' : ''}
                 ${phase === 'docking' ? 'w-4 h-8' : ''}
                 ${phase === 'shaking' ? 'w-5 h-12' : ''}

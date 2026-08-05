@@ -242,7 +242,7 @@ export function MultiChipSettings() {
                         onCheckedChange={(checked) => handleToggleChipActive(chip.id, !!checked)}
                       />
                     )}
-                    <div className={`h-2.5 w-2.5 rounded-full ${chip.status === 'connected' ? 'bg-green-500 animate-pulse' : 'bg-muted-foreground'}`} />
+                    <div className={`h-2.5 w-2.5 rounded-full ${chip.status === 'connected' ? 'bg-success animate-pulse' : 'bg-muted-foreground'}`} />
                     <div>
                       <p className="text-sm font-medium">{chip.label}</p>
                       <p className="text-xs text-muted-foreground font-mono">{chip.instance_id}</p>

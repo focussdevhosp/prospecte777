@@ -65,9 +65,9 @@ import { cn } from '@/lib/utils';
 
 const statusConfig: Record<CampaignStatus, { label: string; color: string; icon: typeof Rocket; dotColor: string }> = {
   draft: { label: 'Rascunho', color: 'bg-muted text-muted-foreground', icon: FileText, dotColor: 'bg-muted-foreground' },
-  scheduled: { label: 'Agendada', color: 'bg-blue-500/10 text-blue-500 border-blue-500/20', icon: Clock, dotColor: 'bg-blue-500' },
-  running: { label: 'Executando', color: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20', icon: Play, dotColor: 'bg-emerald-500 animate-pulse' },
-  paused: { label: 'Pausada', color: 'bg-amber-500/10 text-amber-500 border-amber-500/20', icon: Pause, dotColor: 'bg-amber-500' },
+  scheduled: { label: 'Agendada', color: 'bg-info/10 text-info border-info/20', icon: Clock, dotColor: 'bg-info' },
+  running: { label: 'Executando', color: 'bg-success/10 text-success border-success/20', icon: Play, dotColor: 'bg-success animate-pulse' },
+  paused: { label: 'Pausada', color: 'bg-warning/10 text-warning border-warning/20', icon: Pause, dotColor: 'bg-warning' },
   completed: { label: 'Concluída', color: 'bg-primary/10 text-primary border-primary/20', icon: CheckCircle2, dotColor: 'bg-primary' },
   failed: { label: 'Falhou', color: 'bg-destructive/10 text-destructive border-destructive/20', icon: AlertTriangle, dotColor: 'bg-destructive' },
 };
@@ -133,9 +133,9 @@ function CampaignCard({
               <div className="flex items-center gap-3 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1">
                   {campaign.campaign_type === 'automatic' ? (
-                    <><Zap className="h-3 w-3 text-amber-500" /> Automática</>
+                    <><Zap className="h-3 w-3 text-warning" /> Automática</>
                   ) : (
-                    <><Users className="h-3 w-3 text-blue-500" /> Manual</>
+                    <><Users className="h-3 w-3 text-info" /> Manual</>
                   )}
                 </span>
                 <span>•</span>
@@ -380,7 +380,7 @@ export function CampaignsTab() {
       {/* KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <KPICard icon={Target} label="Total de Campanhas" value={kpis.total} />
-        <KPICard icon={Zap} label="Ativas Agora" value={kpis.active} accent={kpis.active > 0 ? 'bg-emerald-500' : undefined} />
+        <KPICard icon={Zap} label="Ativas Agora" value={kpis.active} accent={kpis.active > 0 ? 'bg-success' : undefined} />
         <KPICard icon={Users} label="Leads Capturados" value={kpis.totalLeads} />
         <KPICard icon={TrendingUp} label="Leads Contactados" value={kpis.totalContacted} />
       </div>

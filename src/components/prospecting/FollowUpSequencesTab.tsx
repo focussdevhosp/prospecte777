@@ -238,8 +238,8 @@ export function FollowUpSequencesTab() {
                   {sequences?.reduce((sum, s) => sum + (s.message_templates?.length || 0), 0) || 0}
                 </p>
               </div>
-              <div className="p-3 rounded-xl bg-blue-500/20">
-                <MessageSquare className="h-6 w-6 text-blue-500" />
+              <div className="p-3 rounded-xl bg-info/20">
+                <MessageSquare className="h-6 w-6 text-info" />
               </div>
             </div>
           </CardContent>
@@ -254,8 +254,8 @@ export function FollowUpSequencesTab() {
                   {Math.max(...(sequences?.flatMap(s => s.trigger_after_days || []) || [0]))} dias
                 </p>
               </div>
-              <div className="p-3 rounded-xl bg-purple-500/20">
-                <Clock className="h-6 w-6 text-purple-500" />
+              <div className="p-3 rounded-xl bg-primary/20">
+                <Clock className="h-6 w-6 text-primary" />
               </div>
             </div>
           </CardContent>

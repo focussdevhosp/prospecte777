@@ -151,13 +151,13 @@ export function SentimentAnalysis() {
 
           {/* Metrics */}
           <div className="space-y-4">
-            <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/20">
+            <div className="p-4 rounded-xl bg-success/10 border border-success/20">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <ThumbsUp className="h-5 w-5 text-green-500" />
+                  <ThumbsUp className="h-5 w-5 text-success" />
                   <span className="font-medium">Respostas Positivas</span>
                 </div>
-                <Badge variant="default" className="bg-green-500">
+                <Badge variant="default" className="bg-success">
                   {sentimentData.percentages.positive.toFixed(1)}%
                 </Badge>
               </div>
@@ -170,10 +170,10 @@ export function SentimentAnalysis() {
               </p>
             </div>
 
-            <div className="p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/20">
+            <div className="p-4 rounded-xl bg-warning/10 border border-warning/20">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <Meh className="h-5 w-5 text-yellow-500" />
+                  <Meh className="h-5 w-5 text-warning" />
                   <span className="font-medium">Respostas Neutras</span>
                 </div>
                 <Badge variant="secondary">
@@ -189,10 +189,10 @@ export function SentimentAnalysis() {
               </p>
             </div>
 
-            <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20">
+            <div className="p-4 rounded-xl bg-destructive/10 border border-destructive/20">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <ThumbsDown className="h-5 w-5 text-red-500" />
+                  <ThumbsDown className="h-5 w-5 text-destructive" />
                   <span className="font-medium">Respostas Negativas</span>
                 </div>
                 <Badge variant="destructive">
@@ -228,7 +228,7 @@ export function SentimentAnalysis() {
             <div className="flex items-center justify-between mb-1">
               <span className="text-sm">Taxa de sentimento positivo</span>
               <span className={`font-bold ${
-                recentSentimentTrend >= 50 ? 'text-green-500' : 'text-yellow-500'
+                recentSentimentTrend >= 50 ? 'text-success' : 'text-warning'
               }`}>
                 {recentSentimentTrend.toFixed(1)}%
               </span>

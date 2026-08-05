@@ -12,8 +12,8 @@ interface MassSendStatsProps {
 export function MassSendStats({ totalLeads, pendingLeads, sentLeads, selectedCount, hasActiveJob }: MassSendStatsProps) {
   const stats = [
     { label: 'Total', value: totalLeads, icon: Users, colorClass: 'text-foreground' },
-    { label: 'Pendentes', value: pendingLeads, icon: Clock, colorClass: 'text-yellow-500' },
-    { label: 'Enviados', value: sentLeads, icon: CheckCircle, colorClass: 'text-emerald-500' },
+    { label: 'Pendentes', value: pendingLeads, icon: Clock, colorClass: 'text-warning' },
+    { label: 'Enviados', value: sentLeads, icon: CheckCircle, colorClass: 'text-success' },
     { label: 'Selecionados', value: selectedCount, icon: Send, colorClass: 'text-primary' },
   ];
 

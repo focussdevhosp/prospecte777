@@ -62,12 +62,21 @@ import {
 import { cn } from '@/lib/utils';
 
 // Icon color map per section
+/**
+ * Cor só no marcador de seção, nunca nos ícones dos itens.
+ *
+ * Antes cada ícone da navegação vestia uma cor da série de gráficos
+ * (chart-1..5). Cores de série existem para codificar dados; usadas na
+ * navegação, deixavam cinco cores competindo o tempo todo — e o item ativo,
+ * que é a única coisa que a cor precisa destacar ali, ficava mais difícil
+ * de achar do que se tudo fosse cinza.
+ */
 const sectionIconColors: Record<string, string> = {
-  main: 'text-chart-1',
-  prospect: 'text-chart-2',
-  communicate: 'text-chart-3',
-  sell: 'text-chart-4',
-  analyze: 'text-chart-5',
+  main: 'text-primary/50',
+  prospect: 'text-brand/50',
+  communicate: 'text-info/50',
+  sell: 'text-success/50',
+  analyze: 'text-warning/50',
 };
 
 // ─── INÍCIO ─────────────────────────────────────────────
@@ -148,31 +157,29 @@ export function AppSidebar() {
         asChild
         isActive={active}
         className={cn(
-          "relative h-9 rounded-xl transition-all duration-200 group/item overflow-hidden",
+          "relative h-9 rounded-xl transition-colors duration-fast group/item overflow-hidden",
+          // Bloco sólido de magenta para o item ativo pesava demais numa
+          // lista de 25 itens. Fundo tingido + trilho + texto colorido
+          // localiza igual e não domina a tela.
           active
-            ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25 hover:bg-primary/90"
+            ? "bg-primary/10 text-primary hover:bg-primary/15"
             : "hover:bg-sidebar-accent text-sidebar-foreground/70 hover:text-sidebar-foreground"
         )}
       >
         <Link to={item.path} className="flex items-center gap-3 px-3">
-          <div className={cn(
-            "relative flex items-center justify-center shrink-0",
-            active && "drop-shadow-sm"
-          )}>
+          <div className="relative flex items-center justify-center shrink-0">
             <item.icon className={cn(
-              "h-[17px] w-[17px] transition-all duration-200",
+              "h-[17px] w-[17px] transition-colors duration-fast",
               active
-                ? 'text-primary-foreground'
-                : item.section
-                  ? sectionIconColors[item.section]
-                  : 'text-muted-foreground group-hover/item:text-foreground'
+                ? 'text-primary'
+                : 'text-muted-foreground group-hover/item:text-foreground'
             )} />
           </div>
           {!collapsed && (
             <>
               <span className={cn(
-                "text-[13px] font-medium truncate flex-1",
-                active ? "text-primary-foreground font-semibold" : ""
+                "text-[13px] truncate flex-1",
+                active ? "font-semibold" : "font-medium"
               )}>
                 {item.title}
               </span>
@@ -193,9 +200,10 @@ export function AppSidebar() {
               )}
             </>
           )}
-          {/* Active indicator line */}
+          {/* Trilho à esquerda: é o que localiza o item ativo quando a
+              sidebar está recolhida e só o ícone aparece. */}
           {active && (
-            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-primary-foreground/50" />
+            <div className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-r-full bg-primary" />
           )}
         </Link>
       </SidebarMenuButton>
@@ -241,7 +249,7 @@ export function AppSidebar() {
             <img
               src={logoImg}
               alt="NexaProspect"
-              className="h-8 w-8 rounded-xl object-contain transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3"
+              className="h-8 w-8 rounded-xl object-contain transition-transform duration-base group-hover:scale-105 motion-reduce:transition-none motion-reduce:group-hover:scale-100"
               width={32}
               height={32}
             />
