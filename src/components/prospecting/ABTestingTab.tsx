@@ -219,8 +219,8 @@ export function ABTestingTab() {
                 <p className="text-sm text-muted-foreground">Concluídos</p>
                 <p className="text-3xl font-bold">{completedTests.length}</p>
               </div>
-              <div className="p-3 rounded-xl bg-green-500/20">
-                <CheckCircle2 className="h-6 w-6 text-green-500" />
+              <div className="p-3 rounded-xl bg-success/20">
+                <CheckCircle2 className="h-6 w-6 text-success" />
               </div>
             </div>
           </CardContent>
@@ -230,10 +230,10 @@ export function ABTestingTab() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Melhoria Média</p>
-                <p className="text-3xl font-bold text-green-500">+{avgImprovement.toFixed(0)}%</p>
+                <p className="text-3xl font-bold text-success">+{avgImprovement.toFixed(0)}%</p>
               </div>
-              <div className="p-3 rounded-xl bg-green-500/20">
-                <TrendingUp className="h-6 w-6 text-green-500" />
+              <div className="p-3 rounded-xl bg-success/20">
+                <TrendingUp className="h-6 w-6 text-success" />
               </div>
             </div>
           </CardContent>
@@ -245,7 +245,7 @@ export function ABTestingTab() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Play className="h-5 w-5 text-green-500" />
+              <Play className="h-5 w-5 text-success" />
               Testes em Execução
             </CardTitle>
           </CardHeader>
@@ -273,14 +273,14 @@ export function ABTestingTab() {
                       <h4 className="font-medium">{test.name}</h4>
                       <div className="flex items-center gap-2 mt-1">
                         <Badge variant="outline">{test.niche}</Badge>
-                        <Badge variant="default" className="bg-green-500">Em execução</Badge>
+                        <Badge variant="default" className="bg-success">Em execução</Badge>
                       </div>
                     </div>
                     <div className="flex gap-2">
                       {significance >= 90 && totalSent >= test.min_sample_size * 2 && (
                         <Button
                           size="sm"
-                          className="bg-green-600 hover:bg-green-700"
+                          className="bg-success hover:bg-success"
                           onClick={() => {
                             const winner = aLeading ? 'variant_a' : 'variant_b';
                             updateTest({
@@ -310,11 +310,11 @@ export function ABTestingTab() {
                     {variants.map(v => {
                       const rate = v.sent > 0 ? (v.responses / v.sent) * 100 : 0;
                       return (
-                        <div key={v.key} className={`p-4 rounded-lg border-2 ${v.leading && totalSent > 0 ? 'border-green-500 bg-green-500/5' : 'border-muted'}`}>
+                        <div key={v.key} className={`p-4 rounded-lg border-2 ${v.leading && totalSent > 0 ? 'border-success bg-success/5' : 'border-muted'}`}>
                           <div className="flex items-center justify-between mb-3">
                             <span className="font-medium">{v.name}</span>
                             {v.leading && totalSent > 0 && (
-                              <Badge variant="default" className="bg-green-500">
+                              <Badge variant="default" className="bg-success">
                                 <Trophy className="h-3 w-3 mr-1" />
                                 Liderando
                               </Badge>
@@ -363,7 +363,7 @@ export function ABTestingTab() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Trophy className="h-5 w-5 text-yellow-500" />
+              <Trophy className="h-5 w-5 text-warning" />
               Testes Concluídos
             </CardTitle>
           </CardHeader>
@@ -399,11 +399,11 @@ export function ABTestingTab() {
                     {variants.map(v => {
                       const rate = v.sent > 0 ? (v.responses / v.sent) * 100 : 0;
                       return (
-                        <div key={v.key} className={`p-4 rounded-lg ${v.isWinner ? 'bg-green-500/10 border border-green-500/30' : 'bg-muted/50'}`}>
+                        <div key={v.key} className={`p-4 rounded-lg ${v.isWinner ? 'bg-success/10 border border-success/30' : 'bg-muted/50'}`}>
                           <div className="flex items-center justify-between mb-2">
                             <span className="font-medium">{v.name}</span>
                             {v.isWinner && (
-                              <Badge className="bg-green-500">
+                              <Badge className="bg-success">
                                 <Trophy className="h-3 w-3 mr-1" />
                                 Vencedor
                               </Badge>
@@ -415,7 +415,7 @@ export function ABTestingTab() {
                               <p className="text-xs text-muted-foreground">Enviados</p>
                             </div>
                             <div>
-                              <p className={`text-lg font-bold ${v.isWinner ? 'text-green-500' : ''}`}>{rate.toFixed(1)}%</p>
+                              <p className={`text-lg font-bold ${v.isWinner ? 'text-success' : ''}`}>{rate.toFixed(1)}%</p>
                               <p className="text-xs text-muted-foreground">Resposta</p>
                             </div>
                             <div>
@@ -428,10 +428,10 @@ export function ABTestingTab() {
                     })}
                   </div>
                   {improvement > 0 && (
-                    <div className="mt-4 p-3 bg-green-500/10 rounded-lg flex items-center gap-2">
-                      <TrendingUp className="h-5 w-5 text-green-500" />
+                    <div className="mt-4 p-3 bg-success/10 rounded-lg flex items-center gap-2">
+                      <TrendingUp className="h-5 w-5 text-success" />
                       <span className="text-sm">
-                        A variante vencedora teve <strong className="text-green-500">+{improvement.toFixed(1)}%</strong> mais respostas
+                        A variante vencedora teve <strong className="text-success">+{improvement.toFixed(1)}%</strong> mais respostas
                       </span>
                     </div>
                   )}

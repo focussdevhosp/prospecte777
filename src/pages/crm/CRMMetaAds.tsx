@@ -109,9 +109,9 @@ export default function CRMMetaAdsPage() {
   return (
     <div className="p-6">
       {/* LGPD Alert */}
-      <Alert className="mb-6 border-blue-500/30 bg-blue-500/5">
-        <Shield className="h-4 w-4 text-blue-500" />
-        <AlertTitle className="text-blue-600">Conformidade LGPD</AlertTitle>
+      <Alert className="mb-6 border-info/30 bg-info/5">
+        <Shield className="h-4 w-4 text-info" />
+        <AlertTitle className="text-info">Conformidade LGPD</AlertTitle>
         <AlertDescription className="text-sm">
           Os dados enviados ao Facebook são hasheados (SHA-256) antes do envio, conforme as diretrizes da LGPD e as políticas de dados da Meta. Apenas telefones públicos são compartilhados.
         </AlertDescription>
@@ -133,7 +133,7 @@ export default function CRMMetaAdsPage() {
           {isConnected ? (
             <div className="space-y-3">
               <div className="flex items-center gap-2">
-                <Badge className="bg-green-500 text-white">Conectado</Badge>
+                <Badge className="bg-success text-white">Conectado</Badge>
                 <Button variant="outline" size="sm" onClick={handleDisconnect}><Unplug className="h-4 w-4 mr-1" />Desconectar</Button>
                 <Button variant="outline" size="sm" onClick={loadAccounts} disabled={loading}>
                   {loading ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}Carregar Contas
@@ -189,7 +189,7 @@ export default function CRMMetaAdsPage() {
                       <TableRow key={c.id}>
                         <TableCell className="text-sm font-medium">{c.name}</TableCell>
                         <TableCell>
-                          <Badge variant="outline" className={c.status === 'ACTIVE' ? 'text-green-600' : 'text-muted-foreground'}>{c.status}</Badge>
+                          <Badge variant="outline" className={c.status === 'ACTIVE' ? 'text-success' : 'text-muted-foreground'}>{c.status}</Badge>
                         </TableCell>
                         <TableCell className="text-xs">{c.objective}</TableCell>
                       </TableRow>

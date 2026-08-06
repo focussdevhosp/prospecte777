@@ -48,8 +48,8 @@ export function ProspectingDashboard() {
       label: 'Encontrados',
       delta: '+18.6%',
       deltaPositive: true,
-      tint: 'from-sky-500/15 to-sky-500/5 ring-sky-500/20',
-      iconClass: 'text-sky-400',
+      tint: 'from-info/15 to-info/5 ring-info/20',
+      iconClass: 'text-info',
     },
     {
       icon: Send,
@@ -57,8 +57,8 @@ export function ProspectingDashboard() {
       label: 'Contatados',
       delta: '+15.2%',
       deltaPositive: true,
-      tint: 'from-emerald-500/15 to-emerald-500/5 ring-emerald-500/20',
-      iconClass: 'text-emerald-400',
+      tint: 'from-success/15 to-success/5 ring-success/20',
+      iconClass: 'text-success',
     },
     {
       icon: MessageSquare,
@@ -66,8 +66,8 @@ export function ProspectingDashboard() {
       label: 'Respostas',
       delta: '+9.8%',
       deltaPositive: true,
-      tint: 'from-amber-500/15 to-amber-500/5 ring-amber-500/20',
-      iconClass: 'text-amber-400',
+      tint: 'from-warning/15 to-warning/5 ring-warning/20',
+      iconClass: 'text-warning',
     },
     {
       icon: TrendingUp,
@@ -75,8 +75,8 @@ export function ProspectingDashboard() {
       label: 'Taxa de Resposta',
       delta: '+2.1 p.p.',
       deltaPositive: true,
-      tint: 'from-violet-500/15 to-violet-500/5 ring-violet-500/20',
-      iconClass: 'text-violet-400',
+      tint: 'from-primary/15 to-primary/5 ring-primary/20',
+      iconClass: 'text-primary',
     },
     {
       icon: Target,
@@ -84,8 +84,8 @@ export function ProspectingDashboard() {
       label: 'Conversões',
       delta: '+12.5%',
       deltaPositive: true,
-      tint: 'from-teal-500/15 to-teal-500/5 ring-teal-500/20',
-      iconClass: 'text-teal-400',
+      tint: 'from-success/15 to-success/5 ring-success/20',
+      iconClass: 'text-success',
     },
     {
       icon: DollarSign,
@@ -93,8 +93,8 @@ export function ProspectingDashboard() {
       label: 'Custo por Lead',
       delta: '-8.7%',
       deltaPositive: true,
-      tint: 'from-rose-500/15 to-rose-500/5 ring-rose-500/20',
-      iconClass: 'text-rose-400',
+      tint: 'from-destructive/15 to-destructive/5 ring-destructive/20',
+      iconClass: 'text-destructive',
     },
   ];
 
@@ -124,14 +124,14 @@ export function ProspectingDashboard() {
             </p>
             <div className="flex items-center gap-1 mt-2">
               {stat.deltaPositive ? (
-                <ArrowUp className="h-3 w-3 text-emerald-500" />
+                <ArrowUp className="h-3 w-3 text-success" />
               ) : (
-                <ArrowDown className="h-3 w-3 text-rose-500" />
+                <ArrowDown className="h-3 w-3 text-destructive" />
               )}
               <span
                 className={cn(
                   'text-[11px] font-semibold tabular-nums',
-                  stat.deltaPositive ? 'text-emerald-500' : 'text-rose-500'
+                  stat.deltaPositive ? 'text-success' : 'text-destructive'
                 )}
               >
                 {stat.delta}

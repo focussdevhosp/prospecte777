@@ -92,9 +92,9 @@ export function PerformanceMiniChart() {
         {/* Mini KPI cards */}
         <div className="grid grid-cols-3 gap-3 mt-5 pt-4 border-t border-border/40">
           {[
-            { label: 'Leads encontrados', value: totals.found, delta: '+19.4%', color: 'text-sky-400' },
-            { label: 'Leads contatados', value: totals.contacted, delta: '+14.8%', color: 'text-emerald-400' },
-            { label: 'Respostas', value: totals.responses, delta: '+11.2%', color: 'text-amber-400' },
+            { label: 'Leads encontrados', value: totals.found, delta: '+19.4%', color: 'text-info' },
+            { label: 'Leads contatados', value: totals.contacted, delta: '+14.8%', color: 'text-success' },
+            { label: 'Respostas', value: totals.responses, delta: '+11.2%', color: 'text-warning' },
           ].map((k) => (
             <div key={k.label} className="rounded-lg bg-muted/20 p-3 border border-border/30">
               <p className="text-[10px] text-muted-foreground uppercase tracking-wider truncate">{k.label}</p>
@@ -102,8 +102,8 @@ export function PerformanceMiniChart() {
                 {k.value.toLocaleString('pt-BR')}
               </p>
               <div className="flex items-center gap-1 mt-0.5">
-                <ArrowUp className="h-2.5 w-2.5 text-emerald-500" />
-                <span className="text-[10px] font-semibold text-emerald-500 tabular-nums">{k.delta}</span>
+                <ArrowUp className="h-2.5 w-2.5 text-success" />
+                <span className="text-[10px] font-semibold text-success tabular-nums">{k.delta}</span>
               </div>
             </div>
           ))}

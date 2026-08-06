@@ -197,8 +197,8 @@ export default function AuthPage() {
 
                 {/* Error */}
                 {authError && (
-                  <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 animate-fade-in">
-                    <p className="text-[13px] text-red-400">{authError}</p>
+                  <div className="p-3 rounded-xl bg-destructive/10 border border-destructive/20 animate-fade-in">
+                    <p className="text-[13px] text-destructive">{authError}</p>
                   </div>
                 )}
 
@@ -240,7 +240,7 @@ export default function AuthPage() {
                         required
                       />
                       {email.includes('@') && email.includes('.') && (
-                        <CheckCircle2 className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-green-500/60" />
+                        <CheckCircle2 className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-success/60" />
                       )}
                     </div>
                   </div>

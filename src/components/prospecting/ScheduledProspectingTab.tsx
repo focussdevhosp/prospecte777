@@ -408,17 +408,17 @@ export function ScheduledProspectingTab() {
             label: 'Leads Capturados',
             value: totalLeads,
             icon: Target,
-            color: 'text-emerald-500',
-            bg: 'from-emerald-500/15 to-emerald-500/5',
-            border: 'border-emerald-500/10',
+            color: 'text-success',
+            bg: 'from-success/15 to-success/5',
+            border: 'border-success/10',
           },
           {
             label: 'Próxima Execução',
             value: formatNextRun(nextRunDate),
             icon: Clock,
-            color: 'text-blue-500',
-            bg: 'from-blue-500/15 to-blue-500/5',
-            border: 'border-blue-500/10',
+            color: 'text-info',
+            bg: 'from-info/15 to-info/5',
+            border: 'border-info/10',
             isText: true,
           },
         ].map((kpi) => (
@@ -477,7 +477,7 @@ export function ScheduledProspectingTab() {
                   <div className="flex-1 space-y-3">
                     {/* Título + Status */}
                     <div className="flex items-center gap-2.5">
-                      <div className={`w-2 h-2 rounded-full ${schedule.is_active ? 'bg-emerald-500 animate-pulse' : 'bg-muted-foreground/30'}`} />
+                      <div className={`w-2 h-2 rounded-full ${schedule.is_active ? 'bg-success animate-pulse' : 'bg-muted-foreground/30'}`} />
                       <h4 className="font-semibold text-foreground">{schedule.name}</h4>
                       <Badge
                         variant={schedule.is_active ? 'default' : 'secondary'}
@@ -521,7 +521,7 @@ export function ScheduledProspectingTab() {
                         </span>
                       )}
                       {schedule.locations.slice(0, 2).map(location => (
-                        <span key={location} className="inline-flex items-center gap-1 rounded-md bg-blue-500/5 border border-blue-500/10 px-2 py-0.5 text-[11px] font-medium text-blue-500">
+                        <span key={location} className="inline-flex items-center gap-1 rounded-md bg-info/5 border border-info/10 px-2 py-0.5 text-[11px] font-medium text-info">
                           <MapPin className="h-3 w-3" />
                           {location}
                         </span>

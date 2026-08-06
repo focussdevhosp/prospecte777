@@ -168,7 +168,7 @@ export function ApiKeysSettings() {
   }
 
   const StatusBadge = ({ status }: { status: 'unknown' | 'valid' | 'invalid' }) => {
-    if (status === 'valid') return <Badge className="bg-green-600 text-white"><Check className="h-3 w-3 mr-1" />Configurada</Badge>;
+    if (status === 'valid') return <Badge className="bg-success text-white"><Check className="h-3 w-3 mr-1" />Configurada</Badge>;
     if (status === 'invalid') return <Badge variant="destructive"><AlertCircle className="h-3 w-3 mr-1" />Inválida</Badge>;
     return null;
   };
@@ -180,7 +180,7 @@ export function ApiKeysSettings() {
         <Sparkles className="h-4 w-4" />
         <AlertTitle className="flex items-center gap-2">
           DeepSeek IA
-          <Badge className="bg-green-600 text-white">Incluída no Plano</Badge>
+          <Badge className="bg-success text-white">Incluída no Plano</Badge>
         </AlertTitle>
         <AlertDescription>
           A IA DeepSeek é compartilhada e já está configurada globalmente. 
@@ -214,7 +214,7 @@ export function ApiKeysSettings() {
               <div className="flex-1">
                 <Label htmlFor="serper" className="cursor-pointer font-medium flex items-center gap-2">
                   Serper.dev
-                  <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/30">Recomendado</Badge>
+                  <Badge variant="outline" className="bg-success/10 text-success border-success/30">Recomendado</Badge>
                 </Label>
                 <p className="text-sm text-muted-foreground mt-1"><strong>2.500 buscas grátis/mês</strong> • Mais rápido</p>
               </div>
@@ -274,7 +274,7 @@ export function ApiKeysSettings() {
         <Card className={preferredApi === 'serpapi' ? 'ring-2 ring-primary/50' : ''}>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Search className="h-5 w-5 text-orange-500" />
+              <Search className="h-5 w-5 text-brand" />
               SerpAPI
               {preferredApi === 'serpapi' && <Badge variant="default">Preferida</Badge>}
               <StatusBadge status={serpApiStatus} />
@@ -312,7 +312,7 @@ export function ApiKeysSettings() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Mail className="h-5 w-5 text-purple-500" />
+              <Mail className="h-5 w-5 text-primary" />
               Hunter.io API
               <StatusBadge status={hunterStatus} />
             </CardTitle>
@@ -349,7 +349,7 @@ export function ApiKeysSettings() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Bot className="h-5 w-5 text-pink-500" />
+              <Bot className="h-5 w-5 text-brand" />
               Apify Token
               <StatusBadge status={apifyStatus} />
             </CardTitle>

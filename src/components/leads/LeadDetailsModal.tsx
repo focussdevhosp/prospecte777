@@ -251,7 +251,7 @@ export function LeadDetailsModal({ lead, open, onOpenChange }: LeadDetailsModalP
 
   const priorityColors: Record<string, string> = {
     alta: 'bg-destructive/10 text-destructive border-destructive/20',
-    media: 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20',
+    media: 'bg-warning/10 text-warning border-warning/20',
     baixa: 'bg-muted text-muted-foreground border-muted',
   };
 

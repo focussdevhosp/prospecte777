@@ -347,7 +347,7 @@ export function WebSearchTab() {
               onClick={() => setSearchSource('firecrawl')}
             >
               <CardContent className="p-4 flex flex-col items-center gap-2">
-                <Flame className="h-8 w-8 text-orange-500" />
+                <Flame className="h-8 w-8 text-brand" />
                 <p className="font-medium">Firecrawl</p>
                 <p className="text-xs text-muted-foreground text-center">Scraping inteligente com IA</p>
               </CardContent>
@@ -358,7 +358,7 @@ export function WebSearchTab() {
               onClick={() => setSearchSource('directories')}
             >
               <CardContent className="p-4 flex flex-col items-center gap-2">
-                <Building2 className="h-8 w-8 text-emerald-500" />
+                <Building2 className="h-8 w-8 text-success" />
                 <p className="font-medium">Diretórios BR</p>
                 <p className="text-xs text-muted-foreground text-center">TeleListas, GuiaMais, Apontador</p>
               </CardContent>
@@ -541,7 +541,7 @@ export function WebSearchTab() {
                               <ExternalLink className="h-3 w-3" />
                             </a>
                             {result.analyzed && (
-                              <Badge variant="secondary" className="text-xs bg-emerald-100 text-emerald-700">
+                              <Badge variant="secondary" className="text-xs bg-success text-success">
                                 <Sparkles className="h-3 w-3 mr-1" />
                                 Analisado
                               </Badge>
@@ -554,7 +554,7 @@ export function WebSearchTab() {
                           {/* Contact Info */}
                           <div className="flex items-center gap-4 mt-2">
                             {result.phone && (
-                              <span className="text-xs flex items-center gap-1 text-emerald-600">
+                              <span className="text-xs flex items-center gap-1 text-success">
                                 <Phone className="h-3 w-3" />
                                 {result.phone}
                               </span>
@@ -596,7 +596,7 @@ export function WebSearchTab() {
                                   </p>
                                   <div className="flex flex-wrap gap-1 mt-1">
                                     {result.opportunities.map((opp, i) => (
-                                      <Badge key={i} variant="outline" className="text-xs bg-emerald-50 text-emerald-700 border-emerald-200">
+                                      <Badge key={i} variant="outline" className="text-xs bg-success text-success border-success">
                                         {opp}
                                       </Badge>
                                     ))}

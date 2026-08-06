@@ -162,9 +162,9 @@ export function MessageConfigurator({
           )}
 
           {leadFilter === 'no_website' && selectedService === 'auto' && (
-            <div className="flex items-center gap-2.5 p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
-              <Info className="h-4 w-4 text-yellow-500 shrink-0" />
-              <p className="text-xs text-yellow-500">
+            <div className="flex items-center gap-2.5 p-3 rounded-lg bg-warning/10 border border-warning/20">
+              <Info className="h-4 w-4 text-warning shrink-0" />
+              <p className="text-xs text-warning">
                 Para empresas sem site, considere selecionar "Sites e Landing Pages" diretamente
               </p>
             </div>

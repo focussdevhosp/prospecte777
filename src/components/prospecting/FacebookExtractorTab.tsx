@@ -346,7 +346,7 @@ export function FacebookExtractorTab() {
                       </TableCell>
                       <TableCell>
                         {imported.has(i) ? (
-                          <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 gap-1 text-xs">
+                          <Badge className="bg-success/10 text-success border-success/20 gap-1 text-xs">
                             <CheckCircle2 className="h-3 w-3" />
                             Importado
                           </Badge>
@@ -384,7 +384,7 @@ export function FacebookExtractorTab() {
                                   disabled={imported.has(i)}
                                 >
                                   {imported.has(i) ? (
-                                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                                    <CheckCircle2 className="h-3.5 w-3.5 text-success" />
                                   ) : (
                                     <Plus className="h-3.5 w-3.5" />
                                   )}

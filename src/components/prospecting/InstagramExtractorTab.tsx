@@ -168,7 +168,7 @@ export function InstagramExtractorTab() {
       <Card className="border-border/60 bg-card/80 backdrop-blur-sm overflow-hidden">
         <div className="border-b border-border/40 bg-muted/30 px-6 py-4">
           <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 text-purple-400">
+            <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-gradient-to-br from-primary/20 to-brand/20 text-primary">
               <Instagram className="h-5 w-5" />
             </div>
             <div>

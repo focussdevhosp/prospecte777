@@ -215,12 +215,12 @@ export function SDRAgentDashboard() {
   }
 
   const kpiCards = [
-    { label: 'Conversas (7d)', value: kpis.conversations7d, icon: MessageSquare, color: 'text-blue-500' },
-    { label: 'Taxa de resposta', value: `${kpis.replyRatePct}%`, icon: TrendingUp, color: 'text-emerald-500' },
-    { label: 'Reuniões marcadas', value: kpis.meetingsBooked7d, icon: Calendar, color: 'text-purple-500' },
-    { label: '1ª resposta (méd.)', value: `${kpis.avgFirstResponseMin}min`, icon: Timer, color: 'text-amber-500' },
-    { label: 'Qualificação', value: `${kpis.qualifiedRate}%`, icon: Target, color: 'text-cyan-500' },
-    { label: 'Escalações abertas', value: kpis.escalationsOpen, icon: ShieldAlert, color: kpis.escalationsOpen ? 'text-red-500' : 'text-muted-foreground' },
+    { label: 'Conversas (7d)', value: kpis.conversations7d, icon: MessageSquare, color: 'text-info' },
+    { label: 'Taxa de resposta', value: `${kpis.replyRatePct}%`, icon: TrendingUp, color: 'text-success' },
+    { label: 'Reuniões marcadas', value: kpis.meetingsBooked7d, icon: Calendar, color: 'text-primary' },
+    { label: '1ª resposta (méd.)', value: `${kpis.avgFirstResponseMin}min`, icon: Timer, color: 'text-warning' },
+    { label: 'Qualificação', value: `${kpis.qualifiedRate}%`, icon: Target, color: 'text-info' },
+    { label: 'Escalações abertas', value: kpis.escalationsOpen, icon: ShieldAlert, color: kpis.escalationsOpen ? 'text-destructive' : 'text-muted-foreground' },
   ];
 
   return (
@@ -252,7 +252,7 @@ export function SDRAgentDashboard() {
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className={`h-4 w-4 rounded-full ${agentEnabled ? 'bg-green-500 animate-pulse' : 'bg-muted-foreground/30'}`} />
+                <div className={`h-4 w-4 rounded-full ${agentEnabled ? 'bg-success animate-pulse' : 'bg-muted-foreground/30'}`} />
                 <span className="font-medium">{agentEnabled ? 'Agente Ativo' : 'Agente Pausado'}</span>
               </div>
               <Switch checked={agentEnabled} onCheckedChange={handleToggleAgent} />
@@ -269,7 +269,7 @@ export function SDRAgentDashboard() {
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
               <CardTitle className="flex items-center gap-2">
-                <AlertTriangle className={`h-5 w-5 ${escalations.length ? 'text-red-500' : 'text-muted-foreground'}`} />
+                <AlertTriangle className={`h-5 w-5 ${escalations.length ? 'text-destructive' : 'text-muted-foreground'}`} />
                 Escalações pendentes
               </CardTitle>
               <CardDescription>Casos que o agente sinalizou para você intervir</CardDescription>
@@ -317,7 +317,7 @@ export function SDRAgentDashboard() {
       <div className="grid lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2"><Zap className="h-5 w-5 text-yellow-500" /> Comportamento</CardTitle>
+            <CardTitle className="flex items-center gap-2"><Zap className="h-5 w-5 text-warning" /> Comportamento</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
@@ -450,7 +450,7 @@ export function SDRAgentDashboard() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2"><TrendingUp className="h-5 w-5 text-emerald-500" /> Top sinais (7d)</CardTitle>
+            <CardTitle className="flex items-center gap-2"><TrendingUp className="h-5 w-5 text-success" /> Top sinais (7d)</CardTitle>
             <CardDescription>Padrões que estão aparecendo mais nas conversas</CardDescription>
           </CardHeader>
           <CardContent>
@@ -476,7 +476,7 @@ export function SDRAgentDashboard() {
       {/* ACTIVITY LOG */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2"><Zap className="h-5 w-5 text-yellow-500" /> Log de ações do SDR</CardTitle>
+          <CardTitle className="flex items-center gap-2"><Zap className="h-5 w-5 text-warning" /> Log de ações do SDR</CardTitle>
         </CardHeader>
         <CardContent>
           <ScrollArea className="h-[240px]">

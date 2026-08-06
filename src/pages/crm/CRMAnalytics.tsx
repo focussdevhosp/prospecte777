@@ -10,7 +10,7 @@ import {
 } from 'recharts';
 import { DollarSign, TrendingUp, Target, Users, Loader2, ArrowUpRight, ArrowDownRight, Flame } from 'lucide-react';
 
-const COLORS = ['#6366f1', '#f59e0b', '#ef4444', '#10b981', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316'];
+const COLORS = ['hsl(var(--chart-4))', 'hsl(var(--chart-6))', 'hsl(var(--destructive))', 'hsl(var(--chart-3))', 'hsl(var(--chart-1))', 'hsl(var(--chart-5))', '#06b6d4', 'hsl(var(--chart-2))'];
 
 const fmt = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(v);
 
@@ -58,8 +58,8 @@ export default function CRMAnalyticsPage() {
     const warm = leads.filter(l => l.temperature === 'morno').length;
     const cold = leads.filter(l => l.temperature === 'frio').length;
     return [
-      { name: 'Quente', value: hot, fill: '#ef4444' },
-      { name: 'Morno', value: warm, fill: '#f59e0b' },
+      { name: 'Quente', value: hot, fill: 'hsl(var(--destructive))' },
+      { name: 'Morno', value: warm, fill: 'hsl(var(--chart-6))' },
       { name: 'Frio', value: cold, fill: '#3b82f6' },
     ];
   }, [leads]);
@@ -102,8 +102,8 @@ export default function CRMAnalyticsPage() {
       label: 'Pipeline Total',
       value: fmt(metrics.totalPipeline),
       icon: DollarSign,
-      color: 'text-emerald-500',
-      bg: 'bg-emerald-500/10',
+      color: 'text-success',
+      bg: 'bg-success/10',
       trend: null,
     },
     {
@@ -118,16 +118,16 @@ export default function CRMAnalyticsPage() {
       label: 'Taxa de Conversão',
       value: `${metrics.conversionRate.toFixed(1)}%`,
       icon: Target,
-      color: 'text-purple-500',
-      bg: 'bg-purple-500/10',
+      color: 'text-primary',
+      bg: 'bg-primary/10',
       trend: null,
     },
     {
       label: 'Ticket Médio',
       value: fmt(metrics.avgTicket),
       icon: Users,
-      color: 'text-amber-500',
-      bg: 'bg-amber-500/10',
+      color: 'text-warning',
+      bg: 'bg-warning/10',
       trend: null,
     },
   ];
@@ -149,7 +149,7 @@ export default function CRMAnalyticsPage() {
                   <kpi.icon className={`h-5 w-5 ${kpi.color}`} />
                 </div>
                 {kpi.trend !== null && (
-                  <Badge variant="outline" className={`text-[10px] ${kpi.trend >= 0 ? 'text-emerald-500 border-emerald-500/20' : 'text-red-500 border-red-500/20'}`}>
+                  <Badge variant="outline" className={`text-[10px] ${kpi.trend >= 0 ? 'text-success border-success/20' : 'text-destructive border-destructive/20'}`}>
                     {kpi.trend >= 0 ? <ArrowUpRight className="h-3 w-3 mr-0.5" /> : <ArrowDownRight className="h-3 w-3 mr-0.5" />}
                     {Math.abs(kpi.trend)}
                   </Badge>
@@ -166,8 +166,8 @@ export default function CRMAnalyticsPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
         <Card className="border-border/50">
           <CardContent className="pt-3 pb-3 flex items-center gap-3">
-            <div className="h-8 w-8 rounded-lg bg-red-500/10 flex items-center justify-center">
-              <Flame className="h-4 w-4 text-red-500" />
+            <div className="h-8 w-8 rounded-lg bg-destructive/10 flex items-center justify-center">
+              <Flame className="h-4 w-4 text-destructive" />
             </div>
             <div>
               <p className="text-lg font-bold">{metrics.hotLeads}</p>
@@ -273,8 +273,8 @@ export default function CRMAnalyticsPage() {
                 <YAxis tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
                 <Tooltip contentStyle={{ borderRadius: '12px', border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }} />
                 <Legend wrapperStyle={{ fontSize: 12 }} />
-                <Bar dataKey="total" name="Total Leads" fill="#6366f1" radius={[6, 6, 0, 0]} />
-                <Bar dataKey="conversion" name="Conversão %" fill="#10b981" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="total" name="Total Leads" fill="hsl(var(--chart-4))" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="conversion" name="Conversão %" fill="hsl(var(--chart-3))" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>

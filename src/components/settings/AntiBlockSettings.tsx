@@ -115,9 +115,9 @@ export function AntiBlockSettings() {
 
   const getRiskStyles = () => {
     switch (risk.level) {
-      case 'safe': return { bg: 'bg-green-500/10 border-green-500/30', text: 'text-green-600', badge: 'bg-green-500' };
-      case 'moderate': return { bg: 'bg-yellow-500/10 border-yellow-500/30', text: 'text-yellow-600', badge: 'bg-yellow-500' };
-      case 'risky': return { bg: 'bg-red-500/10 border-red-500/30', text: 'text-red-600', badge: 'bg-destructive' };
+      case 'safe': return { bg: 'bg-success/10 border-success/30', text: 'text-success', badge: 'bg-success' };
+      case 'moderate': return { bg: 'bg-warning/10 border-warning/30', text: 'text-warning', badge: 'bg-warning' };
+      case 'risky': return { bg: 'bg-destructive/10 border-destructive/30', text: 'text-destructive', badge: 'bg-destructive' };
     }
   };
 

@@ -92,8 +92,8 @@ export default function ColdReactivationPage() {
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-orange-500/20">
-                  <Flame className="h-5 w-5 text-orange-500" />
+                <div className="p-2 rounded-lg bg-brand/20">
+                  <Flame className="h-5 w-5 text-brand" />
                 </div>
                 <div>
                   <p className="text-2xl font-bold">{coldLeads.length}</p>
@@ -105,8 +105,8 @@ export default function ColdReactivationPage() {
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-blue-500/20">
-                  <Clock className="h-5 w-5 text-blue-500" />
+                <div className="p-2 rounded-lg bg-info/20">
+                  <Clock className="h-5 w-5 text-info" />
                 </div>
                 <div>
                   <p className="text-2xl font-bold">{inactiveDays}+</p>
@@ -118,8 +118,8 @@ export default function ColdReactivationPage() {
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-green-500/20">
-                  <CheckCircle2 className="h-5 w-5 text-green-500" />
+                <div className="p-2 rounded-lg bg-success/20">
+                  <CheckCircle2 className="h-5 w-5 text-success" />
                 </div>
                 <div>
                   <p className="text-2xl font-bold">{isEnabled ? 'Ativa' : 'Inativa'}</p>
@@ -148,7 +148,7 @@ export default function ColdReactivationPage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Zap className="h-5 w-5 text-yellow-500" />
+                <Zap className="h-5 w-5 text-warning" />
                 Configuração
               </CardTitle>
               <CardDescription>

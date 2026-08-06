@@ -32,9 +32,9 @@ function getInitials(name: string) {
 }
 
 const tempIcon = (t: string | null) => {
-  if (t === 'quente') return <Flame className="h-3 w-3 text-red-500" />;
-  if (t === 'morno') return <ThermometerSun className="h-3 w-3 text-amber-500" />;
-  return <Snowflake className="h-3 w-3 text-blue-500" />;
+  if (t === 'quente') return <Flame className="h-3 w-3 text-destructive" />;
+  if (t === 'morno') return <ThermometerSun className="h-3 w-3 text-warning" />;
+  return <Snowflake className="h-3 w-3 text-info" />;
 };
 
 function ConversationItem({ conv, isActive, onClick }: {
@@ -193,7 +193,7 @@ function ChatPanel({ leadId, lead, onBack }: {
                     isLead
                       ? 'bg-card border border-border/40 rounded-tl-md'
                       : isAgent
-                      ? 'bg-violet-600 text-white rounded-tr-md'
+                      ? 'bg-primary text-white rounded-tr-md'
                       : 'bg-primary text-primary-foreground rounded-tr-md'
                   }`}>
                     {isAgent && (

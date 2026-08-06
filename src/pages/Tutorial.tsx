@@ -34,7 +34,7 @@ export default function TutorialPage() {
       icon: Bot,
       link: '/settings',
       isComplete: isAgentConfigured,
-      color: 'from-violet-500 to-purple-500',
+      color: 'from-primary to-primary',
     },
     {
       number: 2,
@@ -43,7 +43,7 @@ export default function TutorialPage() {
       icon: Smartphone,
       link: '/settings',
       isComplete: isWhatsAppConnected,
-      color: 'from-green-500 to-emerald-500',
+      color: 'from-success to-success',
     },
     {
       number: 3,
@@ -52,7 +52,7 @@ export default function TutorialPage() {
       icon: Target,
       link: '/prospecting',
       isComplete: false,
-      color: 'from-blue-500 to-cyan-500',
+      color: 'from-info to-info',
     },
     {
       number: 4,
@@ -61,7 +61,7 @@ export default function TutorialPage() {
       icon: Send,
       link: '/prospecting',
       isComplete: false,
-      color: 'from-orange-500 to-amber-500',
+      color: 'from-brand to-warning',
     },
     {
       number: 5,
@@ -70,7 +70,7 @@ export default function TutorialPage() {
       icon: MessageSquare,
       link: '/conversations',
       isComplete: false,
-      color: 'from-pink-500 to-rose-500',
+      color: 'from-brand to-destructive',
     },
   ];
 

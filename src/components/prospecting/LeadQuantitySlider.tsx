@@ -11,7 +11,7 @@ interface LeadQuantitySliderProps {
 export function LeadQuantitySlider({ value, onChange, disabled }: LeadQuantitySliderProps) {
   const getIntensityLevel = (val: number) => {
     if (val <= 500) return { label: 'Básica', icon: Target, color: 'text-primary', bg: 'bg-primary/10 border-primary/20' };
-    if (val <= 2000) return { label: 'Moderada', icon: Zap, color: 'text-amber-500', bg: 'bg-amber-500/10 border-amber-500/20' };
+    if (val <= 2000) return { label: 'Moderada', icon: Zap, color: 'text-warning', bg: 'bg-warning/10 border-warning/20' };
     return { label: 'MÁXIMA', icon: Rocket, color: 'text-destructive', bg: 'bg-destructive/10 border-destructive/20' };
   };
 

@@ -57,7 +57,7 @@ function SidebarContent({ navigate, initials, email, stats }: {
       <div className="px-4 py-3 border-b border-border/30">
         <div className="grid grid-cols-2 gap-2">
           <div className="bg-muted/30 rounded-xl p-2.5 text-center">
-            <DollarSign className="h-3.5 w-3.5 mx-auto text-emerald-500 mb-1" />
+            <DollarSign className="h-3.5 w-3.5 mx-auto text-success mb-1" />
             <p className="text-xs font-bold">{new Intl.NumberFormat('pt-BR', { notation: 'compact', compactDisplay: 'short', style: 'currency', currency: 'BRL' }).format(stats.pipeline)}</p>
             <p className="text-[9px] text-muted-foreground">Pipeline</p>
           </div>

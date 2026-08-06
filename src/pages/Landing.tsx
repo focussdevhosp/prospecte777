@@ -217,7 +217,7 @@ export default function Landing() {
             <div className="flex flex-wrap items-center gap-4 sm:gap-5 mt-5 animate-fade-in" style={{ animationDelay: '1s', animationFillMode: 'both' }}>
               {['Leads ilimitados', 'Setup em 5 min', 'Anti-ban inteligente', 'Cancele com 1 clique'].map(t => (
                 <span key={t} className="flex items-center gap-2 text-base sm:text-lg text-white/50">
-                  <Check className="h-4 w-4 text-emerald-500/60" /> {t}
+                  <Check className="h-4 w-4 text-success/60" /> {t}
                 </span>
               ))}
             </div>
@@ -457,7 +457,7 @@ export default function Landing() {
               <div className="flex items-center justify-center gap-4 mt-4">
                 {['Leads ilimitados', 'Resultado em 48h', 'Cancele com 1 clique'].map(t => (
                   <span key={t} className="flex items-center gap-1.5 text-xs text-white/50">
-                    <Check className="h-3 w-3 text-emerald-500/50" /> {t}
+                    <Check className="h-3 w-3 text-success/50" /> {t}
                   </span>
                 ))}
               </div>

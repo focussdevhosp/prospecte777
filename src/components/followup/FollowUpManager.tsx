@@ -233,13 +233,13 @@ export function FollowUpManager() {
             label: 'Atrasados (enviar agora)',
             value: overdueCount,
             icon: AlertCircle,
-            colorClass: 'text-orange-500',
+            colorClass: 'text-brand',
           },
           {
             label: 'Sequências Ativas',
             value: sequences.filter(s => s.enabled).length,
             icon: Zap,
-            colorClass: 'text-blue-500',
+            colorClass: 'text-info',
           },
         ].map((stat) => (
           <div
@@ -441,11 +441,11 @@ export function FollowUpManager() {
                       {pendingFollowUps.slice(0, 10).map((item, idx) => (
                         <div
                           key={idx}
-                          className={`px-4 py-3 transition-colors ${item.isOverdue ? 'bg-orange-500/5' : 'hover:bg-muted/30'}`}
+                          className={`px-4 py-3 transition-colors ${item.isOverdue ? 'bg-brand/5' : 'hover:bg-muted/30'}`}
                         >
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2 min-w-0">
-                              <div className={`h-2 w-2 rounded-full shrink-0 ${item.isOverdue ? 'bg-orange-500' : 'bg-muted-foreground/30'}`} />
+                              <div className={`h-2 w-2 rounded-full shrink-0 ${item.isOverdue ? 'bg-brand' : 'bg-muted-foreground/30'}`} />
                               <span className="font-medium text-sm truncate">{item.lead.business_name}</span>
                             </div>
                             <Badge
@@ -480,7 +480,7 @@ export function FollowUpManager() {
                     ) : (
                       followUpLog.map((log, idx) => (
                         <p key={idx} className={
-                          log.includes('✅') ? 'text-emerald-500' :
+                          log.includes('✅') ? 'text-success' :
                           log.includes('❌') ? 'text-destructive' :
                           log.includes('⏳') ? 'text-muted-foreground' :
                           log.includes('🚀') ? 'text-primary' :

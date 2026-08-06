@@ -244,7 +244,7 @@ export function ServiceIntelligenceManager() {
               <AccordionItem value="benefits">
                 <AccordionTrigger>
                   <div className="flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-green-500" />
+                    <CheckCircle2 className="h-4 w-4 text-success" />
                     Benefícios ({selectedService.benefits?.length || 0})
                   </div>
                 </AccordionTrigger>
@@ -252,7 +252,7 @@ export function ServiceIntelligenceManager() {
                   <ul className="space-y-1">
                     {selectedService.benefits?.map((benefit, i) => (
                       <li key={i} className="text-sm flex items-start gap-2">
-                        <span className="text-green-500">•</span>
+                        <span className="text-success">•</span>
                         {benefit}
                       </li>
                     ))}
@@ -264,7 +264,7 @@ export function ServiceIntelligenceManager() {
               <AccordionItem value="pain_points">
                 <AccordionTrigger>
                   <div className="flex items-center gap-2">
-                    <Target className="h-4 w-4 text-red-500" />
+                    <Target className="h-4 w-4 text-destructive" />
                     Dores que Resolve ({selectedService.pain_points?.length || 0})
                   </div>
                 </AccordionTrigger>
@@ -272,7 +272,7 @@ export function ServiceIntelligenceManager() {
                   <ul className="space-y-1">
                     {selectedService.pain_points?.map((pain, i) => (
                       <li key={i} className="text-sm flex items-start gap-2">
-                        <span className="text-red-500">•</span>
+                        <span className="text-destructive">•</span>
                         {pain}
                       </li>
                     ))}
@@ -284,7 +284,7 @@ export function ServiceIntelligenceManager() {
               <AccordionItem value="objections">
                 <AccordionTrigger>
                   <div className="flex items-center gap-2">
-                    <MessageSquare className="h-4 w-4 text-amber-500" />
+                    <MessageSquare className="h-4 w-4 text-warning" />
                     Respostas a Objeções
                   </div>
                 </AccordionTrigger>
@@ -307,7 +307,7 @@ export function ServiceIntelligenceManager() {
               <AccordionItem value="templates">
                 <AccordionTrigger>
                   <div className="flex items-center gap-2">
-                    <BookOpen className="h-4 w-4 text-blue-500" />
+                    <BookOpen className="h-4 w-4 text-info" />
                     Templates de Mensagem
                   </div>
                 </AccordionTrigger>
@@ -353,7 +353,7 @@ export function ServiceIntelligenceManager() {
               <AccordionItem value="niches">
                 <AccordionTrigger>
                   <div className="flex items-center gap-2">
-                    <TrendingUp className="h-4 w-4 text-purple-500" />
+                    <TrendingUp className="h-4 w-4 text-primary" />
                     Nichos Alvo ({selectedService.target_niches?.length || 0})
                   </div>
                 </AccordionTrigger>
@@ -380,7 +380,7 @@ export function ServiceIntelligenceManager() {
               <AccordionItem value="faq">
                 <AccordionTrigger>
                   <div className="flex items-center gap-2">
-                    <HelpCircle className="h-4 w-4 text-cyan-500" />
+                    <HelpCircle className="h-4 w-4 text-info" />
                     FAQ ({selectedService.faq?.length || 0})
                   </div>
                 </AccordionTrigger>

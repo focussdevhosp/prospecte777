@@ -503,9 +503,9 @@ export function CNPJRadarTab() {
             {massResults.length > 0 && (
               <motion.div {...fadeSlide} className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                 <MiniKPI icon={Building2} label="Empresas" value={massResults.length} color="text-primary" />
-                <MiniKPI icon={Phone} label="Com Telefone" value={withPhone.length} color="text-emerald-500" />
-                <MiniKPI icon={Mail} label="Com Email" value={withEmail.length} color="text-blue-500" />
-                <MiniKPI icon={CheckCircle2} label="Já Importados" value={alreadyImported.length} color="text-amber-500" />
+                <MiniKPI icon={Phone} label="Com Telefone" value={withPhone.length} color="text-success" />
+                <MiniKPI icon={Mail} label="Com Email" value={withEmail.length} color="text-info" />
+                <MiniKPI icon={CheckCircle2} label="Já Importados" value={alreadyImported.length} color="text-warning" />
               </motion.div>
             )}
 

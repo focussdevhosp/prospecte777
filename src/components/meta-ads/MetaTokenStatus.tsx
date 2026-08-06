@@ -83,9 +83,9 @@ export function MetaTokenStatus({ accessToken, onReconnect }: Props) {
 
   // Valid, > 7 days or never expires
   return (
-    <Alert className="border-green-500/30 bg-green-500/5">
-      <CheckCircle2 className="h-4 w-4 text-green-500" />
-      <AlertTitle className="text-green-700 dark:text-green-400">Token válido</AlertTitle>
+    <Alert className="border-success/30 bg-success/5">
+      <CheckCircle2 className="h-4 w-4 text-success" />
+      <AlertTitle className="text-success dark:text-success">Token válido</AlertTitle>
       <AlertDescription>
         {neverExpires
           ? 'Este token não expira automaticamente.'

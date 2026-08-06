@@ -26,7 +26,7 @@ export function SearchSummaryPanel({
   const rows = [
     {
       icon: Search,
-      color: 'text-sky-400 bg-sky-500/15 ring-sky-500/20',
+      color: 'text-info bg-info/15 ring-info/20',
       title: 'Cobertura estimada',
       subtitle: 'Empresas na área de busca',
       value: estimatedCoverage.toLocaleString('pt-BR'),
@@ -34,7 +34,7 @@ export function SearchSummaryPanel({
     },
     {
       icon: MessageCircle,
-      color: 'text-emerald-400 bg-emerald-500/15 ring-emerald-500/20',
+      color: 'text-success bg-success/15 ring-success/20',
       title: 'WhatsApp encontrado',
       subtitle: 'Empresas com WhatsApp',
       value: whatsappCount.toLocaleString('pt-BR'),
@@ -42,7 +42,7 @@ export function SearchSummaryPanel({
     },
     {
       icon: Globe,
-      color: 'text-violet-400 bg-violet-500/15 ring-violet-500/20',
+      color: 'text-primary bg-primary/15 ring-primary/20',
       title: 'Sites válidos',
       subtitle: 'Empresas com site',
       value: websiteCount.toLocaleString('pt-BR'),
@@ -50,7 +50,7 @@ export function SearchSummaryPanel({
     },
     {
       icon: Mail,
-      color: 'text-amber-400 bg-amber-500/15 ring-amber-500/20',
+      color: 'text-warning bg-warning/15 ring-warning/20',
       title: 'Emails corporativos',
       subtitle: 'Estimativa disponível',
       value: emailCount.toLocaleString('pt-BR'),
@@ -70,7 +70,7 @@ export function SearchSummaryPanel({
           </div>
           <div className={cn(
             'h-2 w-2 rounded-full',
-            isReady ? 'bg-emerald-500 animate-pulse' : 'bg-muted-foreground/30'
+            isReady ? 'bg-success animate-pulse' : 'bg-muted-foreground/30'
           )} />
         </div>
 

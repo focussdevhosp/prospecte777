@@ -133,7 +133,7 @@ export default function SettingsWebhook() {
               Testar Webhook
             </Button>
             {testResult === 'success' && (
-              <div className="flex items-center gap-1.5 text-sm text-emerald-500">
+              <div className="flex items-center gap-1.5 text-sm text-success">
                 <CheckCircle2 className="h-4 w-4" />
                 Webhook respondeu com sucesso
               </div>

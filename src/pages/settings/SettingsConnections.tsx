@@ -43,11 +43,11 @@ export default function SettingsConnections() {
       <div className={cn(
         "flex items-center gap-3 p-4 rounded-xl border transition-all",
         isWhatsAppConnected 
-          ? "bg-emerald-500/5 border-emerald-500/20" 
+          ? "bg-success/5 border-success/20" 
           : "bg-destructive/5 border-destructive/20"
       )}>
         {isWhatsAppConnected ? (
-          <Wifi className="h-5 w-5 text-emerald-500" />
+          <Wifi className="h-5 w-5 text-success" />
         ) : (
           <WifiOff className="h-5 w-5 text-destructive" />
         )}
@@ -63,7 +63,7 @@ export default function SettingsConnections() {
         </div>
         <Badge className={cn(
           isWhatsAppConnected 
-            ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/30 hover:bg-emerald-500/20" 
+            ? "bg-success/10 text-success border-success/30 hover:bg-success/20" 
             : "bg-destructive/10 text-destructive border-destructive/30 hover:bg-destructive/20"
         )} variant="outline">
           {isWhatsAppConnected ? 'Online' : 'Offline'}

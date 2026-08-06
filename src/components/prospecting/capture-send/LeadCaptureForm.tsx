@@ -122,7 +122,7 @@ export function LeadCaptureForm({
                 <Target className="h-5 w-5 text-primary" />
               </div>
               {isSearching && (
-                <div className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-card animate-pulse" />
+                <div className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-success ring-2 ring-card animate-pulse" />
               )}
             </div>
             <div>
@@ -276,10 +276,10 @@ export function LeadCaptureForm({
                   <div className="space-y-3 p-3.5 rounded-xl bg-background border border-border/40">
                     <div className="flex items-center justify-between">
                       <Label className="flex items-center gap-2 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                        <Star className="h-3.5 w-3.5 text-amber-500" />
+                        <Star className="h-3.5 w-3.5 text-warning" />
                         Avaliação Mínima
                       </Label>
-                      <span className="inline-flex items-center gap-1 text-xs font-bold tabular-nums text-foreground bg-amber-500/10 text-amber-600 dark:text-amber-400 px-2 py-0.5 rounded-md">
+                      <span className="inline-flex items-center gap-1 text-xs font-bold tabular-nums text-foreground bg-warning/10 text-warning dark:text-warning px-2 py-0.5 rounded-md">
                         {minRating === 0 ? 'Todas' : (<><Star className="h-3 w-3 fill-current" />{minRating}+</>)}
                       </span>
                     </div>
@@ -325,12 +325,12 @@ export function LeadCaptureForm({
                 <div className="grid gap-3 sm:grid-cols-2">
                   <label className={cn(
                     "flex items-center justify-between gap-3 p-3.5 rounded-xl bg-background border cursor-pointer transition-colors",
-                    skipDuplicates ? "border-emerald-500/30 bg-emerald-500/[0.03]" : "border-border/40 hover:border-border/60"
+                    skipDuplicates ? "border-success/30 bg-success/[0.03]" : "border-border/40 hover:border-border/60"
                   )}>
                     <div className="flex items-center gap-3 min-w-0">
                       <span className={cn(
                         "flex h-9 w-9 items-center justify-center rounded-lg shrink-0",
-                        skipDuplicates ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" : "bg-muted/50 text-muted-foreground"
+                        skipDuplicates ? "bg-success/15 text-success dark:text-success" : "bg-muted/50 text-muted-foreground"
                       )}>
                         <ShieldCheck className="h-4 w-4" />
                       </span>
@@ -378,7 +378,7 @@ export function LeadCaptureForm({
                       </Badge>
                     )}
                     {minRating > 0 && (
-                      <Badge variant="outline" className="text-[10px] gap-1 h-6 bg-amber-500/10 border-amber-500/20 text-amber-600 cursor-pointer hover:bg-amber-500/20" onClick={() => setMinRating(0)}>
+                      <Badge variant="outline" className="text-[10px] gap-1 h-6 bg-warning/10 border-warning/20 text-warning cursor-pointer hover:bg-warning/20" onClick={() => setMinRating(0)}>
                         ⭐ {minRating}+
                         <X className="h-2.5 w-2.5" />
                       </Badge>

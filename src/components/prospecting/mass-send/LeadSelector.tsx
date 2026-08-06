@@ -265,7 +265,7 @@ export function LeadSelector({
                                   </span>
                                 )}
                                 {lead.rating && (
-                                  <span className="flex items-center gap-0.5 text-yellow-500">
+                                  <span className="flex items-center gap-0.5 text-warning">
                                     <Star className="h-3 w-3 fill-current" />
                                     {lead.rating}
                                   </span>

@@ -39,40 +39,40 @@ export function ConversionFunnel() {
         label: 'Capturados',
         icon: Users,
         count: totalCaptured,
-        color: 'text-blue-500',
-        bgColor: 'bg-blue-500/20',
+        color: 'text-info',
+        bgColor: 'bg-info/20',
       },
       {
         id: 'sent',
         label: 'Mensagens Enviadas',
         icon: Send,
         count: totalSent,
-        color: 'text-purple-500',
-        bgColor: 'bg-purple-500/20',
+        color: 'text-primary',
+        bgColor: 'bg-primary/20',
       },
       {
         id: 'responded',
         label: 'Responderam',
         icon: MessageSquare,
         count: totalResponded,
-        color: 'text-orange-500',
-        bgColor: 'bg-orange-500/20',
+        color: 'text-brand',
+        bgColor: 'bg-brand/20',
       },
       {
         id: 'meetings',
         label: 'Reuniões Agendadas',
         icon: Calendar,
         count: totalMeetings,
-        color: 'text-cyan-500',
-        bgColor: 'bg-cyan-500/20',
+        color: 'text-info',
+        bgColor: 'bg-info/20',
       },
       {
         id: 'won',
         label: 'Vendas Fechadas',
         icon: Trophy,
         count: totalWon,
-        color: 'text-green-500',
-        bgColor: 'bg-green-500/20',
+        color: 'text-success',
+        bgColor: 'bg-success/20',
       },
     ];
 
@@ -197,9 +197,9 @@ export function ConversionFunnel() {
                   {rate.from.split(' ')[0]} → {rate.to.split(' ')[0]}
                 </p>
                 <p className={`text-lg font-bold ${
-                  rate.rate >= 50 ? 'text-green-500' : 
-                  rate.rate >= 25 ? 'text-yellow-500' : 
-                  'text-red-500'
+                  rate.rate >= 50 ? 'text-success' : 
+                  rate.rate >= 25 ? 'text-warning' : 
+                  'text-destructive'
                 }`}>
                   {rate.rate.toFixed(1)}%
                 </p>

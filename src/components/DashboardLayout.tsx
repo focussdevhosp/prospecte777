@@ -54,7 +54,7 @@ export function DashboardLayout({ children, title, description, actions }: Dashb
   const toggleNavigationMode = () => setNavigationMode(navigationMode === 'sidebar' ? 'topbar' : 'sidebar');
 
   const offlineBanner = !isOnline && (
-    <div className="fixed top-0 left-0 right-0 z-[100] bg-amber-500 text-amber-950 text-center text-xs font-semibold py-2 flex items-center justify-center gap-2">
+    <div className="fixed top-0 left-0 right-0 z-[100] bg-warning text-warning text-center text-xs font-semibold py-2 flex items-center justify-center gap-2">
       <WifiOff className="h-3.5 w-3.5" />
       Sem conexão — algumas funcionalidades podem não estar disponíveis
     </div>

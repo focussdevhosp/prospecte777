@@ -38,23 +38,18 @@ import {
 import { format, subDays, startOfDay, eachDayOfInterval, parseISO, getHours, getDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import {
+  CHART_SERIES,
+  STAGE_COLORS,
+  TEMPERATURE_COLORS,
+  seriesColor,
+} from '@/lib/chart-colors';
 
-const COLORS = ['#10b981', '#0ea5e9', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
-
-const STAGE_COLORS: Record<string, string> = {
-  'Contato': '#6366f1',
-  'Qualificado': '#0ea5e9',
-  'Proposta': '#22c55e',
-  'Negociação': '#f59e0b',
-  'Ganho': '#16a34a',
-  'Perdido': '#ef4444',
-};
-
-const TEMP_COLORS = {
-  quente: '#ef4444',
-  morno: '#f59e0b',
-  frio: '#0ea5e9',
-};
+// Cores vêm do sistema (validadas para daltonismo e com passo próprio no
+// modo escuro). O array de hex que estava aqui não mudava com o tema e
+// colocava verde e vermelho lado a lado no funil.
+const COLORS = CHART_SERIES;
+const TEMP_COLORS = TEMPERATURE_COLORS;
 
 const DAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
@@ -94,8 +89,8 @@ function AnalyticsKPI({
           {trend && trendLabel && (
             <div className={cn(
               "flex items-center gap-0.5 text-[11px] font-semibold px-2 py-1 rounded-full",
-              trend === 'up' ? "bg-emerald-500/15 text-emerald-400" : 
-              trend === 'down' ? "bg-red-500/15 text-red-400" :
+              trend === 'up' ? "bg-success/15 text-success" : 
+              trend === 'down' ? "bg-destructive/15 text-destructive" :
               "bg-muted text-muted-foreground"
             )}>
               {trend === 'up' ? <ArrowUpRight className="h-3 w-3" /> : 
@@ -266,8 +261,8 @@ export function AdvancedAnalytics() {
           value={`${avgConversionDays} dias`}
           subtitle="Do contato à venda"
           trend="neutral"
-          gradient="bg-gradient-to-br from-sky-500/15 via-sky-500/5 to-transparent border-sky-500/20"
-          iconColor="text-sky-500"
+          gradient="bg-gradient-to-br from-info/15 via-info/5 to-transparent border-info/20"
+          iconColor="text-info"
           delay={50}
         />
         <AnalyticsKPI
@@ -277,8 +272,8 @@ export function AdvancedAnalytics() {
           subtitle="Em negociação ativa"
           trend={activeLeads > 0 ? 'up' : 'neutral'}
           trendLabel={activeLeads > 0 ? `${activeLeads}` : undefined}
-          gradient="bg-gradient-to-br from-amber-500/15 via-amber-500/5 to-transparent border-amber-500/20"
-          iconColor="text-amber-500"
+          gradient="bg-gradient-to-br from-warning/15 via-warning/5 to-transparent border-warning/20"
+          iconColor="text-warning"
           delay={100}
         />
         <AnalyticsKPI
@@ -287,8 +282,8 @@ export function AdvancedAnalytics() {
           value={`${(metrics?.conversionRate || 0).toFixed(1)}%`}
           trend={metrics?.leadsByStage?.Ganho ? 'up' : 'neutral'}
           trendLabel={`${metrics?.leadsByStage?.Ganho || 0} vendas`}
-          gradient="bg-gradient-to-br from-violet-500/15 via-violet-500/5 to-transparent border-violet-500/20"
-          iconColor="text-violet-500"
+          gradient="bg-gradient-to-br from-primary/15 via-primary/5 to-transparent border-primary/20"
+          iconColor="text-primary"
           delay={150}
         />
       </div>
@@ -300,8 +295,8 @@ export function AdvancedAnalytics() {
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle className="flex items-center gap-2 text-base">
-                  <div className="p-1.5 rounded-lg bg-emerald-500/10">
-                    <BarChart3 className="h-4 w-4 text-emerald-500" />
+                  <div className="p-1.5 rounded-lg bg-success/10">
+                    <BarChart3 className="h-4 w-4 text-success" />
                   </div>
                   Leads ao Longo do Tempo
                 </CardTitle>
@@ -315,15 +310,15 @@ export function AdvancedAnalytics() {
               <AreaChart data={leadsOverTime}>
                 <defs>
                   <linearGradient id="colorLeadsAnalytics" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#10b981" stopOpacity={0.35}/>
-                    <stop offset="100%" stopColor="#10b981" stopOpacity={0}/>
+                    <stop offset="0%" stopColor="hsl(var(--chart-3))" stopOpacity={0.35}/>
+                    <stop offset="100%" stopColor="hsl(var(--chart-3))" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.5} />
                 <XAxis dataKey="date" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} interval="preserveStartEnd" axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
                 <Tooltip contentStyle={tooltipStyle} />
-                <Area type="monotone" dataKey="leads" stroke="#10b981" strokeWidth={2.5} fillOpacity={1} fill="url(#colorLeadsAnalytics)" dot={false} activeDot={{ r: 5, fill: '#10b981', stroke: '#fff', strokeWidth: 2 }} />
+                <Area type="monotone" dataKey="leads" stroke="hsl(var(--chart-3))" strokeWidth={2.5} fillOpacity={1} fill="url(#colorLeadsAnalytics)" dot={false} activeDot={{ r: 5, fill: 'hsl(var(--chart-3))', stroke: 'hsl(var(--card))', strokeWidth: 2 }} />
               </AreaChart>
             </ResponsiveContainer>
           </CardContent>
@@ -334,8 +329,8 @@ export function AdvancedAnalytics() {
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle className="flex items-center gap-2 text-base">
-                  <div className="p-1.5 rounded-lg bg-indigo-500/10">
-                    <Target className="h-4 w-4 text-indigo-500" />
+                  <div className="p-1.5 rounded-lg bg-info/10">
+                    <Target className="h-4 w-4 text-info" />
                   </div>
                   Funil de Vendas
                 </CardTitle>
@@ -394,7 +389,7 @@ export function AdvancedAnalytics() {
         <Card className="border-border/50">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-base">
-              <Flame className="h-4 w-4 text-orange-500" />
+              <Flame className="h-4 w-4 text-brand" />
               Temperatura dos Leads
             </CardTitle>
             <CardDescription>Engajamento atual</CardDescription>
@@ -435,7 +430,7 @@ export function AdvancedAnalytics() {
                     variant={item.rate > 50 ? 'default' : 'secondary'} 
                     className={cn(
                       "text-[10px] h-5",
-                      item.rate > 50 && "bg-emerald-500/15 text-emerald-400 border-0"
+                      item.rate > 50 && "bg-success/15 text-success border-0"
                     )}
                   >
                     {item.rate}%
@@ -454,8 +449,8 @@ export function AdvancedAnalytics() {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="flex items-center gap-2 text-base">
-                <div className="p-1.5 rounded-lg bg-teal-500/10">
-                  <Calendar className="h-4 w-4 text-teal-500" />
+                <div className="p-1.5 rounded-lg bg-success/10">
+                  <Calendar className="h-4 w-4 text-success" />
                 </div>
                 Melhores Horários para Contato
               </CardTitle>
@@ -517,8 +512,8 @@ export function AdvancedAnalytics() {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="flex items-center gap-2 text-base">
-                <div className="p-1.5 rounded-lg bg-sky-500/10">
-                  <Activity className="h-4 w-4 text-sky-500" />
+                <div className="p-1.5 rounded-lg bg-info/10">
+                  <Activity className="h-4 w-4 text-info" />
                 </div>
                 Performance Semanal
               </CardTitle>
@@ -539,9 +534,9 @@ export function AdvancedAnalytics() {
                 iconType="circle"
                 iconSize={8}
               />
-              <Bar dataKey="leads" name="Leads" fill="#10b981" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="messages" name="Mensagens" fill="#0ea5e9" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="responses" name="Respostas" fill="#f59e0b" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="leads" name="Leads" fill="hsl(var(--chart-3))" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="messages" name="Mensagens" fill="hsl(var(--chart-4))" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="responses" name="Respostas" fill="hsl(var(--chart-6))" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>
