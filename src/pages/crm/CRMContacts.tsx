@@ -46,7 +46,7 @@ const tempIcons: Record<LeadTemperature, React.ReactNode> = {
 const commonTags = ['VIP', 'Urgente', 'Retorno', 'Sem Site', 'Interessado', 'Indicação', 'Recontato', 'Alto Valor'];
 
 export default function CRMContactsPage() {
-  const { leads, isLoading, deleteLeads, updateLead } = useLeads();
+  const { leads, isLoading, deleteLeads, updateLead, bulkUpdate, bulkTag } = useLeads();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [search, setSearch] = useState('');
@@ -147,39 +147,28 @@ export default function CRMContactsPage() {
     }
   };
 
+  // Todas as ações em massa disparavam um PATCH por lead dentro de um
+  // forEach — e cada resposta invalidava a lista inteira. Com 500
+  // selecionados eram 500 requisições e 500 refetches: a aba travava e
+  // parte das alterações se perdia pelo caminho. Agora é uma requisição.
   const handleBulkStageChange = (stage: LeadStage) => {
-    selected.forEach(id => updateLead({ id, stage }));
-    toast({ title: `${selected.size} leads movidos para ${stage}` });
+    bulkUpdate({ ids: Array.from(selected), changes: { stage } });
     setSelected(new Set());
   };
 
   const handleBulkTempChange = (temperature: LeadTemperature) => {
-    selected.forEach(id => updateLead({ id, temperature }));
-    toast({ title: `Temperatura atualizada para ${selected.size} leads` });
+    bulkUpdate({ ids: Array.from(selected), changes: { temperature } });
     setSelected(new Set());
   };
 
   const handleBulkAddTag = (tag: string) => {
-    selected.forEach(id => {
-      const lead = leads.find(l => l.id === id);
-      if (lead) {
-        const currentTags = lead.tags || [];
-        if (!currentTags.includes(tag)) {
-          updateLead({ id, tags: [...currentTags, tag] });
-        }
-      }
-    });
+    bulkTag({ ids: Array.from(selected), tag, mode: 'add' });
     toast({ title: `Tag "${tag}" adicionada a ${selected.size} leads` });
     setSelected(new Set());
   };
 
   const handleBulkRemoveTag = (tag: string) => {
-    selected.forEach(id => {
-      const lead = leads.find(l => l.id === id);
-      if (lead && lead.tags?.includes(tag)) {
-        updateLead({ id, tags: lead.tags.filter(t => t !== tag) });
-      }
-    });
+    bulkTag({ ids: Array.from(selected), tag, mode: 'remove' });
     toast({ title: `Tag "${tag}" removida de ${selected.size} leads` });
     setSelected(new Set());
   };

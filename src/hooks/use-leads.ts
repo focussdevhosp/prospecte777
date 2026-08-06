@@ -175,6 +175,78 @@ export function useLeads(filters?: {
     },
   });
 
+  /**
+   * Aplica o mesmo campo a vários leads numa requisição só.
+   *
+   * As ações em massa da tela chamavam `updateLead` dentro de um forEach:
+   * 500 leads selecionados viravam 500 PATCHes, e como cada um invalida a
+   * query de leads no onSuccess, mais 500 refetches da lista inteira. Na
+   * prática a aba travava e parte das atualizações se perdia.
+   */
+  const bulkUpdate = useMutation({
+    mutationFn: async ({ ids, changes }: { ids: string[]; changes: Partial<Lead> }) => {
+      if (ids.length === 0) return 0;
+
+      const { error } = await supabase
+        .from('leads')
+        .update(changes as never)
+        .in('id', ids);
+
+      if (error) throw error;
+      return ids.length;
+    },
+    onSuccess: (count) => {
+      queryClient.invalidateQueries({ queryKey: ['leads', user?.id] });
+      toast({
+        title: `${count} lead${count === 1 ? '' : 's'} atualizado${count === 1 ? '' : 's'}`,
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Erro ao atualizar leads',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
+  /**
+   * Tags são por lead, então o valor final difere de um para outro e não
+   * cabe num único UPDATE. O upsert em lote resolve numa requisição.
+   */
+  const bulkTag = useMutation({
+    mutationFn: async ({ ids, tag, mode }: { ids: string[]; tag: string; mode: 'add' | 'remove' }) => {
+      const current = (leads ?? []).filter((l) => ids.includes(l.id));
+
+      const rows = current.map((lead) => {
+        const tags = lead.tags ?? [];
+        const next = mode === 'add'
+          ? (tags.includes(tag) ? tags : [...tags, tag])
+          : tags.filter((t) => t !== tag);
+        return { id: lead.id, tags: next };
+      });
+
+      if (rows.length === 0) return 0;
+
+      const { error } = await supabase
+        .from('leads')
+        .upsert(rows as never, { onConflict: 'id' });
+
+      if (error) throw error;
+      return rows.length;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['leads', user?.id] });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Erro ao aplicar a tag',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
   const refetch = () => queryClient.invalidateQueries({ queryKey: ['leads', user?.id] });
 
   return {
@@ -186,8 +258,10 @@ export function useLeads(filters?: {
     updateLead: updateLead.mutate,
     deleteLead: deleteLead.mutate,
     deleteLeads: deleteLeads.mutate,
+    bulkUpdate: bulkUpdate.mutate,
+    bulkTag: bulkTag.mutate,
     isCreating: createLead.isPending,
-    isUpdating: updateLead.isPending,
+    isUpdating: updateLead.isPending || bulkUpdate.isPending || bulkTag.isPending,
     isDeleting: deleteLead.isPending || deleteLeads.isPending,
   };
 }

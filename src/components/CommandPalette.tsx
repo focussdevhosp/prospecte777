@@ -15,6 +15,7 @@ import {
   Mail, Clock, FlaskConical, Columns3,
   Bell, CreditCard, Code, Search, Kanban,
 } from 'lucide-react';
+import { useLeadSearch } from '@/hooks/use-lead-search';
 
 interface CommandRoute {
   label: string;
@@ -54,7 +55,13 @@ const routes: CommandRoute[] = [
 
 export function CommandPalette() {
   const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState('');
   const navigate = useNavigate();
+
+  // Busca de leads. O Ctrl+K só encontrava telas — para achar um cliente
+  // pelo nome era preciso ir ao CRM, abrir Contatos e filtrar. Num app de
+  // vendas, procurar contato é a busca mais frequente que existe.
+  const { results: leadResults, isSearching } = useLeadSearch(query);
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -67,6 +74,12 @@ export function CommandPalette() {
     return () => document.removeEventListener('keydown', down);
   }, []);
 
+  // Limpa a busca ao fechar, senão o resultado antigo aparece por um
+  // instante na próxima abertura.
+  useEffect(() => {
+    if (!open) setQuery('');
+  }, [open]);
+
   const handleSelect = useCallback((path: string) => {
     setOpen(false);
     navigate(path);
@@ -76,9 +89,38 @@ export function CommandPalette() {
 
   return (
     <CommandDialog open={open} onOpenChange={setOpen}>
-      <CommandInput placeholder="Buscar páginas, ações..." />
+      <CommandInput
+        placeholder="Buscar leads, páginas, ações..."
+        value={query}
+        onValueChange={setQuery}
+      />
       <CommandList>
-        <CommandEmpty>Nenhum resultado encontrado.</CommandEmpty>
+        <CommandEmpty>
+          {isSearching ? 'Buscando...' : 'Nenhum resultado encontrado.'}
+        </CommandEmpty>
+
+        {leadResults.length > 0 && (
+          <>
+            <CommandGroup heading="Leads">
+              {leadResults.map((lead) => (
+                <CommandItem
+                  key={lead.id}
+                  value={`lead-${lead.id}`}
+                  onSelect={() => handleSelect(`/crm/contacts/${lead.id}`)}
+                  className="gap-2 cursor-pointer"
+                >
+                  <Users className="h-4 w-4 shrink-0" />
+                  <span className="truncate">{lead.business_name}</span>
+                  <span className="ml-auto shrink-0 text-xs text-muted-foreground">
+                    {lead.phone_display || lead.phone}
+                  </span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+            <CommandSeparator />
+          </>
+        )}
+
         {groups.map((group, i) => (
           <div key={group}>
             {i > 0 && <CommandSeparator />}
