@@ -58,6 +58,7 @@ import {
   Sun,
   Headphones,
   Stethoscope,
+  Radar,
   Flame,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -109,6 +110,9 @@ const sellItems = [
 
 // ─── 4. ANALISAR ────────────────────────────────────────
 const analyzeItems = [
+  // Responde "por qual lead eu começo?", que é a pergunta que vem logo
+  // depois de capturar e não tinha resposta em lugar nenhum.
+  { title: 'Oportunidades', icon: Radar, path: '/oportunidades', badge: 'NOVO', section: 'analyze' },
   { title: 'Analytics', icon: BarChart3, path: '/analytics', section: 'analyze' },
 ];
 

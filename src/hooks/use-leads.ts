@@ -41,7 +41,7 @@ export function useLeads(filters?: {
 
       const { data, error } = await query;
       if (error) throw error;
-      return data as Lead[];
+      return data as unknown as Lead[];
     },
     enabled: !!user?.id,
   });
@@ -78,12 +78,12 @@ export function useLeads(filters?: {
 
       const { data, error } = await supabase
         .from('leads')
-        .insert({ ...lead, user_id: user.id })
+        .insert({ ...lead, user_id: user.id } as never)
         .select()
         .single();
 
       if (error) throw error;
-      return data as Lead;
+      return data as unknown as Lead;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['leads', user?.id] });
@@ -105,13 +105,13 @@ export function useLeads(filters?: {
     mutationFn: async ({ id, ...updates }: Partial<Lead> & { id: string }) => {
       const { data, error } = await supabase
         .from('leads')
-        .update(updates)
+        .update(updates as never)
         .eq('id', id)
         .select()
         .single();
 
       if (error) throw error;
-      return data as Lead;
+      return data as unknown as Lead;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['leads', user?.id] });
@@ -281,7 +281,7 @@ export function useLead(leadId: string | null) {
         .single();
 
       if (error) throw error;
-      return data as Lead;
+      return data as unknown as Lead;
     },
     enabled: !!leadId && !!user?.id,
   });

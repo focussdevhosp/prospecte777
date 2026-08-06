@@ -19,7 +19,9 @@ import { useActivityLog } from '@/hooks/use-activity-log';
 import { Lead, LeadTask, LeadNote } from '@/types/database';
 import { stageColors } from '@/constants/lead-icons';
 import { AgentControlCard } from '@/components/crm/AgentControlCard';
+import { SiteAuditCard } from '@/components/crm/SiteAuditCard';
 import type { AgentStatus } from '@/hooks/use-agent-control';
+import type { SiteAudit } from '@/hooks/use-opportunity-radar';
 import { enrichmentApi } from '@/lib/api/enrichment';
 import { formatDistanceToNow, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -210,13 +212,23 @@ export default function CRMContactDetailPage() {
               {/* Estado da IA nesta conversa. Sem isto, o handoff acontecia
                   e quem abrisse o contato não fazia ideia de que o agente
                   tinha saído — nem de como trazê-lo de volta. */}
-              <div className="text-left">
+              <div className="space-y-3 text-left">
                 <AgentControlCard
                   leadId={lead.id}
                   status={(lead.agent_status as AgentStatus) ?? 'active'}
                   reason={lead.agent_paused_reason}
                   pausedAt={lead.agent_paused_at}
                   repliesToday={lead.agent_replies_today ?? 0}
+                />
+
+                {/* O argumento de venda fica onde a mensagem é escrita.
+                    Antes o vendedor abria o site do lead em outra aba e
+                    escrevia a abordagem no achismo. */}
+                <SiteAuditCard
+                  leadId={lead.id}
+                  businessName={lead.business_name}
+                  website={lead.website}
+                  audit={(lead.site_audit as SiteAudit | null) ?? null}
                 />
               </div>
 

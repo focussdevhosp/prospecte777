@@ -119,6 +119,28 @@ export interface MessageVariation {
   active: boolean;
 }
 
+/**
+ * Resultado da auditoria do site do lead. Cada achado é uma verificação
+ * objetiva no HTML e vira um argumento de venda concreto.
+ */
+export interface LeadSiteFinding {
+  id: string;
+  severity: 'critical' | 'high' | 'medium' | 'low';
+  title: string;
+  impact: string;
+  opportunity: string;
+}
+
+export interface LeadSiteAudit {
+  url: string | null;
+  reachable: boolean;
+  status?: number;
+  score: number;
+  findings: LeadSiteFinding[];
+  pitch: string;
+  checked_at: string;
+}
+
 export interface Lead {
   id: string;
   user_id: string;
@@ -164,6 +186,9 @@ export interface Lead {
   agent_paused_at: string | null;
   agent_replies_today: number;
   agent_replies_date: string | null;
+  // Auditoria do site do lead
+  site_audit: LeadSiteAudit | null;
+  site_audited_at: string | null;
   // Social URLs
   instagram_url: string | null;
   facebook_url: string | null;

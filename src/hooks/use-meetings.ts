@@ -40,7 +40,7 @@ export function useMeetings(filters?: {
 
       const { data, error } = await query;
       if (error) throw error;
-      return data as Meeting[];
+      return data as unknown as Meeting[];
     },
     enabled: !!user?.id,
   });
@@ -86,7 +86,7 @@ export function useMeetings(filters?: {
         .single();
 
       if (error) throw error;
-      return data as Meeting;
+      return data as unknown as Meeting;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['meetings', user?.id] });
@@ -114,7 +114,7 @@ export function useMeetings(filters?: {
         .single();
 
       if (error) throw error;
-      return data as Meeting;
+      return data as unknown as Meeting;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['meetings', user?.id] });

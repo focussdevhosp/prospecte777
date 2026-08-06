@@ -1159,6 +1159,8 @@ export type Database = {
       }
       leads: {
         Row: {
+          site_audit: Json | null
+          site_audited_at: string | null
           agent_paused_at: string | null
           agent_paused_reason: string | null
           agent_replies_date: string | null
@@ -1223,6 +1225,8 @@ export type Database = {
           website: string | null
         }
         Insert: {
+          site_audit?: Json | null
+          site_audited_at?: string | null
           agent_paused_at?: string | null
           agent_paused_reason?: string | null
           agent_replies_date?: string | null
@@ -1287,6 +1291,8 @@ export type Database = {
           website?: string | null
         }
         Update: {
+          site_audit?: Json | null
+          site_audited_at?: string | null
           agent_paused_at?: string | null
           agent_paused_reason?: string | null
           agent_replies_date?: string | null
@@ -2701,6 +2707,23 @@ export type Database = {
       has_active_subscription: {
         Args: { p_user_id: string }
         Returns: boolean
+      }
+      opportunity_radar: {
+        Args: { p_user_id: string; p_limit?: number }
+        Returns: {
+          id: string
+          business_name: string
+          phone: string
+          niche: string | null
+          website: string | null
+          stage: string
+          rating: number | null
+          reviews_count: number | null
+          site_score: number
+          site_pitch: string | null
+          opportunity_score: number
+          reasons: string[]
+        }[]
       }
       is_phone_blacklisted: {
         Args: { p_phone: string; p_user_id: string }
