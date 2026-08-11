@@ -112,6 +112,25 @@ de só contar dias. A infraestrutura toda já existe.
 
 ---
 
+## 8. A landing page afirma "ROI médio de 23x comprovado"
+
+**Bloqueio:** deliberado. Não mexi porque é o seu posicionamento comercial,
+não um defeito técnico — a decisão é sua, não minha.
+
+**Por que anoto mesmo assim:** `PremiumPricingCard.tsx` diz *"ROI médio de 23x
+comprovado"* e a `Landing.tsx` abre uma seção com *"Resultados comprovados —
+dados reais de empresas que substituíram a prospecção manual pela IA"*.
+
+É a mesma categoria de afirmação que passei dez ciclos removendo das mensagens
+que o produto manda. Fica estranho o sistema recusar-se a dizer "aumentamos
+40%" para um lead e a página de vendas dizer "23x comprovado" — e, se alguém
+pedir a fonte, a resposta precisa existir.
+
+**O que fazer:** ou apontar de onde vem o número (quantos clientes, que
+período, como foi medido), ou trocar por algo que você consiga sustentar.
+
+---
+
 ## 6. Segredos expostos no chat precisam ser rotacionados por você
 
 **Bloqueio:** deliberado. Rotacionar segredo é operação irreversível em

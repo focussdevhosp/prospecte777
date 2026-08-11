@@ -4,17 +4,19 @@ O que foi feito enquanto você esteve fora, o que você precisa fazer, e o que
 eu faria em seguida.
 
 Ponto de partida: `a22652f`, 118 testes.
-Agora: `1806d31`, **173 testes**, 7 ciclos, tudo commitado e no GitHub.
+Agora: `9ab71ac`, **220 testes**, 10 ciclos, tudo commitado e no GitHub.
 
 ---
 
 ## O resumo em três frases
 
-Não implementei funcionalidade nova. Passei os sete ciclos consertando coisas
-que **pareciam prontas e não estavam** — e três delas eram graves o bastante
+Não implementei funcionalidade nova. Passei os dez ciclos consertando coisas
+que **pareciam prontas e não estavam** — e quatro delas eram graves o bastante
 para justificar sozinhas o tempo todo: o lead que pedia "pare" continuava
-recebendo mensagem, a parada de emergência não parava metade dos envios, e o
-modo padrão do produto não conseguia enviar mensagem nenhuma.
+recebendo mensagem, a parada de emergência não parava metade dos envios, o
+modo padrão do produto não conseguia enviar mensagem nenhuma, e a biblioteca
+de textos que o produto entrega pronta no primeiro dia inventava casos de
+sucesso e estatísticas.
 
 A regra que usei para escolher o que atacar: **tela que parece pronta e não
 funciona vem antes de tela que não existe.** Uma funcionalidade ausente
@@ -22,7 +24,7 @@ avisa que falta algo; uma quebrada afirma um fato falso.
 
 ---
 
-## Os três achados que mudam a conversa
+## Os quatro achados que mudam a conversa
 
 ### 1. Quem pedia para parar continuava recebendo
 
@@ -73,6 +75,22 @@ está cheia. Missão encerrada não envia. Resultado:
 
 O caminho mais seguro do produto era o único que não funcionava.
 
+### 4. O produto entregava, pronta, uma biblioteca que inventa
+
+`src/constants/niche-configs.ts` é o que o onboarding grava na biblioteca de
+templates de todo usuário novo. Os 32 textos diziam coisas assim:
+
+> "outros restaurantes da região aumentaram 40% nos pedidos"
+> "uma clínica similar que economizou R$ 3.000/mês"
+> "lançamos um app de treino que os alunos usam em casa"
+
+Nenhum número veio de lugar nenhum e nenhum desses clientes existe. Quem
+assina hoje recebia essa biblioteca e disparava no primeiro dia, assinando com
+o nome da própria empresa.
+
+Isso é o começo da linha que você descreveu como "IA fraca e pouco
+inteligente" — e é a parte em que o modelo não tinha culpa nenhuma.
+
 ---
 
 ## O resto, em uma linha cada
@@ -86,6 +104,9 @@ O caminho mais seguro do produto era o único que não funcionava.
 | 5 | O contrato de veracidade parava na primeira mensagem; o prompt da conversa **pedia** para inventar case | `fba7d97` |
 | 6 | A conversa — o maior gasto de IA do produto — não entrava no painel de custo e não tinha provedor reserva | `b267b2f` |
 | 7 | Follow-up ignorava o que o lead respondeu; nove textos fixos inventavam case e dor | `1806d31` |
+| 8 | Os 32 templates entregues no onboarding inventavam case, percentual e lançamento de produto | `f820120` |
+| 9 | O gate barrava "me dá 2 minutos" e "como vocês agendam hoje?" — três falsos positivos no caminho principal | `163c0cb` |
+| 10 | Sem dono identificado, blacklist e parada de emergência eram puladas — e pedir rotação de chip produzia exatamente isso | `9ab71ac` |
 
 ---
 
@@ -137,7 +158,7 @@ derruba o app na inicialização se alguém tentar configurá-lo como `VITE_*`.
 Na ordem em que eu pegaria:
 
 1. **Testar contra Postgres de verdade.** É a lacuna que mais me incomoda:
-   sete ciclos entregaram lógica de negócio em SQL — gatilhos, decisão de
+   vários ciclos entregaram lógica de negócio em SQL — gatilhos, decisão de
    conclusão de missão, contadores — e nada disso passa pelo vitest, porque
    não há Postgres nesta máquina. A proteção atual é o bloco `RAISE EXCEPTION`
    no fim de cada migração, que pega o essencial e não pega regressão.
@@ -157,18 +178,20 @@ raciocínio, em `AUTONOMOUS_WORK_LOG.md`.
 ## Uma observação que talvez interesse
 
 Seu diagnóstico original foi que a IA abordava de forma "fraca, genérica e
-pouco inteligente". Depois destes sete ciclos eu diria que o problema nunca
-foi a inteligência do modelo — foi que o sistema tinha, em vários pontos,
+pouco inteligente". Depois destes dez ciclos eu diria que o problema nunca foi
+a inteligência do modelo — foi que o sistema tinha, em vários pontos,
 **instruções explícitas mandando inventar**, e textos fixos de reserva que
-afirmavam resultados que nunca aconteceram. Três exemplos que estavam no
+afirmavam resultados que nunca aconteceram. Quatro exemplos que estavam no
 código-fonte:
 
 - `"fiz pra outro X e deu Y"` — no prompt da conversa, sem nenhum case no
   contexto;
+- `"traga 1 prova (case rápido, número, resultado com outro cliente
+  parecido)"` — no playbook, inclusive para quem não tem portfólio nenhum;
 - `"vi um case parecido com o seu, empresas do segmento têm conseguido
   resultados incríveis"` — texto fixo do follow-up;
-- uma tabela de dores por nicho, afirmada ao lead como se alguém tivesse
-  perguntado a ele.
+- 32 templates de onboarding com percentual, valor em reais e caso de sucesso
+  inventados, entregues prontos a todo usuário novo.
 
 Os três disparavam com mais frequência justamente quando a IA falhava — ou
 seja, quando ninguém estava olhando. Um modelo melhor não teria consertado

@@ -388,6 +388,123 @@ seguinte fazia referência a uma conversa que não houve.
 
 ---
 
+## Ciclo 8 — O produto ensinava a inventar
+
+**Commit:** `f820120`
+
+### Análise
+
+Procurando o resto do padrão do ciclo 7, apareceu a origem dele:
+`src/constants/niche-configs.ts`. É o arquivo que o onboarding grava na
+biblioteca de templates de todo usuário novo — na prática, **o que o produto
+ensina a mandar**. Os 32 textos afirmavam:
+
+> "outros restaurantes da região aumentaram 40% nos pedidos"
+> "um restaurante similar que triplicou os pedidos em 3 meses"
+> "algumas clínicas parceiras reduziram 60% das faltas"
+> "uma clínica similar que economizou R$ 3.000/mês"
+> "escritórios parceiros captam 10 novos clientes por mês"
+> "uma loja similar que recuperou R$ 15.000/mês"
+
+Nenhum número veio de lugar nenhum, nenhum cliente existe. Quem assina hoje
+recebia essa biblioteca e disparava no primeiro dia, com o nome da própria
+empresa.
+
+**Este é o começo da linha que o usuário chamou de "IA fraca e pouco
+inteligente".** Não era o modelo — era o conteúdo que o produto entregava
+como exemplo do que é uma boa mensagem.
+
+### Implementação
+
+A regra que passou a valer: **um texto pode ser fixo, não pode ser falso.**
+Só entra o que é verdade para qualquer usuário — o que ele oferece, o que o
+sistema observou, e o que já aconteceu entre os dois.
+
+Os 32 reescritos mantendo tom, emoji e nicho. Trocaram afirmação por
+pergunta: em vez de *"posso mostrar como outros restaurantes aumentaram
+40%"*, *"como vocês recebem pedido hoje — só pelos aplicativos ou também
+direto?"*. A segunda começa conversa; a primeira começa uma conta que alguém
+vai ter que pagar.
+
+Junto: `cold-reactivation` (oito templates anunciando lançamentos que nunca
+existiram) e a linha do playbook do `whatsapp-ai-reply` que mandava "traga 1
+prova" para quem não tem portfólio nenhum.
+
+O teste novo roda os 32 pela conferência de factualidade do próprio produto,
+com evidência vazia — o usuário recém-cadastrado, que é o pior caso e o mais
+comum.
+
+---
+
+## Ciclo 9 — Guarda contra o gate apertar demais
+
+**Commit:** `163c0cb`
+
+### Análise
+
+Cinco ciclos mexeram no Quality Gate. Todo aperto carrega o mesmo risco, e é
+silencioso: o gate vira tão rígido que nada sai, e o produto deixa de mandar
+mensagem ruim porque deixou de mandar mensagem. Ninguém abre chamado dizendo
+"minha campanha está educadamente calada".
+
+Escrevi sete mensagens do tipo que um vendedor bom escreveria, que **precisam
+passar**. Três falharam — três falsos positivos no caminho principal:
+
+1. **"Me dá 2 minutos" era barrado.** A dispensa para duração existia desde o
+   começo e nunca funcionou: era testada contra o trecho casado, e o trecho
+   para antes da unidade — em "2 minutos" sobrava "2 ". A chamada de menor
+   atrito que existe em venda era proibida pelo gate.
+2. **"Como as clientes costumam agendar hoje?" contava como pedir reunião.** O
+   padrão casava a palavra solta. A melhor pergunta de descoberta para clínica
+   e salão — os nichos principais — era penalizada.
+3. **"Sei que a rotina de restaurante é corrida" virava palpite.** O `a ` solto
+   no padrão casava qualquer substantivo.
+
+Em compensação, um bloqueio que faltava: multiplicador com prazo ("triplica
+reviews em 60 dias"), que antes só era barrado de raspão pelo número solto.
+
+### O padrão
+
+Em cinco ciclos mexendo neste arquivo, **toda vez que teste e código
+discordaram, o código estava errado.** Um gate escrito sem exemplos do que
+deve passar só fica mais rígido, porque cada regra nova é escrita olhando um
+caso ruim.
+
+---
+
+## Ciclo 10 — O furo embaixo da correção do ciclo 4
+
+**Commit:** `9ab71ac`
+
+### Análise
+
+Revisando a própria correção do ciclo 4, o furo maior estava embaixo dela:
+
+```ts
+const { data: blocked } = ownerId
+  ? await ctx.supabase.rpc("is_phone_blacklisted", {...})
+  : { data: false };
+```
+
+"Não sei de quem é, então deixa passar" — a resposta errada para a única
+pergunta que não admite palpite. O caminho mais fácil de furar o opt-out era
+chamar a função sem dizer de quem era a mensagem.
+
+E não é hipótese distante: **omitir `instance_id` é o jeito documentado de
+pedir rotação de chip.** Por esse caminho o dono ficava nulo, a blacklist não
+era consultada e a parada de emergência não valia. A rotação de chip — que
+existe justamente para proteger os números — desligava as duas proteções que
+protegem os números.
+
+### Implementação
+
+Falha fechada: sem dono, 400 com o motivo. Os cinco chamadores passam a
+declarar `user_id` e `initiated_by`; a dedução pelo `instance_id` continua
+funcionando, só deixou de ser a única coisa entre um envio e a lista de
+bloqueio.
+
+---
+
 ## Notas de método
 
 **Sobre o lint.** `npm run lint` acusa 367 problemas no repositório inteiro —
