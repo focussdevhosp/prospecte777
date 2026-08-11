@@ -35,6 +35,7 @@ import {
   type MissionRow,
 } from "../_shared/agents/orchestrator.ts";
 import { AUTONOMY, type AutonomyLevel } from "../_shared/agents/types.ts";
+import { classifySendFailure, MAX_SEND_ATTEMPTS } from "../_shared/agents/send-policy.ts";
 
 // Quantos leads a esteira processa por chamada. Cada um custa uma chamada de
 // IA e até duas reescritas; passar disso estoura o tempo da edge function.
@@ -773,25 +774,48 @@ async function sendMessage(
 
     if (!res.ok) {
       const detail = await res.text();
-      const optedOut = res.status === 409 && /blacklist/i.test(detail);
+      const kind = classifySendFailure(res.status, detail);
 
-      await supabase
-        .from("mission_leads")
-        .update({
-          status: optedOut ? "opted_out" : "failed",
-          error_message: detail.slice(0, 400),
-        })
-        .eq("id", params.missionLeadId);
+      // Opt-out não é falha de envio: é resposta. Sai da fila e não volta.
+      if (kind === "opt_out") {
+        await supabase
+          .from("mission_leads")
+          .update({ status: "opted_out", error_message: detail.slice(0, 400) })
+          .eq("id", params.missionLeadId);
+
+        await logEvent(supabase, {
+          userId: params.userId, missionId: params.missionId, leadId: lead.id,
+          agent: "outreach",
+          event: "opted_out",
+          summary: `${lead.business_name} está na lista de bloqueio — nada foi enviado.`,
+          detail: { status: res.status },
+          level: "warning",
+        });
+        return false;
+      }
+
+      const { data: outcome } = await supabase.rpc("mission_lead_send_failed", {
+        p_mission_lead_id: params.missionLeadId,
+        p_error: detail,
+        p_definitive: kind === "definitive",
+        p_max_attempts: MAX_SEND_ATTEMPTS,
+      });
+
+      const willRetry = Boolean((outcome as { will_retry?: boolean } | null)?.will_retry);
+      const attempts = Number((outcome as { attempts?: number } | null)?.attempts ?? 1);
 
       await logEvent(supabase, {
         userId: params.userId, missionId: params.missionId, leadId: lead.id,
         agent: "outreach",
-        event: optedOut ? "opted_out" : "send_failed",
-        summary: optedOut
-          ? `${lead.business_name} está na lista de bloqueio — nada foi enviado.`
-          : `Falha ao enviar para ${lead.business_name}.`,
-        detail: { status: res.status },
-        level: optedOut ? "warning" : "error",
+        event: "send_failed",
+        summary: willRetry
+          ? `Falha ao enviar para ${lead.business_name} (tentativa ${attempts}). A mensagem continua na fila e será tentada de novo.`
+          : `Falha ao enviar para ${lead.business_name} após ${attempts} tentativa(s). O rascunho ficou parado.`,
+        detail: { status: res.status, attempts, will_retry: willRetry },
+        // Enquanto vai tentar de novo é aviso, não erro: erro é o que exige
+        // que alguém olhe. Marcar como erro cada oscilação de rede treina o
+        // usuário a ignorar o feed justamente onde ele precisa confiar.
+        level: willRetry ? "warning" : "error",
       });
       return false;
     }
@@ -840,14 +864,32 @@ async function sendMessage(
 
     return true;
   } catch (e) {
+    // Cair aqui é rede: DNS, timeout, conexão derrubada no meio. Nunca é
+    // motivo definitivo — a mensagem pode nem ter chegado ao `whatsapp-send`.
     console.error("[orchestrator] envio falhou:", e);
-    await supabase
-      .from("mission_leads")
-      .update({ status: "failed", error_message: e instanceof Error ? e.message : String(e) })
-      .eq("id", params.missionLeadId);
+
+    const { data: outcome } = await supabase.rpc("mission_lead_send_failed", {
+      p_mission_lead_id: params.missionLeadId,
+      p_error: e instanceof Error ? e.message : String(e),
+      // Sem status HTTP: a requisição não chegou a ter resposta.
+      p_definitive: classifySendFailure(null, null) === "definitive",
+      p_max_attempts: MAX_SEND_ATTEMPTS,
+    });
+
+    await logEvent(supabase, {
+      userId: params.userId, missionId: params.missionId, leadId: lead.id,
+      agent: "outreach",
+      event: "send_failed",
+      summary: (outcome as { will_retry?: boolean } | null)?.will_retry
+        ? `A rede falhou ao enviar para ${lead.business_name}. A mensagem continua na fila.`
+        : `A rede falhou ao enviar para ${lead.business_name} e as tentativas se esgotaram.`,
+      detail: { attempts: (outcome as { attempts?: number } | null)?.attempts ?? 1 },
+      level: (outcome as { will_retry?: boolean } | null)?.will_retry ? "warning" : "error",
+    });
     return false;
   }
 }
+
 
 /**
  * Solta as mensagens que já estavam aprovadas e ficaram retidas.

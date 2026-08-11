@@ -2767,6 +2767,15 @@ export type Database = {
         Returns: { to_process: number; awaiting_human: number; ready_to_send: number }[]
       }
       mission_settle_status: { Args: { p_mission_id: string }; Returns: Json }
+      mission_lead_send_failed: {
+        Args: {
+          p_mission_lead_id: string
+          p_error: string
+          p_definitive?: boolean
+          p_max_attempts?: number
+        }
+        Returns: Json
+      }
       missions_pending_batch: {
         Args: { p_limit?: number }
         Returns: {
