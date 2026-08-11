@@ -67,12 +67,26 @@ const GUARANTEE_CLAIMS = [
   /\b(vai|v[ãa]o)\b[^.!?]{0,15}\b(dobrar|triplicar)\b[^.!?]{0,20}\b(vendas?|faturamento|clientes?)/i,
 ];
 
-/** Afirmação sobre a operação interna do lead que ninguém verificou. */
+/**
+ * Afirmação sobre a operação interna DESTE lead que ninguém verificou.
+ *
+ * O alvo é a frase que finge conhecimento: "sei que vocês estão perdendo
+ * cliente", "vi que o negócio tem dificuldade em X". O que ela tem de
+ * destrutivo não é o palpite — é a confiança fingida. Quando o palpite erra, e
+ * ele erra na maioria das vezes, quem lê descobre na hora que é robô.
+ *
+ * A última linha destas era `/sei que (você|a )/i`. O `a ` solto casava com
+ * qualquer substantivo depois: "sei que a rotina de restaurante é corrida"
+ * caía junto. Essa frase não afirma nada sobre a empresa do lead — fala da
+ * categoria, é o que qualquer vendedor humano diz para criar conexão, e não
+ * tem como estar errada. Barrar isso empurra a IA para textos sem nenhuma
+ * empatia, que é o defeito que este arquivo existe para combater.
+ */
 const UNVERIFIABLE_CLAIMS = [
   /(sei|vi|notei|percebi|reparei) que (voc[êe]s?|a empresa|o neg[óo]cio) (est[áa]|tem|t[êe]m|perde|perdem|sofre)/i,
   /voc[êe]s? (est[ãa]o|deve[m]? estar) (perdendo|deixando de (ganhar|faturar|vender))/i,
   /seu (faturamento|or[çc]amento|time|sistema atual)/i,
-  /sei que (voc[êe]s?|a )/i,
+  /sei que (voc[êe]s?|a sua|o seu|a empresa|o neg[óo]cio)\b/i,
 ];
 
 /** Prova social sem lastro no catálogo. */

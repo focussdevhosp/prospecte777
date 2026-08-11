@@ -914,9 +914,15 @@ ${qualification.deal_value_estimate ? `- Valor Estimado: R$${qualification.deal_
 - Chame qualifyLeadBANT com o que descobriu.`;
     } else if (qScore >= 60 || hasBuyingSignal) {
       convStage = "APRESENTAÇÃO DE SOLUÇÃO";
-      stagePlaybook = `Objetivo: conectar a DOR dele com sua SOLUÇÃO específica + prova.
+      // A instrução de prova é condicional ao que existe cadastrado. Antes
+      // dizia "traga 1 prova (case rápido, número, resultado com outro
+      // cliente parecido)" sempre — inclusive para quem não tem portfólio
+      // nenhum. Pedir prova a quem não tem prova é pedir para inventar uma.
+      stagePlaybook = `Objetivo: conectar a DOR dele com sua SOLUÇÃO específica.
 - Mostre COMO você resolve — em 2-3 frases, sem jargão.
-- Traga 1 prova (case rápido, número, resultado com outro cliente parecido).
+${(portfolio && portfolio.length)
+  ? `- Se couber, cite UM trabalho do portfólio acima, pelo nome e com o link. Nada além do que está lá.`
+  : `- Você NÃO tem case cadastrado. Fale do método e do que você faria no caso dele. Não invente cliente anterior nem resultado.`}
 - Termine com CTA de baixa fricção: "posso te mandar um exemplo?", "quer ver um print?".
 - Se ele demonstrar interesse claro → proponha uma call de 15min e use scheduleMeeting.`;
     } else {

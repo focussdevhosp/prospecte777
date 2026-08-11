@@ -152,6 +152,24 @@ describe('buildConversationEvidence', () => {
     ).toBe(true);
   });
 
+  it('empatia sobre a categoria passa; palpite sobre a empresa não', () => {
+    // "Sei que a rotina de restaurante é corrida" fala do setor, é o que
+    // qualquer vendedor humano diz e não tem como estar errado. Já "sei que
+    // vocês estão perdendo cliente" finge conhecer o negócio do outro — e o
+    // estrago não é o palpite, é a confiança fingida quando ele erra.
+    const evidence = buildConversationEvidence({ lead });
+
+    expect(
+      checkFactuality('Sei que a rotina de clínica é corrida. Como vocês marcam hoje?', evidence)
+        .approved,
+    ).toBe(true);
+
+    expect(
+      checkFactuality('Sei que vocês estão perdendo cliente por causa da agenda.', evidence)
+        .approved,
+    ).toBe(false);
+  });
+
   it('"custa 2 minutos do seu tempo" não é preço', () => {
     const evidence = buildConversationEvidence({ lead, services: [{ pricing_info: null }] });
 
