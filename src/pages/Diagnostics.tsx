@@ -241,6 +241,10 @@ export default function DiagnosticsPage() {
           phone: testPhone,
           message: testMessage,
           instance_id: settings?.whatsapp_instance_id,
+          // Teste manual: a pessoa está justamente diagnosticando por que
+          // nada sai. Bloquear o teste durante a parada de emergência
+          // esconderia dela a informação que ela veio buscar.
+          initiated_by: 'human',
         },
       });
 

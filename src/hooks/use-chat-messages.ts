@@ -85,6 +85,11 @@ export function useChatMessages(leadId: string | null) {
             phone: lead.phone,
             message: content,
             instance_id: settings.whatsapp_instance_id,
+            // Uma pessoa escreveu esta mensagem e clicou em enviar agora. A
+            // parada de emergência existe para a máquina parar de agir
+            // sozinha, não para impedir alguém de responder um cliente que
+            // está do outro lado esperando.
+            initiated_by: 'human',
           },
         });
 

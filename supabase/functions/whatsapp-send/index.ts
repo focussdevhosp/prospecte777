@@ -10,6 +10,7 @@ import {
   requireUserOrInternal,
 } from "../_shared/auth.ts";
 import { loadChips, pickChip, recordChipSend } from "../_shared/chips.ts";
+import { initiatorOf, outboundBlockReason } from "../_shared/outbound-gate.ts";
 
 const MAX_MESSAGE_LENGTH = 4096;
 
@@ -78,6 +79,37 @@ Deno.serve(async (req) => {
 
     if (!ownerId && typeof body.user_id === "string") {
       ownerId = body.user_id;
+    }
+
+    // ---- PARADA DE EMERGÊNCIA ----
+    // Aqui, e não em cada função que envia, porque este é o único ponto por
+    // onde toda mensagem passa. Enquanto a checagem morava em
+    // `mission_can_send()`, só as missões paravam: o agente conversacional e
+    // os follow-ups agendados seguiam mandando, e o dono da conta ia dormir
+    // achando que tinha parado tudo.
+    const initiatedBy = initiatorOf(body.initiated_by);
+
+    if (ownerId) {
+      const { data: emergency } = await ctx.supabase
+        .from("user_settings")
+        .select("outbound_paused, outbound_paused_reason")
+        .eq("user_id", ownerId)
+        .maybeSingle();
+
+      const blockReason = outboundBlockReason({
+        initiatedBy,
+        outboundPaused: emergency?.outbound_paused === true,
+      });
+
+      if (blockReason) {
+        return json({
+          error:
+            "Os envios estão pausados por parada de emergência" +
+            (emergency?.outbound_paused_reason ? `: ${emergency.outbound_paused_reason}` : ".") +
+            " Retome em Configurações para voltar a enviar.",
+          code: blockReason,
+        }, 409);
+      }
     }
 
     // ---- Rotação de chips ----

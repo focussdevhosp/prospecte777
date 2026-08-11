@@ -1174,58 +1174,81 @@ ${qualification?.close_probability && qualification.close_probability >= 70 ? "\
     const shouldAutoSend = settings?.auto_prospecting_enabled && auto_reply_enabled;
 
     if (shouldAutoSend && settings?.whatsapp_instance_id) {
-      const EVOLUTION_API_URL = Deno.env.get("EVOLUTION_API_URL");
-      const EVOLUTION_API_KEY = Deno.env.get("EVOLUTION_API_KEY");
+      // ---- POR QUE ISTO PASSA PELO `whatsapp-send` ----
+      // Antes esta função falava direto com a Evolution. Parecia atalho
+      // inofensivo; não era. Tudo que protege um envio mora no
+      // `whatsapp-send`, e nada disso valia aqui:
+      //
+      //   - a lista de bloqueio. O lead que respondeu "pare" era colocado na
+      //     blacklist pelo gatilho e, no mesmo instante, recebia a resposta
+      //     automática da IA. Contato depois de opt-out, por um caminho que
+      //     ninguém tinha olhado;
+      //   - a parada de emergência;
+      //   - a rotação de chips e o registro de quanto cada chip enviou;
+      //   - a conferência de que a instância é mesmo desta conta;
+      //   - a checagem de conexão antes de tentar.
+      //
+      // Reimplementar isso aqui criaria uma segunda verdade sobre quando é
+      // permitido enviar — e foi justamente a segunda verdade que deixou
+      // passar mensagem para quem pediu para não receber.
 
-      if (EVOLUTION_API_URL && EVOLUTION_API_KEY) {
-        let formattedPhone = lead.phone.replace(/\D/g, "");
-        if (!formattedPhone.startsWith("55") && formattedPhone.length <= 11) {
-          formattedPhone = "55" + formattedPhone;
-        }
+      // Pausa curta antes de responder: chegar instantaneamente entrega que
+      // é robô, e o WhatsApp trata rajada como comportamento de spam.
+      const delay = Math.floor(Math.random() * 2000) + 1000;
+      await new Promise(resolve => setTimeout(resolve, delay));
 
-        // Human-like delay
-        const delay = Math.floor(Math.random() * 2000) + 1000;
-        await new Promise(resolve => setTimeout(resolve, delay));
+      const sendResult = await supabase.functions.invoke("whatsapp-send", {
+        body: {
+          phone: lead.phone,
+          message: generatedReply,
+          instance_id: settings.whatsapp_instance_id,
+          user_id: lead.user_id,
+          // Resposta automática é automação, mesmo quando alguém do outro
+          // lado está esperando. É exatamente o que a parada de emergência
+          // precisa conseguir segurar.
+          initiated_by: "automation",
+        },
+      });
 
-        const sendResponse = await fetch(
-          `${EVOLUTION_API_URL}/message/sendText/${settings.whatsapp_instance_id}`,
-          {
-            method: "POST",
-            headers: {
-              apikey: EVOLUTION_API_KEY,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              number: formattedPhone,
-              text: generatedReply,
-            }),
-          }
+      if (!sendResult.error) {
+        await supabase.from("chat_messages").insert({
+          lead_id,
+          content: generatedReply,
+          sender_type: "agent",
+          status: "sent",
+        });
+
+        await supabase
+          .from("leads")
+          .update({ last_contact_at: new Date().toISOString() })
+          .eq("id", lead_id);
+
+        return new Response(
+          JSON.stringify({
+            success: true,
+            action: "sent",
+            reply: generatedReply,
+            tools_executed: toolResults,
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
-
-        if (sendResponse.ok) {
-          await supabase.from("chat_messages").insert({
-            lead_id,
-            content: generatedReply,
-            sender_type: "agent",
-            status: "sent",
-          });
-
-          await supabase
-            .from("leads")
-            .update({ last_contact_at: new Date().toISOString() })
-            .eq("id", lead_id);
-
-          return new Response(
-            JSON.stringify({
-              success: true,
-              action: "sent",
-              reply: generatedReply,
-              tools_executed: toolResults,
-            }),
-            { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-          );
-        }
       }
+
+      // Não enviou. A resposta continua sendo devolvida como sugestão — o
+      // texto já foi pago e pode ser útil na tela —, mas dizendo por quê,
+      // para não parecer que o envio simplesmente não aconteceu.
+      console.error("[ai-reply] envio recusado:", sendResult.error.message);
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          action: "not_sent",
+          reason: sendResult.error.message,
+          reply: generatedReply,
+          tools_executed: toolResults,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     return new Response(
