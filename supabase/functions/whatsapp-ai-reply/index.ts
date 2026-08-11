@@ -5,6 +5,12 @@ import {
   requirePaidPlan,
   requireUserOrInternal,
 } from "../_shared/auth.ts";
+import { checkFactuality } from "../_shared/agents/quality-gate.ts";
+import {
+  buildConversationEvidence,
+  renderConversationEvidence,
+} from "../_shared/agents/conversation.ts";
+import type { Fact, Hypothesis } from "../_shared/agents/types.ts";
 
 // Advanced AI Tools with full intelligence capabilities
 const AI_TOOLS = [
@@ -927,6 +933,70 @@ ${qualification.deal_value_estimate ? `- Valor Estimado: R$${qualification.deal_
     const lastLeadMsg = [...(messages || [])].reverse().find(m => m.sender_type === "lead")?.content?.trim() || "";
     const isShortReply = lastLeadMsg.split(/\s+/).length <= 3;
 
+    // ---- O QUE PODE SER AFIRMADO ----
+    // `pain_points` e `service_opportunities` vinham listados no prompt em pé
+    // de igualdade com o nome da empresa, como se fossem a mesma categoria de
+    // coisa. Não são: o nome foi lido de um cadastro, a dor foi DEDUZIDA por
+    // um modelo. Misturados, o segundo era afirmado com a mesma segurança do
+    // primeiro — e o lead ouvia "sei que vocês estão perdendo clientes" sobre
+    // uma dedução que ninguém verificou.
+    const factsForPrompt: Fact[] = [];
+    const hypothesesForPrompt: Hypothesis[] = [];
+
+    const addFact = (label: string, value: unknown, source: string) => {
+      const texto = typeof value === "string" ? value.trim() : value == null ? "" : String(value);
+      if (texto) factsForPrompt.push({ label, value: texto, source });
+    };
+
+    addFact("Empresa", lead.business_name, "cadastro do lead");
+    addFact("Nicho", lead.niche, "cadastro do lead");
+    addFact("Localização", lead.location, "cadastro do lead");
+    addFact("Site", lead.website, "cadastro do lead");
+    if (lead.rating) {
+      addFact(
+        "Avaliação no Google",
+        `${lead.rating}★ com ${lead.reviews_count || 0} avaliações`,
+        "Google Maps",
+      );
+    }
+
+    const auditFindings =
+      (lead.site_audit as { findings?: Array<{ title?: string; detail?: string; impact?: string }> } | null)
+        ?.findings ?? [];
+    for (const finding of auditFindings) {
+      if (finding.title) {
+        addFact(finding.title, finding.detail || finding.title, "auditoria técnica do site");
+      }
+      // O impacto do achado é projeção, não observação: "site lento" foi
+      // medido, "você está perdendo clientes por isso" não.
+      if (finding.impact) {
+        hypothesesForPrompt.push({ statement: finding.impact, basedOn: finding.title || "auditoria" });
+      }
+    }
+
+    for (const memory of leadMemories || []) {
+      if ((memory.confidence ?? 1) >= 0.7 && memory.value) {
+        addFact(memory.key || memory.memory_type || "memória", memory.value, "dito pelo lead antes");
+      }
+    }
+
+    for (const dor of (lead.pain_points as string[] | null) || []) {
+      hypothesesForPrompt.push({ statement: dor, basedOn: "análise automática do lead" });
+    }
+    for (const oportunidade of (lead.service_opportunities as string[] | null) || []) {
+      hypothesesForPrompt.push({ statement: oportunidade, basedOn: "análise automática do lead" });
+    }
+
+    const leadEvidenceBlock = renderConversationEvidence(factsForPrompt, hypothesesForPrompt);
+
+    const factualityEvidence = buildConversationEvidence({
+      lead,
+      memories: leadMemories,
+      messages,
+      services: serviceIntelligence,
+      portfolioCount: portfolio?.length ?? 0,
+    });
+
     // Build super intelligent system prompt
     const systemPrompt = `# IDENTIDADE
 Você é ${settings?.agent_name || "um especialista em vendas consultivas"}.
@@ -949,6 +1019,20 @@ ${servicesKnowledge || settings?.services_offered?.join(', ') || 'Serviços de m
 # TEMPLATES QUE MAIS CONVERTEM (referência de tom)
 ${templates?.map(t => `- ${t.name} (${t.response_rate?.toFixed(0) || 0}%): "${t.content?.slice(0, 80)}..."`).join('\n') || 'N/A'}
 
+# A REGRA QUE VALE MAIS QUE TODAS AS OUTRAS
+Você só pode AFIRMAR o que está em FATOS OBSERVADOS, logo abaixo, ou o que o
+próprio lead escreveu nesta conversa.
+- NÃO invente estatística, percentual, valor em reais, prazo ou quantidade.
+- NÃO invente caso de sucesso, cliente anterior ou resultado obtido. Se não
+  houver caso cadastrado, fale do método, não de um resultado que você não viu.
+- HIPÓTESE não é fato. Se quiser usar, vire pergunta: "costuma acontecer de...
+  é o caso de vocês?" em vez de "vocês estão perdendo clientes".
+- Se faltar material, escreva uma mensagem mais curta. Curta e verdadeira é
+  melhor que completa e inventada — inventar destrói a conversa inteira, e
+  não dá para desfazer depois que o cliente confere.
+
+${leadEvidenceBlock}
+
 # CONTEXTO DO LEAD
 - Empresa: ${lead.business_name}
 - Nicho: ${lead.niche || "Não identificado"}
@@ -957,8 +1041,6 @@ ${templates?.map(t => `- ${t.name} (${t.response_rate?.toFixed(0) || 0}%): "${t.
 - Avaliação: ${lead.rating ? `${lead.rating}★ (${lead.reviews_count || 0} reviews)` : "sem avaliações"}
 - Estágio no funil: ${lead.stage}
 - Temperatura: ${lead.temperature || "frio"}
-- Dores identificadas: ${lead.pain_points?.join(', ') || "ainda a descobrir"}
-- Oportunidades: ${lead.service_opportunities?.join(', ') || "a mapear"}
 - Resumo da conversa: ${lead.conversation_summary || "Primeira interação"}
 
 # QUALIFICAÇÃO BANT
@@ -1029,13 +1111,19 @@ O lead respondeu curto ("${lastLeadMsg}"). Isso pode significar interesse rápid
 ✅ SEMPRE termine com pergunta OU CTA claro — nunca deixe a bola no ar.
 ✅ UMA ideia por mensagem. Não empilhe 3 perguntas.
 ✅ Use o NOME da empresa/pessoa quando fizer diferença.
-✅ Prova > promessa. "fiz pra outro X e deu Y" > "vou fazer sua empresa crescer".
+✅ Prova, quando existir, é a do PORTFÓLIO acima: link de trabalho real, com
+   nome real. Sem portfólio para o caso dele, fale de método e de como você
+   trabalha — nunca de um resultado que você não pode mostrar.
 ✅ Se não sabe uma resposta técnica ou de preço específico → escale, não invente.
 
 ❌ NUNCA repita coisa que você já disse na conversa (olhe o histórico).
 ❌ NUNCA seja robótico ("Entendi sua necessidade. Vamos prosseguir...").
 ❌ NUNCA force a venda. Se ele hesita, dê espaço + traga prova.
 ❌ NUNCA prometa resultado específico com número que você não pode garantir.
+❌ NUNCA cite cliente anterior, caso parecido ou número de resultado que não
+   esteja no portfólio ou nos cases cadastrados acima. Nem como exemplo, nem
+   como "por exemplo, um cliente meu...". Inventar um cliente é a única coisa
+   aqui que não tem conserto depois.
 
 # OBJETIVO FINAL
 Avançar UM passo no funil a cada mensagem. Sempre saiba qual é o PRÓXIMO PASSO e conduza pra lá com naturalidade.
@@ -1155,10 +1243,103 @@ ${qualification?.close_probability && qualification.close_probability >= 70 ? "\
       }
     }
 
-    const generatedReply = assistantMessage?.content || "";
+    let generatedReply = assistantMessage?.content || "";
 
     if (!generatedReply) {
       throw new Error("Empty AI response");
+    }
+
+    // ---- CONFERÊNCIA DE FACTUALIDADE ----
+    // A primeira abordagem passava por seis avaliações antes de sair. A
+    // segunda mensagem em diante, por nenhuma — que é ao contrário do risco
+    // real: é depois que o lead começou a confiar que um número inventado
+    // vira decisão de compra tomada em cima de coisa que nunca aconteceu.
+    let factCheck = checkFactuality(generatedReply, factualityEvidence);
+
+    if (!factCheck.approved) {
+      const problemas = factCheck.issues
+        .filter((i) => i.severity === "block")
+        .map((i) => `- ${i.message}${i.excerpt ? ` (trecho: "${i.excerpt}")` : ""}`)
+        .join("\n");
+
+      console.warn(`[ai-reply] resposta reprovada na factualidade:\n${problemas}`);
+
+      // Uma reescrita, apontando o problema. Não é castigo: o modelo quase
+      // sempre acerta quando sabe exatamente o que tirar.
+      const rewrite = await fetch("https://api.deepseek.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${DEEPSEEK_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "deepseek-chat",
+          messages: [
+            { role: "system", content: systemPrompt },
+            ...conversationHistory,
+            { role: "assistant", content: generatedReply },
+            {
+              role: "user",
+              content:
+                `Sua resposta afirma coisa que você não tem como sustentar:\n${problemas}\n\n` +
+                `Reescreva mantendo a intenção e TIRANDO o que não pode ser afirmado. ` +
+                `Se o que sobrar for pouco, mande uma mensagem mais curta — ou transforme ` +
+                `a afirmação em pergunta. Devolva SÓ a mensagem, sem explicação.`,
+            },
+          ],
+          temperature: 0.5,
+          max_tokens: 400,
+        }),
+      });
+
+      if (rewrite.ok) {
+        const rewriteData = await rewrite.json();
+        const rewritten = rewriteData.choices?.[0]?.message?.content?.trim();
+        if (rewritten) {
+          const recheck = checkFactuality(rewritten, factualityEvidence);
+          if (recheck.approved) {
+            generatedReply = rewritten;
+            factCheck = recheck;
+          }
+        }
+      }
+    }
+
+    if (!factCheck.approved) {
+      // Não existe mensagem de reserva, aqui pelo mesmo motivo de sempre:
+      // texto genérico é exatamente o que afirma resultado que nunca
+      // aconteceu. Cala a boca do robô e chama gente.
+      const motivos = factCheck.issues
+        .filter((i) => i.severity === "block")
+        .map((i) => i.message)
+        .join(" | ");
+
+      const { error: escalationError } = await supabase.from("agent_escalations").insert({
+        user_id: lead.user_id,
+        lead_id,
+        escalation_reason: "factuality_block",
+        priority: "high",
+        context:
+          `A IA não conseguiu responder sem afirmar o que não tem como sustentar: ${motivos}\n\n` +
+          `Último rascunho (NÃO enviado): ${generatedReply}`,
+        recommended_action:
+          "Responda você mesmo, ou cadastre o dado que falta (case, preço, portfólio) " +
+          "para a IA poder citá-lo.",
+        status: "pending",
+      });
+
+      if (escalationError) console.error("[ai-reply] falha ao escalar:", escalationError.message);
+
+      return new Response(
+        JSON.stringify({
+          success: false,
+          action: "escalated",
+          reason: "quality_gate_blocked",
+          issues: factCheck.issues.filter((i) => i.severity === "block"),
+          reply: generatedReply,
+        }),
+        { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
     }
 
     console.log(`Generated reply: ${generatedReply.slice(0, 100)}...`);

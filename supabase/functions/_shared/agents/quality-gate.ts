@@ -129,7 +129,7 @@ export function evaluate(input: GateInput): QualityVerdict {
     personalization: scorePersonalization(message, input.dossier, issues),
     relevance: scoreRelevance(message, input.dossier, input.strategy, issues),
     naturalness: scoreNaturalness(message, words, issues),
-    factuality: scoreFactuality(message, input.dossier, input.strategy, issues),
+    factuality: scoreFactuality(message, evidenceFrom(input.dossier, input.strategy), issues),
     spamRisk: scoreSpamRisk(message, issues),
     offerAdherence: scoreOfferAdherence(message, input.strategy, issues),
   };
@@ -365,16 +365,67 @@ function scoreNaturalness(message: string, words: string[], issues: QualityIssue
 /**
  * A nota que importa. Procura afirmação sem lastro no dossiê.
  */
+/**
+ * Tudo que dá lastro a uma afirmação, reunido num objeto só.
+ *
+ * A checagem de factualidade recebia `dossier` e `strategy` inteiros, o que a
+ * prendia à primeira abordagem — a única etapa que tem esses dois. A conversa
+ * depois da resposta do lead não tem estratégia nenhuma, e era justamente
+ * onde nada era conferido: o primeiro contato passava por seis avaliações e a
+ * segunda mensagem, por nenhuma. Uma estatística inventada na quarta troca
+ * custa a mesma credibilidade que na primeira.
+ */
+export interface FactualityEvidence {
+  /** Números que podem aparecer sem inventar: vieram de fato observado. */
+  allowedNumbers: string[];
+  /** Valores dos fatos observados, para sustentar afirmação sobre o lead. */
+  factValues: string[];
+  /** Existe preço cadastrado que autorize falar em valor. */
+  hasPricing: boolean;
+  /** Existe caso de sucesso cadastrado que autorize citar cliente anterior. */
+  hasCaseStudies: boolean;
+}
+
+/** Monta a evidência a partir do que a esteira de primeira abordagem produz. */
+export function evidenceFrom(dossier: Dossier, strategy: Strategy): FactualityEvidence {
+  return {
+    allowedNumbers: allowedNumbers(dossier),
+    factValues: dossier.facts.map((f) => f.value),
+    hasPricing: Boolean(strategy.offer?.pricingInfo),
+    hasCaseStudies: (strategy.offer?.caseStudies.length ?? 0) > 0,
+  };
+}
+
+/**
+ * Confere só a factualidade de um texto. Entrada leve, para quem não tem
+ * dossiê nem estratégia — a conversa, o follow-up, a proposta.
+ *
+ * Devolve os problemas que impedem o envio, não uma nota de estilo. Texto
+ * feio é problema de qualidade; texto que afirma o que não aconteceu é outra
+ * categoria de coisa.
+ */
+export function checkFactuality(
+  message: string,
+  evidence: FactualityEvidence,
+): { score: number; issues: QualityIssue[]; approved: boolean } {
+  const issues: QualityIssue[] = [];
+  const score = scoreFactuality((message ?? "").trim(), evidence, issues);
+  return {
+    score,
+    issues,
+    approved: !issues.some((i) => i.severity === "block"),
+  };
+}
+
 function scoreFactuality(
   message: string,
-  dossier: Dossier,
-  strategy: Strategy,
+  evidence: FactualityEvidence,
   issues: QualityIssue[],
 ): number {
   let score = 100;
 
   // ---- Número sem fonte ----
-  const allowed = new Set(allowedNumbers(dossier));
+  const allowed = new Set(evidence.allowedNumbers);
   // Números que sempre podem aparecer sem virem do dossiê: contagem trivial
   // de tempo em frases como "2 minutos", "1 minuto".
   const trivial = /\b(1|2|3|5|10)\s*(min|minuto|minutos|segundo|segundos)\b/i;
@@ -400,21 +451,44 @@ function scoreFactuality(
   }
 
   // ---- Preço fora do catálogo ----
-  const mentionsPrice = /R\$\s*\d|\b\d+\s*(reais|mil)\b|\bpre[çc]o (é|de|a partir)/i.test(message);
-  if (mentionsPrice && !strategy.offer?.pricingInfo) {
+  // A regra vale mesmo quando o número TEM lastro. Se o lead disse "posso
+  // pagar 500", o agente pode repetir 500 — mas não pode responder "fechamos
+  // por R$ 500" sem esse preço existir no catálogo. Repetir é escutar;
+  // cravar valor é assumir compromisso comercial que ninguém autorizou.
+  //
+  // Exige indício de PREÇO, não só de dinheiro. "Você comentou que fatura 40
+  // mil" cita valor e não fala de preço nenhum — barrar isso impediria o
+  // agente de demonstrar que prestou atenção, que é o oposto do objetivo.
+  //
+  // A conferência é por frase, e pergunta não conta. "Seu orçamento tá na
+  // faixa de 500?" é qualificação — o agente está perguntando, não cravando.
+  // "Fica 500 por mês" é proposta. A mesma quantia, papéis opostos.
+  const PRICE_CUE =
+    /\b(pre[çc]o|custa|custo|investimento|mensalidade|or[çc]amento|fica|sai por|cobro|cobramos)\b/i;
+
+  const cravaPreco = message.split(/(?<=[.!?])\s+/).some((frase) => {
+    if (frase.trim().endsWith("?")) return false;
+    if (!PRICE_CUE.test(frase)) return false;
+
+    // Tira as expressões de tempo antes de procurar número: "custa 2 minutos
+    // do seu tempo" fala de custo e não tem valor nenhum.
+    const semTempo = frase.replace(/\b\d+\s*(min|minutos?|segundos?|horas?|dias?)\b/gi, "");
+    return /\d/.test(semTempo);
+  });
+
+  if (cravaPreco && !evidence.hasPricing) {
     score -= 50;
     issues.push({
       code: "price_without_catalog",
       severity: "block",
-      message: "A mensagem fala de preço e não há preço cadastrado no catálogo desta oferta.",
+      message: "A mensagem crava um valor e não há preço cadastrado no catálogo desta oferta.",
     });
   }
 
   // ---- Prova social sem case cadastrado ----
-  const hasCases = (strategy.offer?.caseStudies.length ?? 0) > 0;
   for (const pattern of FABRICATED_PROOF) {
     const hit = message.match(pattern);
-    if (hit && !hasCases) {
+    if (hit && !evidence.hasCaseStudies) {
       score -= 55;
       issues.push({
         code: "fabricated_proof",
@@ -442,12 +516,21 @@ function scoreFactuality(
   }
 
   // ---- Afirmação sobre a operação interna do lead ----
+  // A regra é sobre AFIRMAR. Pergunta não afirma nada, e o prompt manda
+  // justamente transformar hipótese em pergunta — "vocês estão perdendo
+  // clientes?" no lugar de "vocês estão perdendo clientes". Enquanto o gate
+  // barrava as duas formas igual, a saída que o próprio prompt oferecia era
+  // uma armadilha: o modelo obedecia e continuava reprovado.
+  const afirmacoes = message
+    .split(/(?<=[.!?])\s+/)
+    .filter((frase) => !frase.trim().endsWith("?"));
+
   for (const pattern of UNVERIFIABLE_CLAIMS) {
-    const hit = message.match(pattern);
+    const hit = afirmacoes.map((frase) => frase.match(pattern)).find(Boolean);
     if (!hit) continue;
 
     // Só é problema se o que vem depois não estiver no dossiê.
-    const supported = dossier.facts.some((f) => usesFact(message, f.value));
+    const supported = evidence.factValues.some((value) => usesFact(message, value));
     if (!supported) {
       score -= 45;
       issues.push({
