@@ -243,6 +243,8 @@ async function processQueueItem(
           phone: item.phone,
           message: messageContent,
           instance_id: instanceId,
+          user_id: item.user_id,
+          initiated_by: "automation",
         }),
       }
     );

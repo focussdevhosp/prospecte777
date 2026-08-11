@@ -146,7 +146,15 @@ async function handleMessages(req: Request, supabase: any, userId: string, route
     if (!settings?.whatsapp_connected) return errorResponse("WhatsApp not connected", 422);
 
     const { data, error } = await supabase.functions.invoke("whatsapp-send", {
-      body: { phone: body.phone, message: body.message, instance_id: settings.whatsapp_instance_id },
+      body: {
+        phone: body.phone,
+        message: body.message,
+        instance_id: settings.whatsapp_instance_id,
+        user_id: userId,
+        // Envio por API e automacao: quem integrou escreveu um programa.
+        // A parada de emergencia precisa alcancar isso tambem.
+        initiated_by: "automation",
+      },
     });
 
     if (error) return errorResponse(error.message, 500);

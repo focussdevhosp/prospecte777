@@ -72,6 +72,8 @@ Deno.serve(async (req) => {
             phone: lead.phone,
             message,
             instance_id: userSettings.whatsapp_instance_id,
+            user_id: userSettings.user_id,
+            initiated_by: "automation",
           },
         });
 

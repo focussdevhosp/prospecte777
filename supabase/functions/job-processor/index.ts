@@ -271,6 +271,10 @@ async function processJobItem(
               phone: lead.phone,
               message,
               instance_id: userSettings.whatsapp_instance_id,
+              // Sem o dono declarado, o `whatsapp-send` nao tem como conferir
+              // lista de bloqueio nem parada de emergencia -- e recusa.
+              user_id: job.user_id,
+              initiated_by: "automation",
             }),
           }
         );
@@ -381,6 +385,10 @@ async function processJobItem(
               phone: lead.phone,
               message,
               instance_id: userSettings.whatsapp_instance_id,
+              // Sem o dono declarado, o `whatsapp-send` nao tem como conferir
+              // lista de bloqueio nem parada de emergencia -- e recusa.
+              user_id: job.user_id,
+              initiated_by: "automation",
             }),
           }
         );

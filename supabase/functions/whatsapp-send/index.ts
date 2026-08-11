@@ -81,6 +81,30 @@ Deno.serve(async (req) => {
       ownerId = body.user_id;
     }
 
+    // ---- SEM DONO, NÃO SAI ----
+    // Todas as proteções desta função dependem de saber de quem é o envio: a
+    // lista de bloqueio é por usuário, a parada de emergência é por usuário, o
+    // limite por chip é por usuário.
+    //
+    // Antes, quando o dono não era identificado, as duas checagens
+    // simplesmente não rodavam — a da blacklist tinha um `: { data: false }`
+    // explícito no lugar. Ou seja, o caminho mais fácil de furar o opt-out era
+    // chamar esta função sem dizer de quem era a mensagem. Não é hipótese
+    // distante: omitir `instance_id` é o jeito DOCUMENTADO de pedir rotação de
+    // chip, e por esse caminho o dono ficava nulo.
+    //
+    // Portaria de envio falha fechada. Se não dá para saber de quem é, não
+    // dá para saber se pode.
+    if (!ownerId) {
+      return json({
+        error:
+          "Não foi possível identificar o dono deste envio. " +
+          "Informe `instance_id` ou `user_id` — sem isso não há como conferir " +
+          "lista de bloqueio nem parada de emergência.",
+        code: "owner_unknown",
+      }, 400);
+    }
+
     // ---- PARADA DE EMERGÊNCIA ----
     // Aqui, e não em cada função que envia, porque este é o único ponto por
     // onde toda mensagem passa. Enquanto a checagem morava em
@@ -89,27 +113,25 @@ Deno.serve(async (req) => {
     // achando que tinha parado tudo.
     const initiatedBy = initiatorOf(body.initiated_by);
 
-    if (ownerId) {
-      const { data: emergency } = await ctx.supabase
-        .from("user_settings")
-        .select("outbound_paused, outbound_paused_reason")
-        .eq("user_id", ownerId)
-        .maybeSingle();
+    const { data: emergency } = await ctx.supabase
+      .from("user_settings")
+      .select("outbound_paused, outbound_paused_reason")
+      .eq("user_id", ownerId)
+      .maybeSingle();
 
-      const blockReason = outboundBlockReason({
-        initiatedBy,
-        outboundPaused: emergency?.outbound_paused === true,
-      });
+    const blockReason = outboundBlockReason({
+      initiatedBy,
+      outboundPaused: emergency?.outbound_paused === true,
+    });
 
-      if (blockReason) {
-        return json({
-          error:
-            "Os envios estão pausados por parada de emergência" +
-            (emergency?.outbound_paused_reason ? `: ${emergency.outbound_paused_reason}` : ".") +
-            " Retome em Configurações para voltar a enviar.",
-          code: blockReason,
-        }, 409);
-      }
+    if (blockReason) {
+      return json({
+        error:
+          "Os envios estão pausados por parada de emergência" +
+          (emergency?.outbound_paused_reason ? `: ${emergency.outbound_paused_reason}` : ".") +
+          " Retome em Configurações para voltar a enviar.",
+        code: blockReason,
+      }, 409);
     }
 
     // ---- Rotação de chips ----
@@ -118,20 +140,18 @@ Deno.serve(async (req) => {
     // todo envio saía pelo chip principal, mesmo com três cadastrados.
     let chosenChip: string | null = instance_id;
 
-    if (ownerId) {
-      const { chips, strategy, enabled } = await loadChips(ctx.supabase, ownerId);
+    const { chips, strategy, enabled } = await loadChips(ctx.supabase, ownerId);
 
-      if (enabled && chips.length > 0 && !instance_id) {
-        const pick = pickChip(chips, strategy, Number(rotation_index) || 0);
-        if (pick) {
-          chosenChip = pick.instance_id;
-          console.log(`[chips] ${strategy}: enviando por ${pick.label} (${pick.instance_id}), ${pick.sent_today} hoje`);
-        }
+    if (enabled && chips.length > 0 && !instance_id) {
+      const pick = pickChip(chips, strategy, Number(rotation_index) || 0);
+      if (pick) {
+        chosenChip = pick.instance_id;
+        console.log(`[chips] ${strategy}: enviando por ${pick.label} (${pick.instance_id}), ${pick.sent_today} hoje`);
       }
-
-      // Sem rotação e sem instância no corpo, cai no chip principal.
-      if (!chosenChip && chips.length > 0) chosenChip = chips[0].instance_id;
     }
+
+    // Sem rotação e sem instância no corpo, cai no chip principal.
+    if (!chosenChip && chips.length > 0) chosenChip = chips[0].instance_id;
 
     if (!chosenChip) {
       return json({ error: "Nenhum chip de WhatsApp disponível. Conecte em Configurações." }, 409);
@@ -152,12 +172,15 @@ Deno.serve(async (req) => {
     // O destinatário pediu para não receber mais? Respeitar é obrigação
     // legal (LGPD) e é o que mantém o chip vivo. A checagem roda no banco
     // com o telefone normalizado, senão formatos diferentes escapam.
-    const { data: blocked } = ownerId
-      ? await ctx.supabase.rpc("is_phone_blacklisted", {
-        p_user_id: ownerId,
-        p_phone: formattedPhone,
-      })
-      : { data: false };
+    //
+    // Não existe mais o `: { data: false }` que ficava aqui para o caso de
+    // dono desconhecido: dono desconhecido agora nem chega neste ponto.
+    // "Não sei de quem é, então deixa passar" era a resposta errada para a
+    // única pergunta que não admite palpite.
+    const { data: blocked } = await ctx.supabase.rpc("is_phone_blacklisted", {
+      p_user_id: ownerId,
+      p_phone: formattedPhone,
+    });
 
     if (blocked === true) {
       return json(
@@ -210,7 +233,7 @@ Deno.serve(async (req) => {
       const errorText = await sendResponse.text();
       console.error("Evolution send error:", errorText);
 
-      if (ownerId) await recordChipSend(ctx.supabase, ownerId, instance_id, true);
+      await recordChipSend(ctx.supabase, ownerId, instance_id, true);
 
       if (errorText.includes("Connection Closed")) {
         return json(
@@ -225,7 +248,7 @@ Deno.serve(async (req) => {
 
     // Contabiliza no chip que atendeu — é o que alimenta a estratégia por
     // saúde e o painel de uso por número.
-    if (ownerId) await recordChipSend(ctx.supabase, ownerId, instance_id, false);
+    await recordChipSend(ctx.supabase, ownerId, instance_id, false);
 
     if (ab_test_id && ab_variant) {
       try {
