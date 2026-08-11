@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
+  RotateCcw,
   ArrowLeft, Loader2, Play, Check, X, AlertTriangle, ShieldCheck,
   Package, Route, Search, Ban, ChevronDown, ChevronRight,
 } from 'lucide-react';
@@ -42,7 +43,7 @@ export default function MissionDetailPage() {
   const navigate = useNavigate();
   const {
     mission, leads, events, sendBlockReason,
-    isLoading, error, runBatch, approveDraft, rejectDraft,
+    isLoading, error, runBatch, approveDraft, rejectDraft, retryLead,
   } = useMission(id);
 
   if (isLoading) {
@@ -180,7 +181,14 @@ export default function MissionDetailPage() {
           <TabsContent value="blocked" className="mt-4 space-y-3">
             {blocked.length === 0
               ? <EmptyState title="Nenhum descarte" hint="Leads desqualificados ou bloqueados pelo Quality Gate aparecem aqui." />
-              : blocked.map((lead) => <BlockedCard key={lead.id} item={lead} />)}
+              : blocked.map((lead) => (
+                  <BlockedCard
+                    key={lead.id}
+                    item={lead}
+                    onRetry={() => retryLead.mutate(lead.id)}
+                    isRetrying={retryLead.isPending}
+                  />
+                ))}
           </TabsContent>
         </Tabs>
 
@@ -420,7 +428,15 @@ function SentCard({ item }: { item: MissionLead }) {
   );
 }
 
-function BlockedCard({ item }: { item: MissionLead }) {
+function BlockedCard({
+  item,
+  onRetry,
+  isRetrying,
+}: {
+  item: MissionLead;
+  onRetry: () => void;
+  isRetrying: boolean;
+}) {
   const reason =
     item.qualification?.disqualifiedReason ??
     item.rejected_reason ??
@@ -428,17 +444,34 @@ function BlockedCard({ item }: { item: MissionLead }) {
     item.error_message ??
     'Sem motivo registrado';
 
+  // Falha de envio é a única situação aqui que pode ser desfeita: o rascunho
+  // continua gravado e revisado, e o que quebrou foi a rede, não a mensagem.
+  // Desqualificado, recusado e opt-out são decisões — não têm botão.
+  const podeRetentar = item.status === 'failed' && Boolean(item.draft_message);
+
   return (
     <Card className="border-dashed">
       <CardContent className="flex items-start gap-3 p-4">
         <Ban className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <p className="text-sm font-medium">{item.leads?.business_name}</p>
           <p className="text-xs text-muted-foreground">{reason}</p>
           {item.draft_message && (
             <p className="mt-2 rounded border-l-2 border-muted px-2 py-1 text-xs italic text-muted-foreground">
               {item.draft_message}
             </p>
+          )}
+          {podeRetentar && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="mt-3"
+              onClick={onRetry}
+              disabled={isRetrying}
+            >
+              <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
+              Tentar enviar de novo
+            </Button>
           )}
         </div>
       </CardContent>

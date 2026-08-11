@@ -13,6 +13,7 @@
 //   preview_lead     — roda a esteira em modo seco, sem enviar nada
 //   approve_draft    — humano aprova e o envio sai
 //   reject_draft     — humano recusa
+//   retry_lead       — recoloca na fila um lead que falhou no envio
 //   pause_mission / resume_mission
 //   emergency_stop / resume_outbound
 //   command_center   — números do painel operacional
@@ -80,6 +81,7 @@ Deno.serve(async (req) => {
       case "preview_lead":    return await previewLead(supabase, userId, body);
       case "approve_draft":   return await approveDraft(supabase, userId, body);
       case "reject_draft":    return await rejectDraft(supabase, userId, body);
+      case "retry_lead":      return await retryLead(supabase, userId, body);
       case "pause_mission":   return await setPaused(supabase, userId, body, true);
       case "resume_mission":  return await setPaused(supabase, userId, body, false);
       case "emergency_stop":  return await emergencyStop(supabase, userId, body);
@@ -577,7 +579,7 @@ async function runBatch(supabase: Supa, userId: string, body: Record<string, unk
       userId, missionId,
       agent: "supervisor",
       event: "budget_exceeded",
-      summary: `Lote não processado: ${budgetBlock}. Ajuste o limite em Configurações para continuar.`,
+      summary: `Lote não processado: ${budgetBlock}. Ajuste o teto em Central de IA > Custo e teto para continuar.`,
       level: "warning",
     });
     return json({
@@ -1042,6 +1044,61 @@ async function approveDraft(supabase: Supa, userId: string, body: Record<string,
   return ok
     ? json({ status: "sent" })
     : json({ error: "A mensagem foi aprovada mas o envio falhou. Veja o feed." }, 502);
+}
+
+/**
+ * Recoloca na fila um lead que falhou no envio.
+ *
+ * O ciclo das tentativas automáticas para em cinco. Depois disso o lead vira
+ * `failed` e ficava sem caminho de volta pela interface — o rascunho continua
+ * gravado, aprovado e revisado, e mesmo assim inalcançável.
+ *
+ * Zera o contador de propósito: se a pessoa está clicando, ela sabe de algo
+ * que o sistema não sabe (o WhatsApp voltou, o número foi corrigido). Manter
+ * o contador faria a primeira tentativa nova já bater no teto.
+ *
+ * Não recoloca quem saiu por opt-out. Aquele "failed" seria uma decisão do
+ * lead, não uma falha de rede, e insistir seria desrespeito.
+ */
+async function retryLead(supabase: Supa, userId: string, body: Record<string, unknown>) {
+  const id = str(body.mission_lead_id);
+  if (!id) return json({ error: "mission_lead_id é obrigatório." }, 400);
+
+  const { data: row } = await supabase
+    .from("mission_leads")
+    .select("id, mission_id, lead_id, status, draft_message, quality")
+    .eq("id", id)
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (!row) return json({ error: "Item não encontrado." }, 404);
+
+  if (row.status === "opted_out") {
+    return json({ error: "Este número pediu para não receber mensagens." }, 409);
+  }
+  if (row.status !== "failed") {
+    return json({ error: "Só faz sentido recolocar na fila quem falhou no envio." }, 400);
+  }
+  if (!row.draft_message) {
+    return json({ error: "Não há rascunho para reenviar. Rode o lote de novo." }, 400);
+  }
+
+  await supabase
+    .from("mission_leads")
+    .update({ status: "approved", send_attempts: 0, error_message: null })
+    .eq("id", id);
+
+  await supabase.rpc("mission_settle_status", { p_mission_id: row.mission_id });
+
+  await logEvent(supabase, {
+    userId, missionId: row.mission_id, leadId: row.lead_id,
+    agent: "supervisor",
+    event: "retry_requested",
+    summary: "Rascunho recolocado na fila de envio por decisão do usuário.",
+    level: "info",
+  });
+
+  return json({ status: "approved" });
 }
 
 async function rejectDraft(supabase: Supa, userId: string, body: Record<string, unknown>) {

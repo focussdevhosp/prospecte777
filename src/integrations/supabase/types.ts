@@ -2337,6 +2337,12 @@ export type Database = {
       user_settings: {
         Row: {
           active_chip_ids: string[] | null
+          ai_daily_budget_usd: number | null
+          ai_monthly_budget_usd: number | null
+          outbound_paused: boolean | null
+          outbound_paused_at: string | null
+          outbound_paused_reason: string | null
+          default_autonomy_level: string | null
           agent_name: string | null
           agent_persona: string | null
           agent_type: string | null
@@ -2413,6 +2419,12 @@ export type Database = {
         }
         Insert: {
           active_chip_ids?: string[] | null
+          ai_daily_budget_usd: number | null
+          ai_monthly_budget_usd: number | null
+          outbound_paused: boolean | null
+          outbound_paused_at: string | null
+          outbound_paused_reason: string | null
+          default_autonomy_level: string | null
           agent_name?: string | null
           agent_persona?: string | null
           agent_type?: string | null
@@ -2489,6 +2501,12 @@ export type Database = {
         }
         Update: {
           active_chip_ids?: string[] | null
+          ai_daily_budget_usd: number | null
+          ai_monthly_budget_usd: number | null
+          outbound_paused: boolean | null
+          outbound_paused_at: string | null
+          outbound_paused_reason: string | null
+          default_autonomy_level: string | null
           agent_name?: string | null
           agent_persona?: string | null
           agent_type?: string | null

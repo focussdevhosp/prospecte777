@@ -28,6 +28,7 @@ const MassSendPage = lazy(() => import("./pages/MassSend"));
 const EmailFinderPage = lazy(() => import("./pages/EmailFinder"));
 const ProspectingHistoryPage = lazy(() => import("./pages/ProspectingHistory"));
 const ABTestingPage = lazy(() => import("./pages/ABTesting"));
+const AiCenterPage = lazy(() => import("./pages/AiCenter"));
 const MeetingsPage = lazy(() => import("./pages/Meetings"));
 const FollowUpPage = lazy(() => import("./pages/FollowUp"));
 const TemplatesPage = lazy(() => import("./pages/Templates"));
@@ -109,6 +110,7 @@ const App = () => (
                   <Route path="/prospecting-history" element={<ProtectedRoute><ProspectingHistoryPage /></ProtectedRoute>} />
                   <Route path="/campaigns" element={<ProtectedRoute><CampaignsPage /></ProtectedRoute>} />
                   <Route path="/ab-testing" element={<ProtectedRoute><ABTestingPage /></ProtectedRoute>} />
+                  <Route path="/ai" element={<ProtectedRoute><AiCenterPage /></ProtectedRoute>} />
 
                   {/* Redirects de rotas duplicadas → CRM */}
                   <Route path="/leads" element={<Navigate to="/crm/contacts" replace />} />

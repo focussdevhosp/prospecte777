@@ -299,6 +299,26 @@ export function useMission(missionId: string | undefined) {
     },
   });
 
+  /**
+   * Recoloca na fila um lead que esgotou as tentativas de envio.
+   *
+   * O rascunho continua gravado e aprovado; o que faltava era o caminho de
+   * volta pela interface.
+   */
+  const retryLead = useMutation({
+    mutationFn: (missionLeadId: string) =>
+      orchestrate('retry_lead', { mission_lead_id: missionLeadId }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['mission', missionId] });
+      toast({
+        title: 'De volta à fila',
+        description: 'Sai no próximo lote, respeitando horário e limite diário.',
+      });
+    },
+    onError: (e: Error) =>
+      toast({ title: 'Não foi possível recolocar na fila', description: e.message, variant: 'destructive' }),
+  });
+
   return {
     mission: query.data?.mission,
     leads: query.data?.leads ?? [],
@@ -309,6 +329,7 @@ export function useMission(missionId: string | undefined) {
     runBatch,
     approveDraft,
     rejectDraft,
+    retryLead,
   };
 }
 
