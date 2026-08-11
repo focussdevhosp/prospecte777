@@ -398,7 +398,9 @@ async function researchAndIngest(
     });
 
     if (businesses.length === 0) {
-      await supabase.from("missions").update({ status: "completed" }).eq("id", mission.id);
+      // Nenhuma empresa encontrada: não há fila para abrir, então concluir é
+      // verdade. Passa pela mesma função que decide isso em todo lugar.
+      await supabase.rpc("mission_settle_status", { p_mission_id: mission.id });
       return;
     }
 
@@ -528,6 +530,22 @@ async function runBatch(supabase: Supa, userId: string, body: Record<string, unk
 
   if (!mission) return json({ error: "Missão não encontrada." }, 404);
 
+  const { data: settingsFirst } = await supabase
+    .from("user_settings").select("*").eq("user_id", userId).maybeSingle();
+  const settings = settingsFirst ?? {};
+
+  // ---- PRIMEIRO O QUE JÁ ESTÁ ESCRITO ----
+  // Mensagem aprovada e retida (fora do horário, limite do dia, WhatsApp
+  // caído) espera aqui até a janela abrir. Sai antes de qualquer lead novo:
+  // soltar o que já existe custa uma chamada de rede, escrever um lote novo
+  // custa IA — e a mensagem retida é a que está envelhecendo.
+  const blocks = new Set<string>();
+  const flushed = await flushApproved(supabase, {
+    userId, missionId,
+    instanceId: (settings as { whatsapp_instance_id?: string }).whatsapp_instance_id ?? null,
+    blocks,
+  });
+
   const { data: pending } = await supabase
     .from("mission_leads")
     .select("id, lead_id, leads(*)")
@@ -536,21 +554,18 @@ async function runBatch(supabase: Supa, userId: string, body: Record<string, unk
     .limit(BATCH_SIZE);
 
   if (!pending || pending.length === 0) {
-    const { count } = await supabase
-      .from("mission_leads")
-      .select("id", { count: "exact", head: true })
-      .eq("mission_id", missionId)
-      .in("status", ["found"]);
-
-    if ((count ?? 0) === 0) {
-      await supabase.from("missions").update({ status: "completed" }).eq("id", missionId);
-    }
-    return json({ processed: 0, remaining: 0, done: true });
+    await reportBlocks(supabase, userId, missionId, blocks);
+    const { data: work } = await supabase.rpc("mission_settle_status", { p_mission_id: missionId });
+    return json({ processed: 0, sent: flushed, remaining: 0, done: true, work });
   }
 
   // Teto de gasto antes de qualquer chamada de IA. Um lote de 8 leads pode
   // custar 24 chamadas com as reescritas; descobrir o estouro depois de
   // gastar não serve de nada.
+  //
+  // Fica depois do flush de propósito: soltar mensagem já escrita não gasta
+  // IA nenhuma, e estourar o orçamento não é motivo para deixar mensagem
+  // pronta apodrecendo na fila.
   const { data: budgetBlock } = await supabase.rpc("ai_budget_check", {
     p_user_id: userId,
     p_mission_id: missionId,
@@ -571,16 +586,11 @@ async function runBatch(supabase: Supa, userId: string, body: Record<string, unk
     }, 429);
   }
 
-  const [catalog, settingsResult] = await Promise.all([
-    loadCatalog(supabase, userId, mission.offer_ids ?? []),
-    supabase.from("user_settings").select("*").eq("user_id", userId).maybeSingle(),
-  ]);
-
-  const settings = settingsResult.data ?? {};
+  const catalog = await loadCatalog(supabase, userId, mission.offer_ids ?? []);
   const autonomy = AUTONOMY[mission.autonomy_level as AutonomyLevel] ?? AUTONOMY.assistido;
 
   const results: Record<string, unknown>[] = [];
-  let sent = 0;
+  let sent = flushed;
 
   for (const row of pending) {
     const lead = row.leads;
@@ -602,26 +612,26 @@ async function runBatch(supabase: Supa, userId: string, body: Record<string, unk
       // A portaria checa parada de emergência, horário, dia útil, limite
       // diário e conexão — e falha fechada.
       if (record.status === "approved" && autonomy.send) {
-        const { data: blockReason } = await supabase.rpc("mission_can_send", { p_mission_id: missionId });
+        // Se a portaria já barrou alguém neste lote, o motivo é da missão e
+        // continua valendo — não vale uma ida ao banco por lead para ouvir a
+        // mesma resposta.
+        const blockReason = blocks.size > 0
+          ? [...blocks][0]
+          : (await supabase.rpc("mission_can_send", { p_mission_id: missionId })).data;
 
         if (blockReason) {
-          await supabase
-            .from("mission_leads")
-            .update({ status: "awaiting_approval" })
-            .eq("id", row.id);
-
-          await logEvent(supabase, {
-            userId, missionId, leadId: lead.id,
-            agent: "outreach",
-            event: "send_blocked",
-            summary: `Envio para ${lead.business_name} retido: ${String(blockReason).replace(/_/g, " ")}. O rascunho ficou aguardando.`,
-            level: "warning",
-          });
+          // Fica em 'approved', não em 'awaiting_approval'. A distinção
+          // importa: 'awaiting_approval' diz "a IA quer que alguém decida", e
+          // aqui ninguém precisa decidir nada — é só o expediente, o limite
+          // do dia ou o WhatsApp fora do ar. Marcado como aprovado, o próprio
+          // cron solta quando a janela abrir; marcado como pendente de
+          // aprovação, esperava um clique que ninguém sabia que devia dar.
+          blocks.add(String(blockReason));
         } else {
           const ok = await sendMessage(supabase, {
             userId, missionId, missionLeadId: row.id,
             lead, message: String(record.draft_message ?? ""),
-            instanceId: settings.whatsapp_instance_id ?? null,
+            instanceId: (settings as { whatsapp_instance_id?: string }).whatsapp_instance_id ?? null,
           });
           if (ok) sent++;
         }
@@ -637,23 +647,19 @@ async function runBatch(supabase: Supa, userId: string, body: Record<string, unk
     }
   }
 
-  await refreshCounters(supabase, missionId);
+  await reportBlocks(supabase, userId, missionId, blocks);
 
-  const { count: remaining } = await supabase
-    .from("mission_leads")
-    .select("id", { count: "exact", head: true })
-    .eq("mission_id", missionId)
-    .eq("status", "found");
-
-  if ((remaining ?? 0) === 0) {
-    await supabase.from("missions").update({ status: "completed" }).eq("id", missionId);
-  }
+  // Recalcula os contadores e conclui a missão só se não sobrou nada em
+  // nenhuma fila — inclusive a de aprovação humana.
+  const { data: work } = await supabase.rpc("mission_settle_status", { p_mission_id: missionId });
+  const remaining = Number((work as { to_process?: number } | null)?.to_process ?? 0);
 
   return json({
     processed: results.length,
     sent,
-    remaining: remaining ?? 0,
-    done: (remaining ?? 0) === 0,
+    remaining,
+    done: remaining === 0,
+    work,
     results,
   });
 }
@@ -843,6 +849,99 @@ async function sendMessage(
   }
 }
 
+/**
+ * Solta as mensagens que já estavam aprovadas e ficaram retidas.
+ *
+ * Retenção não é falha: fora do horário comercial, no limite do dia ou com o
+ * WhatsApp desconectado, segurar é o comportamento certo. O que faltava era
+ * alguém voltar depois. Sem isto, "envio automático fora do horário" queria
+ * dizer "envio nunca".
+ *
+ * A portaria é consultada a cada envio, não uma vez por lote: o limite
+ * diário se esgota DENTRO do lote, e uma checagem só no começo deixaria
+ * passar até sete mensagens além do teto — justamente o número que protege a
+ * conta de bloqueio.
+ */
+async function flushApproved(
+  supabase: Supa,
+  params: {
+    userId: string;
+    missionId: string;
+    instanceId: string | null;
+    blocks: Set<string>;
+  },
+): Promise<number> {
+  const { data: ready } = await supabase
+    .from("mission_leads")
+    .select("id, draft_message, leads(*)")
+    .eq("mission_id", params.missionId)
+    .eq("status", "approved")
+    .not("draft_message", "is", null)
+    // Mais antigo primeiro: quem esperou mais sai antes.
+    .order("updated_at", { ascending: true })
+    .limit(BATCH_SIZE);
+
+  if (!ready || ready.length === 0) return 0;
+
+  let sent = 0;
+
+  for (const row of ready) {
+    const lead = row.leads;
+    if (!lead) continue;
+
+    const { data: blockReason } = await supabase.rpc("mission_can_send", {
+      p_mission_id: params.missionId,
+    });
+
+    if (blockReason) {
+      // Bloqueio é da missão inteira, não deste lead: quando aparece, vale
+      // para todos os que vêm depois. Parar aqui evita repetir a consulta
+      // para cada um dos que sobraram.
+      params.blocks.add(String(blockReason));
+      break;
+    }
+
+    const ok = await sendMessage(supabase, {
+      userId: params.userId,
+      missionId: params.missionId,
+      missionLeadId: row.id,
+      lead,
+      message: String(row.draft_message ?? ""),
+      instanceId: params.instanceId,
+    });
+    if (ok) sent++;
+  }
+
+  return sent;
+}
+
+/**
+ * Conta ao usuário, uma vez por motivo, por que a missão não enviou agora.
+ *
+ * Um evento por lead retido inundaria o feed: o cron roda a cada 5 minutos, e
+ * uma missão parada das 18h às 9h geraria centenas de linhas dizendo a mesma
+ * coisa. O motivo é da missão, então basta dizê-lo uma vez.
+ */
+async function reportBlocks(
+  supabase: Supa,
+  userId: string,
+  missionId: string,
+  blocks: Set<string>,
+): Promise<void> {
+  for (const reason of blocks) {
+    await logEvent(supabase, {
+      userId, missionId,
+      agent: "outreach",
+      event: "send_blocked",
+      summary:
+        `Envios retidos: ${reason.replace(/_/g, " ")}. ` +
+        `As mensagens já escritas continuam na fila e saem sozinhas quando isso se resolver.`,
+      detail: { reason },
+      level: "warning",
+    });
+  }
+}
+
 // ------------------------------------------------------------
 // APROVAÇÃO HUMANA
 // ------------------------------------------------------------
@@ -895,7 +994,8 @@ async function approveDraft(supabase: Supa, userId: string, body: Record<string,
     instanceId: settings?.whatsapp_instance_id ?? null,
   });
 
-  await refreshCounters(supabase, row.mission_id);
+  // Aprovar o último item da fila pode ser o que conclui a missão.
+  await supabase.rpc("mission_settle_status", { p_mission_id: row.mission_id });
 
   return ok
     ? json({ status: "sent" })
@@ -924,6 +1024,9 @@ async function rejectDraft(supabase: Supa, userId: string, body: Record<string, 
     summary: `Rascunho recusado: ${reason}`,
     level: "warning",
   });
+
+  // Recusar também esvazia a fila — e esvaziar a fila pode concluir a missão.
+  await supabase.rpc("mission_settle_status", { p_mission_id: row.mission_id });
 
   return json({ status: "rejected" });
 }
@@ -988,17 +1091,11 @@ async function resumeOutbound(supabase: Supa, userId: string) {
 // AUXILIARES
 // ------------------------------------------------------------
 
-/**
- * Recalcula os contadores da missão.
- *
- * A conta em si mora no banco (`mission_refresh_counters`). Ela precisa
- * rodar também dentro dos gatilhos de resposta e de reunião, e uma regra de
- * negócio escrita nos dois lugares acaba divergindo — normalmente no dia em
- * que alguém acrescenta um status novo e lembra de só uma das cópias.
- */
-async function refreshCounters(supabase: Supa, missionId: string): Promise<void> {
-  await supabase.rpc("mission_refresh_counters", { p_mission_id: missionId });
-}
+// Não existe mais `refreshCounters` aqui: recalcular contador e decidir se a
+// missão acabou são a mesma pergunta feita ao banco em `mission_settle_status`.
+// Manter as duas chamadas separadas em TypeScript foi o que permitiu a missão
+// ser concluída com a fila de aprovação cheia — os contadores estavam certos e
+// ninguém olhava para eles antes de encerrar.
 
 function str(value: unknown): string | null {
   return typeof value === "string" && value.trim().length > 0 ? value.trim() : null;

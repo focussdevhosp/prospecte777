@@ -2762,9 +2762,19 @@ export type Database = {
       resume_outbound: { Args: { p_user_id: string }; Returns: undefined }
       command_center: { Args: { p_user_id: string }; Returns: Json }
       mission_refresh_counters: { Args: { p_mission_id: string }; Returns: undefined }
+      mission_pending_work: {
+        Args: { p_mission_id: string }
+        Returns: { to_process: number; awaiting_human: number; ready_to_send: number }[]
+      }
+      mission_settle_status: { Args: { p_mission_id: string }; Returns: Json }
       missions_pending_batch: {
         Args: { p_limit?: number }
-        Returns: { mission_id: string; user_id: string; pending: number }[]
+        Returns: {
+          mission_id: string
+          user_id: string
+          pending: number
+          ready_to_send: number
+        }[]
       }
 
       // ---- Custo de IA ----
