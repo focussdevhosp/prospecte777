@@ -183,6 +183,11 @@ async function createMission(supabase: Supa, userId: string, body: Record<string
       end_hour: endHour,
       work_days_only: body.work_days_only !== false,
       quality_thresholds: (body.quality_thresholds as Record<string, unknown>) ?? {},
+      // Só a procedência. O `icp` acima é cópia: alterar o perfil depois não
+      // pode reescrever a régua de uma missão que já rodou — o score dos
+      // leads dela foi calculado com a régua antiga, e trocar uma sem trocar
+      // o outro produz um histórico que não fecha.
+      icp_profile_id: str(body.icp_profile_id),
       status: "draft",
     })
     .select()

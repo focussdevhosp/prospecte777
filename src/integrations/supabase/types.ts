@@ -2334,6 +2334,57 @@ export type Database = {
         }
         Relationships: []
       }
+      icp_profiles: {
+        Row: {
+          id: string
+          user_id: string
+          name: string
+          description: string | null
+          niches: string[]
+          locations: string[]
+          signals: string[]
+          exclusions: string[]
+          min_rating: number | null
+          max_rating: number | null
+          min_reviews: number | null
+          is_default: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          name: string
+          description?: string | null
+          niches?: string[]
+          locations?: string[]
+          signals?: string[]
+          exclusions?: string[]
+          min_rating?: number | null
+          max_rating?: number | null
+          min_reviews?: number | null
+          is_default?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          name?: string
+          description?: string | null
+          niches?: string[]
+          locations?: string[]
+          signals?: string[]
+          exclusions?: string[]
+          min_rating?: number | null
+          max_rating?: number | null
+          min_reviews?: number | null
+          is_default?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_settings: {
         Row: {
           active_chip_ids: string[] | null

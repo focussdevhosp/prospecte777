@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Loader2, Rocket, AlertTriangle } from 'lucide-react';
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
@@ -18,6 +18,7 @@ import {
   AUTONOMY_LABELS, GOAL_LABELS, useOffers, useMissions,
   type AutonomyLevel, type CampaignGoal,
 } from '@/hooks/use-missions';
+import { useIcpProfiles } from '@/hooks/use-icp-profiles';
 import { cn } from '@/lib/utils';
 
 /**
@@ -49,6 +50,7 @@ export function NewMissionDialog({
   onCreated?: (missionId: string) => void;
 }) {
   const { offers, isLoading: loadingOffers } = useOffers();
+  const { profiles, defaultProfile } = useIcpProfiles();
   const { createMission } = useMissions();
 
   const [name, setName] = useState('');
@@ -71,13 +73,35 @@ export function NewMissionDialog({
   const [icpSignals, setIcpSignals] = useState('');
   const [minRating, setMinRating] = useState('');
   const [minReviews, setMinReviews] = useState('');
+  const [perfilId, setPerfilId] = useState<string | null>(null);
+
+  // Aplicar um perfil COPIA os valores para os campos, em vez de só guardar
+  // a referência. Assim o usuário vê o que vai valer e pode ajustar para esta
+  // missão sem alterar o perfil — e a missão guarda a régua com que rodou,
+  // que é o que permite auditar a nota dos leads dela depois.
+  const aplicarPerfil = (id: string) => {
+    const p = profiles.find((x) => x.id === id);
+    if (!p) return;
+    setPerfilId(p.id);
+    setIcpSignals(p.signals.join(', '));
+    setExclusions(p.exclusions.join(', '));
+    setMinRating(p.min_rating != null ? String(p.min_rating) : '');
+    setMinReviews(p.min_reviews != null ? String(p.min_reviews) : '');
+  };
+
+  // O perfil padrão entra sozinho na primeira abertura. Quem configurou um
+  // perfil não deveria precisar escolhê-lo toda vez.
+  useEffect(() => {
+    if (open && !perfilId && defaultProfile) aplicarPerfil(defaultProfile.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, defaultProfile?.id]);
 
   const reset = () => {
     setName(''); setNiche(''); setCity(''); setState('');
     setSelectedOffers([]); setGoal('agendar_demonstracao'); setAutonomy('assistido');
     setTargetCount(50); setDailyLimit(30); setStartHour(9); setEndHour(18);
     setWorkDaysOnly(true); setExclusions('');
-    setIcpSignals(''); setMinRating(''); setMinReviews('');
+    setIcpSignals(''); setMinRating(''); setMinReviews(''); setPerfilId(null);
   };
 
   // O nome se preenche sozinho a partir do que já foi digitado, mas continua
@@ -106,10 +130,13 @@ export function NewMissionDialog({
       start_hour: startHour,
       end_hour: endHour,
       work_days_only: workDaysOnly,
-      icp_exclusions: exclusions
-        .split(/[,\n]/)
-        .map((s) => s.trim())
-        .filter(Boolean),
+      // O ICP inteiro vai no corpo. `create_mission` aceita os sete critérios
+      // desde sempre; o que faltava era a tela mandá-los.
+      icp_exclusions: listaDe(exclusions),
+      icp_signals: listaDe(icpSignals),
+      icp_min_rating: numeroOuNulo(minRating),
+      icp_min_reviews: numeroOuNulo(minReviews),
+      icp_profile_id: perfilId,
     });
 
     reset();
@@ -200,6 +227,29 @@ export function NewMissionDialog({
                   Separe por vírgula. Quem bater com um destes termos é descartado antes de gastar IA.
                 </p>
               </div>
+
+              {profiles.length > 0 && (
+                <div className="sm:col-span-2">
+                  <Label>Perfil de cliente ideal</Label>
+                  <div className="mt-1 flex flex-wrap gap-2">
+                    {profiles.map((p) => (
+                      <Button
+                        key={p.id}
+                        type="button"
+                        size="sm"
+                        variant={perfilId === p.id ? 'default' : 'outline'}
+                        onClick={() => aplicarPerfil(p.id)}
+                      >
+                        {p.name}
+                      </Button>
+                    ))}
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Preenche os critérios abaixo. Você pode ajustar para esta
+                    missão sem alterar o perfil salvo.
+                  </p>
+                </div>
+              )}
 
               <div className="sm:col-span-2">
                 <Label htmlFor="mission-signals">
