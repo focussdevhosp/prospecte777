@@ -2761,6 +2761,7 @@ export type Database = {
       }
       resume_outbound: { Args: { p_user_id: string }; Returns: undefined }
       command_center: { Args: { p_user_id: string }; Returns: Json }
+      mission_refresh_counters: { Args: { p_mission_id: string }; Returns: undefined }
       missions_pending_batch: {
         Args: { p_limit?: number }
         Returns: { mission_id: string; user_id: string; pending: number }[]

@@ -1,8 +1,11 @@
 -- ============================================================
 -- SCHEMA COMPLETO — PROJETO NOVO E VAZIO
 -- ============================================================
--- Contém as 63 migrações do projeto, na ordem cronológica em que foram
+-- Contém as 64 migrações do projeto, na ordem cronológica em que foram
 -- criadas. É o schema inteiro: nenhum dado de nenhum projeto anterior.
+--
+-- Gerado por `node scripts/build-schema.mjs`. Não edite à mão: edite a
+-- migração e gere de novo.
 --
 -- COMO USAR
 --   Supabase -> SQL Editor -> cole tudo -> Run.
@@ -21,14 +24,14 @@
 -- OBSERVAÇÃO SOBRE O HISTÓRICO
 --   Cinco migrações antigas gravaram o endereço do projeto anterior direto
 --   no comando do cron. Elas continuam aqui para o histórico ficar íntegro,
---   e a ÚLTIMA migração desfaz e recria todos os agendamentos apontando
---   para o projeto correto — e falha de propósito se sobrar algum apontando
---   para outro lugar.
+--   e a migração 63 desfaz e recria todos os agendamentos apontando para o
+--   projeto correto — e falha de propósito se sobrar algum apontando para
+--   outro lugar.
 -- ============================================================
 
 
 -- ############################################################
--- [01/63] 20260205182010_95dad26d-4d67-46dc-85fc-fa36d32d2c98.sql
+-- [01/64] 20260205182010_95dad26d-4d67-46dc-85fc-fa36d32d2c98.sql
 -- ############################################################
 
 -- ===========================================
@@ -277,8 +280,9 @@ CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
+
 -- ############################################################
--- [02/63] 20260205183050_1edecf76-2e28-4262-bb1d-96cee3c59fe6.sql
+-- [02/64] 20260205183050_1edecf76-2e28-4262-bb1d-96cee3c59fe6.sql
 -- ############################################################
 
 -- Add advanced agent configuration columns to user_settings
@@ -303,8 +307,9 @@ ADD COLUMN IF NOT EXISTS greeting_style TEXT DEFAULT 'padrao'
 ADD COLUMN IF NOT EXISTS value_proposition_focus TEXT DEFAULT 'beneficios'
   CHECK (value_proposition_focus IN ('beneficios', 'resultados', 'economia', 'exclusividade'));
 
+
 -- ############################################################
--- [03/63] 20260205232207_11dbefe6-cb8b-4d08-8877-d7e15ec72b81.sql
+-- [03/64] 20260205232207_11dbefe6-cb8b-4d08-8877-d7e15ec72b81.sql
 -- ############################################################
 
 -- Create campaigns table for scheduled prospecting
@@ -357,8 +362,9 @@ EXECUTE FUNCTION public.update_updated_at_column();
 CREATE INDEX idx_campaigns_user_id ON public.campaigns(user_id);
 CREATE INDEX idx_campaigns_status ON public.campaigns(status);
 
+
 -- ############################################################
--- [04/63] 20260205233003_d7e90fd5-d57d-43a2-b6c2-75a59cad978e.sql
+-- [04/64] 20260205233003_d7e90fd5-d57d-43a2-b6c2-75a59cad978e.sql
 -- ############################################################
 
 -- Add new columns to leads table for advanced management
@@ -457,8 +463,9 @@ CREATE INDEX IF NOT EXISTS idx_stats_user_niche ON public.prospecting_stats(user
 CREATE INDEX IF NOT EXISTS idx_leads_tags ON public.leads USING GIN(tags);
 CREATE INDEX IF NOT EXISTS idx_leads_quality ON public.leads(user_id, quality_score DESC);
 
+
 -- ############################################################
--- [05/63] 20260206013150_326004c7-83f9-4d47-baf3-b254a1eabaf8.sql
+-- [05/64] 20260206013150_326004c7-83f9-4d47-baf3-b254a1eabaf8.sql
 -- ############################################################
 
 -- Add columns for user's own API keys
@@ -470,8 +477,9 @@ ADD COLUMN IF NOT EXISTS serpapi_api_key TEXT;
 COMMENT ON COLUMN public.user_settings.gemini_api_key IS 'User personal Gemini API key for AI features';
 COMMENT ON COLUMN public.user_settings.serpapi_api_key IS 'User personal SerpAPI key for lead prospecting';
 
+
 -- ############################################################
--- [06/63] 20260206025213_b7aba049-3f33-48cb-a5ad-2b78bce18a79.sql
+-- [06/64] 20260206025213_b7aba049-3f33-48cb-a5ad-2b78bce18a79.sql
 -- ############################################################
 
 -- Create follow_up_sequences table for automated follow-up flows
@@ -548,8 +556,9 @@ BEFORE UPDATE ON public.scheduled_prospecting
 FOR EACH ROW
 EXECUTE FUNCTION public.update_updated_at_column();
 
+
 -- ############################################################
--- [07/63] 20260206030514_4679ed9c-38e4-4a7f-9fea-911d4e73a679.sql
+-- [07/64] 20260206030514_4679ed9c-38e4-4a7f-9fea-911d4e73a679.sql
 -- ############################################################
 
 -- Enable required extensions for cron jobs
@@ -560,8 +569,9 @@ CREATE EXTENSION IF NOT EXISTS pg_net WITH SCHEMA extensions;
 GRANT USAGE ON SCHEMA cron TO postgres;
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA cron TO postgres;
 
+
 -- ############################################################
--- [08/63] 20260206030544_aace4901-3975-4864-b0fa-2fd040667be5.sql
+-- [08/64] 20260206030544_aace4901-3975-4864-b0fa-2fd040667be5.sql
 -- ############################################################
 
 -- Schedule prospecting check every hour at minute 0
@@ -590,8 +600,9 @@ SELECT cron.schedule(
   $$
 );
 
+
 -- ############################################################
--- [09/63] 20260206032342_54e9428d-72ee-4ad7-8067-a161bd42881c.sql
+-- [09/64] 20260206032342_54e9428d-72ee-4ad7-8067-a161bd42881c.sql
 -- ############################################################
 
 -- Create teams table
@@ -724,8 +735,9 @@ CREATE TRIGGER update_teams_updated_at
   FOR EACH ROW
   EXECUTE FUNCTION public.update_updated_at_column();
 
+
 -- ############################################################
--- [10/63] 20260206032756_618904bf-0d9d-4f71-b626-a996d477d968.sql
+-- [10/64] 20260206032756_618904bf-0d9d-4f71-b626-a996d477d968.sql
 -- ############################################################
 
 -- Create background jobs table for persistent task processing
@@ -822,8 +834,9 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 GRANT EXECUTE ON FUNCTION public.recover_stale_jobs() TO authenticated;
 GRANT EXECUTE ON FUNCTION public.recover_stale_jobs() TO service_role;
 
+
 -- ############################################################
--- [11/63] 20260206032811_dc4a3f58-87ef-4409-85ed-04872494ad39.sql
+-- [11/64] 20260206032811_dc4a3f58-87ef-4409-85ed-04872494ad39.sql
 -- ############################################################
 
 -- Fix search_path for recover_stale_jobs function
@@ -853,8 +866,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
+
 -- ############################################################
--- [12/63] 20260206033315_a5b3a612-f86f-4b86-a0bc-c85e51f3dc2b.sql
+-- [12/64] 20260206033315_a5b3a612-f86f-4b86-a0bc-c85e51f3dc2b.sql
 -- ############################################################
 
 -- Add lead_score columns
@@ -967,8 +981,9 @@ $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 GRANT EXECUTE ON FUNCTION public.calculate_lead_score(UUID) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.calculate_lead_score(UUID) TO service_role;
 
+
 -- ############################################################
--- [13/63] 20260206200655_77b5d629-91cf-44ac-bcec-133c992ce14b.sql
+-- [13/64] 20260206200655_77b5d629-91cf-44ac-bcec-133c992ce14b.sql
 -- ############################################################
 
 -- Create prospecting_history table to track all prospecting sessions
@@ -1028,8 +1043,9 @@ BEFORE UPDATE ON public.prospecting_history
 FOR EACH ROW
 EXECUTE FUNCTION public.update_updated_at_column();
 
+
 -- ############################################################
--- [14/63] 20260207011238_f3316bde-b3fb-4cd8-95ff-96f57096b1e1.sql
+-- [14/64] 20260207011238_f3316bde-b3fb-4cd8-95ff-96f57096b1e1.sql
 -- ############################################################
 
 -- Add anti-block configuration columns to user_settings
@@ -1047,8 +1063,9 @@ ADD COLUMN IF NOT EXISTS cooldown_after_batch boolean DEFAULT true,
 ADD COLUMN IF NOT EXISTS batch_size integer DEFAULT 10,
 ADD COLUMN IF NOT EXISTS cooldown_minutes integer DEFAULT 15;
 
+
 -- ############################################################
--- [15/63] 20260207011903_ae6663ad-d073-45e7-905d-c8372aa0dea7.sql
+-- [15/64] 20260207011903_ae6663ad-d073-45e7-905d-c8372aa0dea7.sql
 -- ############################################################
 
 -- Add remaining anti-block configuration columns to user_settings
@@ -1062,8 +1079,9 @@ ADD COLUMN IF NOT EXISTS read_receipt_delay boolean DEFAULT true,
 ADD COLUMN IF NOT EXISTS auto_slowdown boolean DEFAULT true,
 ADD COLUMN IF NOT EXISTS slowdown_threshold integer DEFAULT 5;
 
+
 -- ############################################################
--- [16/63] 20260207013757_2a426a67-937e-4efa-8032-b61e1ba388ad.sql
+-- [16/64] 20260207013757_2a426a67-937e-4efa-8032-b61e1ba388ad.sql
 -- ############################################################
 
 -- Create a table to store job logs for persistence
@@ -1097,8 +1115,9 @@ CREATE INDEX idx_job_logs_user_id ON public.job_logs(user_id);
 CREATE INDEX idx_job_logs_job_id ON public.job_logs(job_id);
 CREATE INDEX idx_job_logs_created_at ON public.job_logs(created_at DESC);
 
+
 -- ############################################################
--- [17/63] 20260207013812_6b0dd7ce-fa90-4e59-9576-b6965df18b78.sql
+-- [17/64] 20260207013812_6b0dd7ce-fa90-4e59-9576-b6965df18b78.sql
 -- ############################################################
 
 -- Drop the permissive INSERT policy
@@ -1107,8 +1126,9 @@ DROP POLICY IF EXISTS "Service role can insert job logs" ON public.job_logs;
 -- For job_logs, inserts will only happen from Edge Functions using service role key
 -- which bypasses RLS entirely. No INSERT policy needed for authenticated users.
 
+
 -- ############################################################
--- [18/63] 20260207020000_2e40c0df-7429-4f05-8598-00a037a871d8.sql
+-- [18/64] 20260207020000_2e40c0df-7429-4f05-8598-00a037a871d8.sql
 -- ############################################################
 
 -- Add message_sent field to track if a lead received a message or not
@@ -1127,8 +1147,9 @@ WHERE EXISTS (
   AND cm.sender_type IN ('agent', 'user')
 );
 
+
 -- ############################################################
--- [19/63] 20260207190348_008f6d76-52cd-4fa7-a2c2-ffe883337c03.sql
+-- [19/64] 20260207190348_008f6d76-52cd-4fa7-a2c2-ffe883337c03.sql
 -- ############################################################
 
 -- Add Serper.dev API key and preferred search API fields to user_settings
@@ -1136,8 +1157,9 @@ ALTER TABLE public.user_settings
 ADD COLUMN IF NOT EXISTS serper_api_key text DEFAULT NULL,
 ADD COLUMN IF NOT EXISTS preferred_search_api text DEFAULT 'serper';
 
+
 -- ############################################################
--- [20/63] 20260208181338_9f789e7f-1480-4a0c-8773-34bef8d7a82b.sql
+-- [20/64] 20260208181338_9f789e7f-1480-4a0c-8773-34bef8d7a82b.sql
 -- ############################################################
 
 -- Tabela de estados brasileiros
@@ -1286,8 +1308,9 @@ INSERT INTO public.brazil_cep_ranges (state_code, cep_start, cep_end, region_nam
 ('SC', '88000-000', '89999-999', 'Santa Catarina'),
 ('RS', '90000-000', '99999-999', 'Rio Grande do Sul');
 
+
 -- ############################################################
--- [21/63] 20260208181733_3a06c0bd-d400-42e8-8cf6-47de6e9a325a.sql
+-- [21/64] 20260208181733_3a06c0bd-d400-42e8-8cf6-47de6e9a325a.sql
 -- ############################################################
 
 -- Inserir as principais cidades de cada estado brasileiro
@@ -1577,8 +1600,9 @@ INSERT INTO public.brazil_cities (state_code, name) VALUES
 
 ON CONFLICT (state_code, name) DO NOTHING;
 
+
 -- ############################################################
--- [22/63] 20260208181913_67e4009f-8e27-4bab-a6ef-e5db40438894.sql
+-- [22/64] 20260208181913_67e4009f-8e27-4bab-a6ef-e5db40438894.sql
 -- ############################################################
 
 -- Add photo_url column to leads for storing Google Maps photos
@@ -1598,8 +1622,9 @@ COMMENT ON COLUMN public.leads.photo_url IS 'URL da foto do estabelecimento do G
 COMMENT ON COLUMN public.leads.lead_group IS 'Grupo do lead identificado pela IA (ex: Sem Site, Avaliação Baixa, etc)';
 COMMENT ON COLUMN public.leads.service_opportunities IS 'Oportunidades de serviço identificadas pela IA';
 
+
 -- ############################################################
--- [23/63] 20260208191417_7ebee322-8a33-43ae-9602-9c38aad61370.sql
+-- [23/64] 20260208191417_7ebee322-8a33-43ae-9602-9c38aad61370.sql
 -- ############################################################
 
 -- Create service_intelligence table for storing AI knowledge per service
@@ -1673,8 +1698,9 @@ CREATE TRIGGER update_service_intelligence_updated_at
 -- Add comment
 COMMENT ON TABLE public.service_intelligence IS 'AI knowledge base per service with templates and objection handling';
 
+
 -- ############################################################
--- [24/63] 20260208192047_0d894ef8-33c4-4d98-9509-12ce48d017c6.sql
+-- [24/64] 20260208192047_0d894ef8-33c4-4d98-9509-12ce48d017c6.sql
 -- ############################################################
 
 -- Tabela para armazenar padrões de aprendizado por nicho
@@ -1903,15 +1929,17 @@ CREATE INDEX idx_generated_proposals_lead ON public.generated_proposals(lead_id)
 CREATE INDEX idx_intelligent_followups_scheduled ON public.intelligent_followups(scheduled_at, status);
 CREATE INDEX idx_intelligent_followups_lead ON public.intelligent_followups(lead_id);
 
+
 -- ############################################################
--- [25/63] 20260208195031_bf2c8644-1704-4ecf-a45a-9ca0a5f8c758.sql
+-- [25/64] 20260208195031_bf2c8644-1704-4ecf-a45a-9ca0a5f8c758.sql
 -- ############################################################
 
 -- Enable realtime for meetings table
 ALTER PUBLICATION supabase_realtime ADD TABLE public.meetings;
 
+
 -- ############################################################
--- [26/63] 20260208195200_88e7efb1-fb27-4ff8-aa12-9c0fa9f3690f.sql
+-- [26/64] 20260208195200_88e7efb1-fb27-4ff8-aa12-9c0fa9f3690f.sql
 -- ############################################################
 
 -- Fix infinite recursion in team_members policies
@@ -1979,16 +2007,18 @@ ON public.leads
 FOR SELECT
 USING (user_id = auth.uid() OR team_id IN (SELECT public.get_user_team_ids(auth.uid())));
 
+
 -- ############################################################
--- [27/63] 20260208195526_433de59b-e7b9-4d0c-9cf0-58464dd974d8.sql
+-- [27/64] 20260208195526_433de59b-e7b9-4d0c-9cf0-58464dd974d8.sql
 -- ############################################################
 
 -- Add Google Meet link field to user_settings
 ALTER TABLE public.user_settings 
 ADD COLUMN IF NOT EXISTS google_meet_link text;
 
+
 -- ############################################################
--- [28/63] 20260208202514_2db69d76-7698-4c32-af96-89c766fabc87.sql
+-- [28/64] 20260208202514_2db69d76-7698-4c32-af96-89c766fabc87.sql
 -- ############################################################
 
 -- =====================================================
@@ -2260,8 +2290,9 @@ CREATE TRIGGER auto_blacklist_on_response
   FOR EACH ROW
   EXECUTE FUNCTION public.check_and_blacklist_response();
 
+
 -- ############################################################
--- [29/63] 20260208203508_962a4715-6ff9-43a3-b3bb-8364db4c3a9d.sql
+-- [29/64] 20260208203508_962a4715-6ff9-43a3-b3bb-8364db4c3a9d.sql
 -- ############################################################
 
 -- Update default values for antiban_config to be more comprehensive
@@ -2394,8 +2425,9 @@ SELECT ac.user_id, 'emoji', ARRAY['😊', '👍', '🚀', '💪', '✨', '🎯',
 FROM public.antiban_config ac
 WHERE NOT EXISTS (SELECT 1 FROM public.message_variations mv WHERE mv.user_id = ac.user_id AND mv.category = 'emoji');
 
+
 -- ############################################################
--- [30/63] 20260208203846_41eabf8e-be44-4a47-bf48-9dc7477d56ce.sql
+-- [30/64] 20260208203846_41eabf8e-be44-4a47-bf48-9dc7477d56ce.sql
 -- ############################################################
 
 -- Delete existing variations for the user
@@ -2640,8 +2672,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
+
 -- ############################################################
--- [31/63] 20260208204347_d389c481-8bae-44c0-b691-4330f935bb53.sql
+-- [31/64] 20260208204347_d389c481-8bae-44c0-b691-4330f935bb53.sql
 -- ############################################################
 
 -- Add missing UPDATE and DELETE policies for activity_log for security completeness
@@ -2676,8 +2709,9 @@ ON public.job_logs
 FOR DELETE 
 USING (false);
 
+
 -- ############################################################
--- [32/63] 20260208204430_450f473b-c41b-4ece-8aba-b9020ff72f5f.sql
+-- [32/64] 20260208204430_450f473b-c41b-4ece-8aba-b9020ff72f5f.sql
 -- ############################################################
 
 -- Update handle_new_user to also create antiban_config (which triggers message variations)
@@ -2704,8 +2738,9 @@ BEGIN
 END;
 $function$;
 
+
 -- ############################################################
--- [33/63] 20260208210947_6e7aa69a-8dd1-4d1b-9ef0-d5918a404679.sql
+-- [33/64] 20260208210947_6e7aa69a-8dd1-4d1b-9ef0-d5918a404679.sql
 -- ############################################################
 
 -- Create table for long-term memory of conversations
@@ -2791,27 +2826,31 @@ BEGIN
 END;
 $$;
 
+
 -- ############################################################
--- [34/63] 20260328202602_78e85876-d6c6-4a03-a3cd-6e4aa2202088.sql
+-- [34/64] 20260328202602_78e85876-d6c6-4a03-a3cd-6e4aa2202088.sql
 -- ############################################################
 
 ALTER TABLE public.user_settings RENAME COLUMN gemini_api_key TO deepseek_api_key;
 
+
 -- ############################################################
--- [35/63] 20260328204246_c329713f-3cf9-4d76-9ca6-11e412aeedb3.sql
+-- [35/64] 20260328204246_c329713f-3cf9-4d76-9ca6-11e412aeedb3.sql
 -- ############################################################
 
 ALTER TABLE public.leads ADD COLUMN IF NOT EXISTS deal_value numeric DEFAULT NULL;
 ALTER TABLE public.leads ADD COLUMN IF NOT EXISTS tasks jsonb DEFAULT '[]'::jsonb;
 
+
 -- ############################################################
--- [36/63] 20260328210134_bf4793c2-e64e-40aa-bc06-f1ef05813138.sql
+-- [36/64] 20260328210134_bf4793c2-e64e-40aa-bc06-f1ef05813138.sql
 -- ############################################################
 
 ALTER TABLE public.user_settings ADD COLUMN IF NOT EXISTS apify_token text DEFAULT NULL;
 
+
 -- ############################################################
--- [37/63] 20260328231723_d8ed585b-aff0-4bc6-b27c-a67205f70b3b.sql
+-- [37/64] 20260328231723_d8ed585b-aff0-4bc6-b27c-a67205f70b3b.sql
 -- ############################################################
 
 
@@ -2861,8 +2900,9 @@ TO authenticated
 USING (public.has_role(auth.uid(), 'admin'))
 WITH CHECK (public.has_role(auth.uid(), 'admin'));
 
+
 -- ############################################################
--- [38/63] 20260328231751_2eec8b54-2651-48bc-9182-20bbb7ae3f2e.sql
+-- [38/64] 20260328231751_2eec8b54-2651-48bc-9182-20bbb7ae3f2e.sql
 -- ############################################################
 
 
@@ -2871,8 +2911,9 @@ INSERT INTO public.user_roles (user_id, role)
 VALUES ('4ab898dc-d738-4e01-ab2d-48e7554af43d', 'admin')
 ON CONFLICT (user_id, role) DO NOTHING;
 
+
 -- ############################################################
--- [39/63] 20260328232818_81bfd73f-bdee-4c64-bcfe-9ba76c491aa6.sql
+-- [39/64] 20260328232818_81bfd73f-bdee-4c64-bcfe-9ba76c491aa6.sql
 -- ############################################################
 
 
@@ -2887,8 +2928,9 @@ ALTER TABLE public.user_settings
   ADD COLUMN IF NOT EXISTS onboarding_completed boolean DEFAULT false,
   ADD COLUMN IF NOT EXISTS onboarding_niche text DEFAULT NULL;
 
+
 -- ############################################################
--- [40/63] 20260329003158_6d4bd183-7fdd-451a-b49f-9c9064bead99.sql
+-- [40/64] 20260329003158_6d4bd183-7fdd-451a-b49f-9c9064bead99.sql
 -- ############################################################
 
 
@@ -2976,8 +3018,9 @@ CREATE TRIGGER update_subscriptions_updated_at
   FOR EACH ROW
   EXECUTE FUNCTION public.update_updated_at_column();
 
+
 -- ############################################################
--- [41/63] 20260329021300_505bb8c1-042a-4ef9-9d1d-5812ceb566fe.sql
+-- [41/64] 20260329021300_505bb8c1-042a-4ef9-9d1d-5812ceb566fe.sql
 -- ############################################################
 
 SELECT cron.schedule(
@@ -2992,8 +3035,9 @@ SELECT cron.schedule(
   $$
 );
 
+
 -- ############################################################
--- [42/63] 20260401152401_c80f3733-7b19-479b-8325-1a526c9997fc.sql
+-- [42/64] 20260401152401_c80f3733-7b19-479b-8325-1a526c9997fc.sql
 -- ############################################################
 
 -- Fix: Add INSERT policy for job_logs
@@ -3012,8 +3056,9 @@ USING (auth.uid() = user_id);
 ALTER PUBLICATION supabase_realtime DROP TABLE meetings;
 ALTER PUBLICATION supabase_realtime ADD TABLE meetings;
 
+
 -- ############################################################
--- [43/63] 20260402001353_c4b56a47-7609-46d3-bd08-3f6127f6025f.sql
+-- [43/64] 20260402001353_c4b56a47-7609-46d3-bd08-3f6127f6025f.sql
 -- ############################################################
 
 
@@ -3055,8 +3100,9 @@ CREATE POLICY "Users can delete their own lead notes"
 -- Index for faster geo queries
 CREATE INDEX IF NOT EXISTS idx_leads_lat_lng ON public.leads (lat, lng) WHERE lat IS NOT NULL AND lng IS NOT NULL;
 
+
 -- ############################################################
--- [44/63] 20260402013057_546d18d8-3a9c-495a-a6a7-7279233ad85b.sql
+-- [44/64] 20260402013057_546d18d8-3a9c-495a-a6a7-7279233ad85b.sql
 -- ############################################################
 
 ALTER TABLE public.user_settings
@@ -3065,8 +3111,9 @@ ALTER TABLE public.user_settings
   ADD COLUMN IF NOT EXISTS extra_chip_instances jsonb DEFAULT '[]'::jsonb,
   ADD COLUMN IF NOT EXISTS active_chip_ids text[] DEFAULT '{}'::text[];
 
+
 -- ############################################################
--- [45/63] 20260402013636_fcf655ab-d593-4ee0-b149-d6591196a030.sql
+-- [45/64] 20260402013636_fcf655ab-d593-4ee0-b149-d6591196a030.sql
 -- ############################################################
 
 
@@ -3106,8 +3153,9 @@ CREATE POLICY "Anyone authenticated can insert community leads"
   ON public.community_leads FOR INSERT TO authenticated
   WITH CHECK (true);
 
+
 -- ############################################################
--- [46/63] 20260405054816_83c5706b-d6c1-4d23-951e-c37435792c52.sql
+-- [46/64] 20260405054816_83c5706b-d6c1-4d23-951e-c37435792c52.sql
 -- ############################################################
 
 
@@ -3541,8 +3589,9 @@ CREATE POLICY "Users can view their own service intelligence"
 ON public.service_intelligence FOR SELECT TO authenticated
 USING (auth.uid() = user_id);
 
+
 -- ############################################################
--- [47/63] 20260405055222_4d29b25e-c8a3-4c70-87a0-a53cff46692f.sql
+-- [47/64] 20260405055222_4d29b25e-c8a3-4c70-87a0-a53cff46692f.sql
 -- ############################################################
 
 -- Fix user_settings RLS policy to use authenticated role instead of public
@@ -3555,8 +3604,9 @@ TO authenticated
 USING (auth.uid() = user_id)
 WITH CHECK (auth.uid() = user_id);
 
+
 -- ############################################################
--- [48/63] 20260406145742_a790410a-815e-4fd7-aa69-26d07b7618db.sql
+-- [48/64] 20260406145742_a790410a-815e-4fd7-aa69-26d07b7618db.sql
 -- ############################################################
 
 
@@ -3655,8 +3705,9 @@ CREATE POLICY "Users can check if they are blocked" ON public.blocked_users
 CREATE TRIGGER update_support_tickets_updated_at BEFORE UPDATE ON public.support_tickets
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
+
 -- ############################################################
--- [49/63] 20260406174649_42c7ffce-cdac-4b27-a99b-1269c4103f0d.sql
+-- [49/64] 20260406174649_42c7ffce-cdac-4b27-a99b-1269c4103f0d.sql
 -- ############################################################
 
 SELECT cron.schedule(
@@ -3671,8 +3722,9 @@ SELECT cron.schedule(
   $$
 );
 
+
 -- ############################################################
--- [50/63] 20260406174934_0c16818d-cfa6-4d24-aae9-fe2c173260ca.sql
+-- [50/64] 20260406174934_0c16818d-cfa6-4d24-aae9-fe2c173260ca.sql
 -- ############################################################
 
 
@@ -3710,14 +3762,16 @@ CREATE POLICY "Users manage own AB tests" ON public.ab_tests
   USING (auth.uid() = user_id)
   WITH CHECK (auth.uid() = user_id);
 
+
 -- ############################################################
--- [51/63] 20260406175538_34e59281-80c0-4ccc-a870-876f6d285ee4.sql
+-- [51/64] 20260406175538_34e59281-80c0-4ccc-a870-876f6d285ee4.sql
 -- ############################################################
 
 ALTER TABLE public.user_settings ADD COLUMN IF NOT EXISTS meta_access_token text;
 
+
 -- ############################################################
--- [52/63] 20260423021202_b85849e1-27e8-4902-8e36-061b8c04a873.sql
+-- [52/64] 20260423021202_b85849e1-27e8-4902-8e36-061b8c04a873.sql
 -- ############################################################
 
 DO $$
@@ -3781,8 +3835,9 @@ BEGIN
   );
 END $$;
 
+
 -- ############################################################
--- [53/63] 20260724192641_cf1ef2c1-ea12-4683-853e-6f88396ac174.sql
+-- [53/64] 20260724192641_cf1ef2c1-ea12-4683-853e-6f88396ac174.sql
 -- ############################################################
 
 
@@ -3862,8 +3917,9 @@ CREATE TRIGGER meta_ads_tokens_updated_at
   BEFORE UPDATE ON public.meta_ads_tokens
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
+
 -- ############################################################
--- [54/63] 20260724224950_289cdd27-aabd-45d6-9750-793cc1db5dad.sql
+-- [54/64] 20260724224950_289cdd27-aabd-45d6-9750-793cc1db5dad.sql
 -- ############################################################
 
 
@@ -3921,8 +3977,9 @@ INSERT INTO public.objection_responses (user_id, is_template, category, objectio
 (NULL, true, 'tentou', ARRAY['já tentei','não funcionou','testei antes'], 'Já tentei isso antes e não funcionou', 'Que ruim ouvir isso. Sabe qual costuma ser a diferença entre quem trava e quem escala? [seu diferencial]. Posso te mostrar em 5 min o que provavelmente faltou antes?', 'diagnostico'),
 (NULL, true, 'crise', ARRAY['crise','economia','mercado ruim'], 'Com essa economia não dá', 'Justamente por isso! Nossos clientes que mais cresceram foram os que investiram em crise, enquanto os concorrentes recuaram. Posso te mostrar 2 cases de 2024?', 'contra-intuitivo');
 
+
 -- ############################################################
--- [55/63] 20260724225410_1166ed0e-5ccc-4fe9-97ee-d027644c91ee.sql
+-- [55/64] 20260724225410_1166ed0e-5ccc-4fe9-97ee-d027644c91ee.sql
 -- ############################################################
 
 
@@ -3970,16 +4027,18 @@ INSERT INTO public.portfolio_sites (user_id, is_template, title, url, category, 
 (NULL, true, 'Blank Canvas Creation', 'https://blank-canvas-creation-3487.lovable.app/', 'saas', 8, 'App web com dashboard moderno'),
 (NULL, true, 'Landing Premium 8', 'https://pagina-8-eagle.vercel.app/', 'landing', 9, 'Design elegante para serviços premium');
 
+
 -- ############################################################
--- [56/63] 20260726013856_bff0b923-c11a-4d26-aff9-dc6a702bd9ca.sql
+-- [56/64] 20260726013856_bff0b923-c11a-4d26-aff9-dc6a702bd9ca.sql
 -- ############################################################
 
 DELETE FROM public.subscriptions WHERE user_id = '4ab898dc-d738-4e01-ab2d-48e7554af43d';
 INSERT INTO public.subscriptions (user_id, plan, status, started_at, expires_at)
 VALUES ('4ab898dc-d738-4e01-ab2d-48e7554af43d', 'enterprise', 'active', NOW(), NOW() + INTERVAL '100 years');
 
+
 -- ############################################################
--- [57/63] 20260805210000_a1b2c3d4-0001-4a11-9c01-000000000001.sql
+-- [57/64] 20260805210000_a1b2c3d4-0001-4a11-9c01-000000000001.sql
 -- ############################################################
 
 -- ============================================================
@@ -4227,8 +4286,9 @@ BEGIN
   END LOOP;
 END $$;
 
+
 -- ############################################################
--- [58/63] 20260805220000_a1b2c3d4-0002-4a22-9c02-000000000002.sql
+-- [58/64] 20260805220000_a1b2c3d4-0002-4a22-9c02-000000000002.sql
 -- ############################################################
 
 -- ============================================================
@@ -4510,8 +4570,9 @@ $$;
 
 GRANT EXECUTE ON FUNCTION public.prune_lead_memory() TO service_role;
 
+
 -- ############################################################
--- [59/63] 20260805230000_a1b2c3d4-0003-4a33-9c03-000000000003.sql
+-- [59/64] 20260805230000_a1b2c3d4-0003-4a33-9c03-000000000003.sql
 -- ############################################################
 
 -- ============================================================
@@ -4591,8 +4652,9 @@ $$;
 
 GRANT EXECUTE ON FUNCTION public.get_chip_usage_today(UUID) TO authenticated, service_role;
 
+
 -- ############################################################
--- [60/63] 20260806000000_a1b2c3d4-0004-4a44-9c04-000000000004.sql
+-- [60/64] 20260806000000_a1b2c3d4-0004-4a44-9c04-000000000004.sql
 -- ############################################################
 
 -- ============================================================
@@ -4711,8 +4773,9 @@ $$;
 
 GRANT EXECUTE ON FUNCTION public.opportunity_radar(UUID, INTEGER) TO authenticated, service_role;
 
+
 -- ############################################################
--- [61/63] 20260811120000_b7c8d9e0-0005-4a55-9c05-000000000005.sql
+-- [61/64] 20260811120000_b7c8d9e0-0005-4a55-9c05-000000000005.sql
 -- ############################################################
 
 -- ============================================================
@@ -5231,8 +5294,9 @@ CREATE TRIGGER trg_mission_leads_touch
   BEFORE UPDATE ON public.mission_leads
   FOR EACH ROW EXECUTE FUNCTION public.touch_updated_at();
 
+
 -- ############################################################
--- [62/63] 20260811140000_c8d9e0f1-0006-4a66-9c06-000000000006.sql
+-- [62/64] 20260811140000_c8d9e0f1-0006-4a66-9c06-000000000006.sql
 -- ############################################################
 
 -- ============================================================
@@ -5564,8 +5628,9 @@ CREATE TRIGGER trg_provider_states_touch
   BEFORE UPDATE ON public.provider_states
   FOR EACH ROW EXECUTE FUNCTION public.touch_updated_at();
 
+
 -- ############################################################
--- [63/63] 20260811160000_d9e0f1a2-0007-4a77-9c07-000000000007.sql
+-- [63/64] 20260811160000_d9e0f1a2-0007-4a77-9c07-000000000007.sql
 -- ############################################################
 
 -- ============================================================
@@ -5728,6 +5793,352 @@ END;
 $$;
 
 
+-- ############################################################
+-- [64/64] 20260811180000_e0f1a2b3-0008-4a88-9c08-000000000008.sql
+-- ############################################################
+
+-- ============================================================
+-- O FUNIL DA MISSÃO PRECISA CHEGAR ATÉ O FIM
+-- ============================================================
+-- `mission_leads` tem os estados 'replied' e 'meeting_booked', a tela desenha
+-- as cinco etapas do funil, e `command_center()` devolve `replied_today` e
+-- `meetings_today`. Só que nenhum código fora do orquestrador jamais escreveu
+-- nessa tabela:
+--
+--   $ grep -rn "mission_leads" supabase/functions/ | grep -v sales-orchestrator
+--   (vazio)
+--
+-- Quer dizer: a esteira levava o lead até 'sent' e parava ali. Quando o lead
+-- respondia, quem sabia disso era `leads.last_response_at`; quando a reunião
+-- era marcada, quem sabia era `meetings`. A missão nunca ficava sabendo.
+-- As duas últimas etapas do funil mostravam zero para sempre — não porque a
+-- operação ia mal, mas porque ninguém contava.
+--
+-- Uma tela que exibe zero permanente é pior que uma tela ausente: a ausente
+-- avisa que falta algo, a zerada afirma um fato falso. E o número que estava
+-- faltando é justamente o que decide se a abordagem funciona.
+--
+-- POR QUE GATILHO NO BANCO, E NÃO CHAMADA NO CÓDIGO
+-- Já existem DOIS caminhos que inserem reunião (`webhook` e
+-- `whatsapp-ai-reply`) e a resposta do lead entra por mais de um lugar.
+-- Espalhar `update mission_leads` por esses pontos significa que o próximo
+-- caminho de resposta — que vai existir — nasce esquecendo de avançar o
+-- funil, e o defeito volta calado. No gatilho, avançar deixa de ser algo que
+-- alguém precisa lembrar de fazer.
+-- ============================================================
+
+-- ------------------------------------------------------------
+-- 1. CONTADORES EM UM LUGAR SÓ
+-- ------------------------------------------------------------
+-- A regra de "o que conta como abordado/respondido" estava escrita em
+-- TypeScript dentro do orquestrador. Com o gatilho, ela passaria a existir em
+-- dois lugares — e duas cópias de uma regra sempre acabam discordando.
+-- Passa a morar aqui; o orquestrador chama esta função.
+--
+-- Recalcula em vez de incrementar de propósito. Incremento depende de saber
+-- o estado anterior de cada linha e erra para sempre quando erra uma vez;
+-- recontar é exato, e o custo é uma varredura por índice sobre no máximo
+-- 2000 linhas (`target_count` tem teto).
+
+CREATE OR REPLACE FUNCTION public.mission_refresh_counters(p_mission_id UUID)
+RETURNS VOID
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  UPDATE public.missions m
+  SET leads_found     = c.found,
+      leads_qualified = c.qualified,
+      leads_drafted   = c.drafted,
+      leads_contacted = c.contacted,
+      leads_replied   = c.replied,
+      meetings_booked = c.meetings,
+      updated_at      = NOW()
+  FROM (
+    SELECT
+      COUNT(*)                                                            AS found,
+      COUNT(*) FILTER (WHERE status NOT IN ('found', 'disqualified', 'failed')) AS qualified,
+      COUNT(*) FILTER (WHERE status IN ('drafted', 'awaiting_approval', 'approved',
+                                        'sent', 'replied', 'meeting_booked', 'handed_off')) AS drafted,
+      COUNT(*) FILTER (WHERE status IN ('sent', 'replied', 'meeting_booked', 'handed_off')) AS contacted,
+      -- Quem marcou reunião obviamente respondeu; quem foi passado para
+      -- humano só chega lá depois de responder. Contar só o status literal
+      -- 'replied' faria o número CAIR quando o lead avança — o oposto do que
+      -- um funil deve mostrar.
+      COUNT(*) FILTER (WHERE status IN ('replied', 'meeting_booked', 'handed_off'))         AS replied,
+      COUNT(*) FILTER (WHERE status = 'meeting_booked')                                    AS meetings
+    FROM public.mission_leads
+    WHERE mission_id = p_mission_id
+  ) c
+  WHERE m.id = p_mission_id;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.mission_refresh_counters(UUID) TO authenticated, service_role;
+
+-- ------------------------------------------------------------
+-- 2. O LEAD RESPONDEU
+-- ------------------------------------------------------------
+
+/**
+ * Avança para 'replied' a linha de missão que de fato abordou este lead.
+ *
+ * Duas decisões que valem explicação:
+ *
+ * 1. Só concorre missão com `sent_at` preenchido. O mesmo lead pode estar em
+ *    várias missões; a resposta pertence a quem escreveu. Missão que ainda
+ *    não enviou nada não pode reivindicar uma resposta que não provocou —
+ *    seria inflar a conversão dela com o trabalho de outra.
+ *
+ * 2. Entre as que enviaram, ganha a de envio mais recente: é a mensagem que
+ *    o lead tinha na frente quando respondeu.
+ *
+ * `replied_at` só é gravado na primeira resposta. A métrica que interessa é
+ * o tempo até o lead reagir; sobrescrever a cada mensagem transformaria isso
+ * em "quando ele falou pela última vez", que já existe em `leads`.
+ */
+CREATE OR REPLACE FUNCTION public.mission_lead_on_reply()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_row RECORD;
+BEGIN
+  SELECT id, mission_id, user_id, status
+    INTO v_row
+  FROM public.mission_leads
+  WHERE lead_id = NEW.lead_id
+    AND sent_at IS NOT NULL
+    -- Não regride quem já está adiante no funil.
+    AND status NOT IN ('replied', 'meeting_booked', 'handed_off', 'opted_out')
+  ORDER BY sent_at DESC
+  LIMIT 1;
+
+  IF NOT FOUND THEN
+    RETURN NEW;
+  END IF;
+
+  UPDATE public.mission_leads
+  SET status     = 'replied',
+      replied_at = COALESCE(replied_at, NEW.created_at)
+  WHERE id = v_row.id;
+
+  PERFORM public.mission_refresh_counters(v_row.mission_id);
+
+  INSERT INTO public.agent_events (user_id, mission_id, lead_id, agent, event, summary, detail, level)
+  VALUES (
+    v_row.user_id, v_row.mission_id, NEW.lead_id,
+    'orchestrator', 'lead_replied',
+    'Lead respondeu à abordagem.',
+    jsonb_build_object(
+      'status_anterior', v_row.status,
+      'trecho', left(NEW.content, 180)
+    ),
+    'success'
+  );
+
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_mission_lead_on_reply ON public.chat_messages;
+CREATE TRIGGER trg_mission_lead_on_reply
+  AFTER INSERT ON public.chat_messages
+  FOR EACH ROW
+  -- O filtro fica no WHEN, não dentro da função: assim mensagem nossa
+  -- (99% do volume) nem chega a abrir o bloco plpgsql.
+  WHEN (NEW.sender_type = 'lead')
+  EXECUTE FUNCTION public.mission_lead_on_reply();
+
+-- ------------------------------------------------------------
+-- 3. A REUNIÃO FOI MARCADA
+-- ------------------------------------------------------------
+
+/**
+ * Avança para 'meeting_booked' — o desfecho que a missão persegue.
+ *
+ * Aceita também linha ainda em 'replied' ou anterior: acontece de o lead
+ * fechar a agenda na mesma mensagem em que responde, e nesse caso os dois
+ * gatilhos disparam na mesma transação. `replied_at` é preenchido aqui
+ * quando ainda estiver vazio, porque marcar reunião sem ter respondido é
+ * impossível — se o campo ficasse nulo, o funil mostraria mais reuniões que
+ * respostas.
+ */
+CREATE OR REPLACE FUNCTION public.mission_lead_on_meeting()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_row RECORD;
+BEGIN
+  SELECT id, mission_id, user_id, status
+    INTO v_row
+  FROM public.mission_leads
+  WHERE lead_id = NEW.lead_id
+    -- A reunião só move a missão de quem é dono do lead. Ver a política de
+    -- `meetings` reforçada no bloco 5: `lead_id` não era conferido contra o
+    -- dono, então dava para inserir reunião apontando para o lead de outra
+    -- conta. Com o gatilho, isso deixaria de ser um registro solto e passaria
+    -- a mexer no funil alheio.
+    AND user_id = NEW.user_id
+    AND sent_at IS NOT NULL
+    AND status NOT IN ('meeting_booked', 'opted_out')
+  ORDER BY sent_at DESC
+  LIMIT 1;
+
+  IF NOT FOUND THEN
+    RETURN NEW;
+  END IF;
+
+  UPDATE public.mission_leads
+  SET status     = 'meeting_booked',
+      replied_at = COALESCE(replied_at, NEW.created_at)
+  WHERE id = v_row.id;
+
+  PERFORM public.mission_refresh_counters(v_row.mission_id);
+
+  INSERT INTO public.agent_events (user_id, mission_id, lead_id, agent, event, summary, detail, level)
+  VALUES (
+    v_row.user_id, v_row.mission_id, NEW.lead_id,
+    'scheduler', 'meeting_booked',
+    format('Reunião marcada para %s.',
+           to_char(NEW.scheduled_at AT TIME ZONE 'America/Sao_Paulo', 'DD/MM/YYYY HH24:MI')),
+    jsonb_build_object(
+      'meeting_id', NEW.id,
+      'scheduled_at', NEW.scheduled_at,
+      'status_anterior', v_row.status
+    ),
+    'success'
+  );
+
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_mission_lead_on_meeting ON public.meetings;
+CREATE TRIGGER trg_mission_lead_on_meeting
+  AFTER INSERT ON public.meetings
+  FOR EACH ROW
+  EXECUTE FUNCTION public.mission_lead_on_meeting();
+
+-- ------------------------------------------------------------
+-- 4. O QUE JÁ ACONTECEU ANTES DO GATILHO EXISTIR
+-- ------------------------------------------------------------
+-- Respostas e reuniões que ocorreram enquanto o funil estava aberto ficaram
+-- registradas em `chat_messages` e `meetings`, mas não em `mission_leads`.
+-- Sem esta recuperação, o histórico continuaria dizendo que ninguém nunca
+-- respondeu — e a primeira medição de conversão nasceria errada.
+--
+-- Só faz UPDATE, e só para frente. Em projeto novo não encontra nada.
+
+WITH primeira_resposta AS (
+  SELECT ml.id,
+         MIN(cm.created_at) AS respondeu_em
+  FROM public.mission_leads ml
+  JOIN public.chat_messages cm
+    ON cm.lead_id = ml.lead_id
+   AND cm.sender_type = 'lead'
+   AND cm.created_at >= ml.sent_at
+  WHERE ml.sent_at IS NOT NULL
+    AND ml.status = 'sent'
+  GROUP BY ml.id
+)
+UPDATE public.mission_leads ml
+SET status = 'replied',
+    replied_at = COALESCE(ml.replied_at, p.respondeu_em)
+FROM primeira_resposta p
+WHERE ml.id = p.id;
+
+WITH reuniao AS (
+  SELECT ml.id,
+         MIN(mt.created_at) AS marcou_em
+  FROM public.mission_leads ml
+  JOIN public.meetings mt
+    ON mt.lead_id = ml.lead_id
+   AND mt.created_at >= ml.sent_at
+  WHERE ml.sent_at IS NOT NULL
+    AND ml.status IN ('sent', 'replied')
+  GROUP BY ml.id
+)
+UPDATE public.mission_leads ml
+SET status = 'meeting_booked',
+    replied_at = COALESCE(ml.replied_at, r.marcou_em)
+FROM reuniao r
+WHERE ml.id = r.id;
+
+-- Contadores de todas as missões tocadas pela recuperação.
+DO $$
+DECLARE
+  v_id UUID;
+BEGIN
+  FOR v_id IN SELECT id FROM public.missions LOOP
+    PERFORM public.mission_refresh_counters(v_id);
+  END LOOP;
+END;
+$$;
+
+-- ------------------------------------------------------------
+-- 5. REUNIÃO PRECISA SER DE UM LEAD SEU
+-- ------------------------------------------------------------
+-- A política original de `meetings` conferia só o `user_id`:
+--
+--   FOR ALL USING (auth.uid() = user_id)
+--
+-- O `lead_id` passava sem conferência. Dava para inserir uma reunião com o
+-- próprio user_id apontando para o lead de OUTRA conta. Enquanto a tabela
+-- era só um calendário, o estrago era um registro estranho na agenda de
+-- ninguém. Agora que a reunião avança o funil, viraria escrita na missão de
+-- outra empresa.
+--
+-- `chat_messages` já conferia isso desde o começo (`is_lead_owner`); a
+-- assimetria entre as duas tabelas era o defeito.
+
+DROP POLICY IF EXISTS "Users can manage their own meetings" ON public.meetings;
+
+CREATE POLICY "Users can manage their own meetings"
+  ON public.meetings FOR ALL
+  USING (auth.uid() = user_id AND public.is_lead_owner(lead_id))
+  WITH CHECK (auth.uid() = user_id AND public.is_lead_owner(lead_id));
+
+-- ------------------------------------------------------------
+-- 6. CONFERÊNCIA
+-- ------------------------------------------------------------
+-- Gatilho que não foi criado não dá erro: ele simplesmente não roda, e o
+-- sintoma é exatamente o mesmo defeito que esta migração veio corrigir —
+-- números zerados sem explicação. Melhor a migração falhar aqui.
+
+DO $$
+DECLARE
+  v_faltando TEXT[] := ARRAY[]::TEXT[];
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger
+    WHERE tgname = 'trg_mission_lead_on_reply' AND NOT tgisinternal
+  ) THEN
+    v_faltando := v_faltando || 'trg_mission_lead_on_reply';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger
+    WHERE tgname = 'trg_mission_lead_on_meeting' AND NOT tgisinternal
+  ) THEN
+    v_faltando := v_faltando || 'trg_mission_lead_on_meeting';
+  END IF;
+
+  IF array_length(v_faltando, 1) > 0 THEN
+    RAISE EXCEPTION 'Gatilhos do funil não foram criados: %', array_to_string(v_faltando, ', ');
+  END IF;
+END;
+$$;
+
+COMMENT ON FUNCTION public.mission_refresh_counters(UUID) IS
+  'Recalcula os contadores desnormalizados de uma missão a partir de mission_leads. '
+  'Fonte única da regra — o orquestrador chama esta função em vez de repeti-la.';
+
+
 -- ============================================================
 -- VERIFICAÇÃO FINAL
 -- ============================================================
@@ -5756,3 +6167,9 @@ SELECT jobname, schedule,
        substring(command from 'https://[a-z0-9]+\.supabase\.co') AS projeto
 FROM cron.job
 ORDER BY jobname;
+
+-- 5. Os gatilhos que fecham o funil da missão existem? Devem vir os dois.
+SELECT tgname
+FROM pg_trigger
+WHERE tgname IN ('trg_mission_lead_on_reply', 'trg_mission_lead_on_meeting')
+ORDER BY tgname;

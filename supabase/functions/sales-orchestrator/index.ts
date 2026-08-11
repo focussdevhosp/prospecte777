@@ -988,28 +988,16 @@ async function resumeOutbound(supabase: Supa, userId: string) {
 // AUXILIARES
 // ------------------------------------------------------------
 
+/**
+ * Recalcula os contadores da missão.
+ *
+ * A conta em si mora no banco (`mission_refresh_counters`). Ela precisa
+ * rodar também dentro dos gatilhos de resposta e de reunião, e uma regra de
+ * negócio escrita nos dois lugares acaba divergindo — normalmente no dia em
+ * que alguém acrescenta um status novo e lembra de só uma das cópias.
+ */
 async function refreshCounters(supabase: Supa, missionId: string): Promise<void> {
-  const { data } = await supabase
-    .from("mission_leads")
-    .select("status")
-    .eq("mission_id", missionId);
-
-  if (!data) return;
-
-  const has = (...statuses: string[]) =>
-    data.filter((r: { status: string }) => statuses.includes(r.status)).length;
-
-  await supabase
-    .from("missions")
-    .update({
-      leads_found: data.length,
-      leads_qualified: data.length - has("found", "disqualified", "failed"),
-      leads_drafted: has("drafted", "awaiting_approval", "approved", "sent", "replied", "meeting_booked", "handed_off"),
-      leads_contacted: has("sent", "replied", "meeting_booked", "handed_off"),
-      leads_replied: has("replied", "meeting_booked", "handed_off"),
-      meetings_booked: has("meeting_booked"),
-    })
-    .eq("id", missionId);
+  await supabase.rpc("mission_refresh_counters", { p_mission_id: missionId });
 }
 
 function str(value: unknown): string | null {
