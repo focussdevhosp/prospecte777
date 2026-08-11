@@ -4,12 +4,13 @@ import type { Database } from './types';
 // ============================================================
 // CLIENTE SUPABASE
 // ============================================================
-// A URL e a chave vinham fixas neste arquivo. Trocar de projeto exigia
-// editar código e refazer o build — e o `.env` do repositório, que parecia
-// ser a configuração, não tinha efeito nenhum.
+// A URL e a chave vinham fixas neste arquivo, e o `.env` do repositório —
+// que parecia ser a configuração — não tinha efeito nenhum. Quem editasse o
+// `.env` esperando apontar para outro banco continuava batendo no mesmo.
 //
-// Agora valem as variáveis de ambiente. Os valores abaixo são apenas
-// reserva para desenvolvimento local sem `.env`.
+// Agora valem as variáveis de ambiente, e os valores abaixo são só reserva:
+// o mesmo projeto de sempre, para o app subir em desenvolvimento sem `.env`.
+// Apontar para outro banco passou a ser configuração, não edição de código.
 //
 // Só entra aqui chave PUBLICÁVEL (anon). Em projeto Vite, tudo que começa
 // com VITE_ é embutido no bundle que vai para o navegador — a chave
@@ -17,11 +18,11 @@ import type { Database } from './types';
 // secrets das edge functions.
 
 const SUPABASE_URL =
-  import.meta.env.VITE_SUPABASE_URL ?? 'https://sciphxtbxvbpiypbcxub.supabase.co';
+  import.meta.env.VITE_SUPABASE_URL ?? 'https://oeztpxyprifabkvysroh.supabase.co';
 
 const SUPABASE_PUBLISHABLE_KEY =
   import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ??
-  'sb_publishable_RLg7_0prleJlR7tgiffUOQ_YyB6wy5O';
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9lenRweHlwcmlmYWJrdnlzcm9oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAzMTIyODAsImV4cCI6MjA4NTg4ODI4MH0.rGGWHPQTpMsyFPnSBw9XkaDEdmHlcaJJo8tJtfg3IaA';
 
 if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
   throw new Error(

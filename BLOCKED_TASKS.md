@@ -5,24 +5,29 @@ quanto atrapalha.
 
 ---
 
-## 1. O schema ainda não subiu no projeto novo
+## 1. As migrações novas ainda não foram aplicadas
 
 **Bloqueio:** não tenho acesso ao Supabase. Sem access token e sem CLI
-autenticada, não consigo aplicar migração nem criar tabela.
+autenticada, não consigo aplicar migração.
 
-**Por que atrapalha:** o projeto `sciphxtbxvbpiypbcxub` está vazio. Todo o
-trabalho dos ciclos 1 e 2 existe em migração no repositório e em nenhum banco.
-Enquanto isso não for aplicado, o app aponta para um projeto sem tabela
-nenhuma e não abre.
+**Por que atrapalha:** todo o trabalho existe em migração no repositório e em
+nenhum banco. Enquanto não subir, as telas novas (Missões, Central de IA,
+teste A/B) abrem e falham — as tabelas não existem.
 
-**O que destrava:** abrir o SQL Editor do projeto novo, colar
-`SCHEMA_COMPLETO.sql` inteiro e rodar. São 65 migrações, 237 KB, alguns
-segundos. Antes disso, confirmar em *Database → Extensions* que `pgcrypto`,
-`pg_cron` e `pg_net` estão ligadas — sem as duas últimas os blocos de
-agendamento falham (o resto do schema sobe normal, mas nada roda sozinho).
+**O que destrava:** *SQL Editor* do projeto `oeztpxyprifabkvysroh` → cole o
+`MIGRACOES_NOVAS.sql` inteiro → Run. São 10 migrações, 88 KB, alguns
+segundos.
 
-Ao final o arquivo tem cinco consultas de conferência. A de número 5 é a que
-importa para o ciclo 1: precisa devolver os dois gatilhos do funil.
+Antes, confirme em *Database → Extensions* que `pgcrypto`, `pg_cron` e
+`pg_net` estão ligadas — sem as duas últimas os blocos de agendamento falham
+(o resto sobe normal, mas nada roda sozinho).
+
+**Todas as 10 são aditivas:** criam tabela, função, gatilho e coluna. Nenhuma
+apaga dado, remove coluna ou altera tipo. Ao final há quatro consultas de
+conferência, e a última confirma que a contagem de leads continua a mesma.
+
+> O `SCHEMA_COMPLETO.sql` continua no repositório para subir um banco vazio do
+> zero. **Não é o seu caso** — não rode aquele.
 
 ---
 
@@ -82,18 +87,11 @@ comparado com o mesmo comando no `git stash`.
 
 ---
 
-## 5. Não há tela para retomar lead que esgotou as tentativas
+## 5. ~~Não há tela para retomar lead que esgotou as tentativas~~ — RESOLVIDO
 
-**Bloqueio:** nenhum. É continuação do ciclo 3, que resolveu a parte urgente.
-
-**Por que atrapalha:** o ciclo 3 fez o envio transitório tentar de novo até
-cinco vezes. Depois disso o lead vira `failed` e continua sem caminho de
-volta pela interface — a diferença é que agora isso só acontece depois de
-cinco falhas reais, não na primeira oscilação.
-
-**O que destrava:** um filtro "falharam no envio" na tela da missão com botão
-de recolocar na fila (zerar `send_attempts`, status `approved`). O rascunho
-continua gravado, então é só interface.
+Entregue no ciclo 13: o detalhe da missão tem botão "Tentar enviar de novo"
+nos leads que falharam no envio, e só neles — desqualificado, recusado e
+opt-out são decisões, não falhas de rede.
 
 ---
 
@@ -140,11 +138,13 @@ produção, e está na lista do que devo parar antes de fazer.
 tratadas como públicas a partir de agora.
 
 1. **Token do GitHub** (`ghp_...`) — *Settings → Developer settings → Personal
-   access tokens → Revoke*. Uso aqui foi sempre transitório
-   (`git -c http.extraheader`), nunca gravado em arquivo, nunca no histórico.
-2. **`sb_secret_...`** — *Project Settings → API → Rotate*.
-3. **JWT `service_role`** — a mais grave: ignora RLS e dá acesso total ao
-   banco. Rotacionar junto.
+   access tokens → Revoke*. **É o urgente:** dá escrita neste repositório. Uso
+   aqui foi sempre transitório (`git -c http.extraheader`), nunca gravado em
+   arquivo, nunca no histórico.
+2. **`sb_secret_...`** e o **JWT `service_role`** — são do projeto
+   `sciphxtbxvbpiypbcxub`, que decidimos não usar. Perderam gravidade: são
+   chaves de um banco vazio. Ainda assim, chave colada em chat é chave
+   pública — revogue quando puder.
 
 A chave `service_role` **não** está em nenhum arquivo do repositório. O
 `client.ts` tem uma checagem que derruba o app na inicialização se alguém

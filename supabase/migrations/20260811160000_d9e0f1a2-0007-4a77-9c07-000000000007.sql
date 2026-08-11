@@ -1,23 +1,33 @@
 -- ============================================================
--- URL DO PROJETO DEIXA DE SER FIXA NO SQL
+-- O CRON PRECISA PROVAR QUE É O CRON
 -- ============================================================
--- Cinco migrações antigas gravaram o endereço do projeto direto no comando
--- do cron:
+-- Duas coisas erradas nos agendamentos antigos, e a segunda é a que
+-- realmente quebrava:
 --
---   url := 'https://oeztpxyprifabkvysroh.supabase.co/functions/v1/cron-tasks'
+-- 1. O endereço do projeto estava fixo dentro do comando do cron, em cinco
+--    migrações diferentes:
 --
--- Enquanto existiu um projeto só, isso passou despercebido. Ao migrar para
--- outro projeto o defeito aparece do pior jeito possível: o cron do projeto
--- NOVO fica chamando as funções do projeto VELHO. Ele não falha — funciona,
--- só que operando o banco errado. Uma missão criada aqui seria processada lá.
+--      url := 'https://<ref>.supabase.co/functions/v1/cron-tasks'
 --
--- O endereço passa a morar em `private.app_config`, junto do segredo
--- interno. Trocar de projeto vira um UPDATE numa linha, não uma caçada por
--- string em migração antiga.
+--    Enquanto existe um projeto só, isso passa despercebido. No dia em que
+--    alguém restaurar um backup em outro projeto, o cron de lá continua
+--    chamando as funções daqui — e não falha, funciona, operando o banco
+--    errado. Passa a morar em `private.app_config`: trocar vira um UPDATE
+--    numa linha, não uma caçada por string em migração antiga.
 --
--- Esta migração é a última da fila de propósito: ela reagenda por cima do
--- que as anteriores deixaram, então o histórico continua íntegro e o
--- resultado final está correto em qualquer projeto onde ela rodar.
+-- 2. Os agendamentos mandavam a ANON KEY no Authorization. As functions
+--    internas passaram a exigir prova de chamada interna, e a anon key não é
+--    uma — então TODA execução automática morria em 401. Nenhum follow-up,
+--    nenhuma manutenção e nenhum lote de missão jamais rodou pelo cron.
+--
+-- Esta migração é a última da fila de propósito: reagenda por cima do que as
+-- anteriores deixaram, então o histórico continua íntegro e o resultado
+-- final está correto em qualquer projeto onde ela rodar.
+--
+-- SE UM DIA VOCÊ TROCAR DE PROJETO: altere o valor abaixo antes de rodar. A
+-- conferência do fim FALHA de propósito se sobrar cron apontando para outro
+-- lugar — é melhor a migração parar do que o agendamento operar o banco
+-- errado em silêncio.
 -- ============================================================
 
 -- ------------------------------------------------------------
@@ -53,13 +63,13 @@ AS $$
   SELECT value FROM private.app_config WHERE key = 'functions_base_url';
 $$;
 
--- Endereço deste projeto. Ao migrar de novo, basta:
+-- Endereço deste projeto. Se um dia mudar, basta:
 --   UPDATE private.app_config
---      SET value = 'https://<novo-ref>.supabase.co/functions/v1/'
+--      SET value = 'https://<outro-ref>.supabase.co/functions/v1/'
 --    WHERE key = 'functions_base_url';
 -- e rodar o bloco de reagendamento abaixo.
 INSERT INTO private.app_config (key, value)
-VALUES ('functions_base_url', 'https://sciphxtbxvbpiypbcxub.supabase.co/functions/v1/')
+VALUES ('functions_base_url', 'https://oeztpxyprifabkvysroh.supabase.co/functions/v1/')
 ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;
 
 -- Garante o segredo interno mesmo que esta migração rode isolada.

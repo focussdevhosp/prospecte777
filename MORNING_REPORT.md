@@ -124,27 +124,40 @@ E os três últimos são o inverso: **backend pronto sem tela.**
 
 Em ordem. O primeiro item bloqueia todo o resto.
 
-### 1. Subir o schema no projeto novo (5 minutos)
+### 1. Aplicar as migrações novas (5 minutos)
 
-O projeto `sciphxtbxvbpiypbcxub` está vazio. Todo o trabalho existe em
-migração e em nenhum banco.
+Todo o trabalho existe em migração e em nenhum banco. Enquanto não subir, as
+telas novas abrem e falham.
 
 1. *Database → Extensions*: confirme `pgcrypto`, `pg_cron`, `pg_net` ligadas.
-2. *SQL Editor* → cole o `SCHEMA_COMPLETO.sql` inteiro → Run.
+2. *SQL Editor* do projeto `oeztpxyprifabkvysroh` → cole o
+   `MIGRACOES_NOVAS.sql` inteiro → Run.
 
-São 67 migrações, 246 KB, alguns segundos. No fim do arquivo há cinco
-consultas de conferência — se alguma vier diferente do esperado, me mande o
-resultado.
+São 10 migrações, 88 KB. **Todas aditivas** — criam tabela, função, gatilho e
+coluna; nenhuma apaga dado nem remove coluna. No fim há quatro consultas de
+conferência; a última confirma que seus leads continuam lá.
+
+> Existe também um `SCHEMA_COMPLETO.sql` no repositório. Ele serve para subir
+> um banco vazio do zero e **não é o seu caso**.
+
+Um efeito colateral que vale saber: hoje **nenhuma execução automática
+funciona**. Os crons mandam a anon key no Authorization, e as functions
+internas passaram a exigir prova de chamada interna — então toda rodada morre
+em 401. Nenhum follow-up e nenhuma manutenção jamais rodou pelo agendamento.
+Essa migração conserta isso.
 
 ### 2. Configurar os segredos das edge functions
 
-*Project Settings → Edge Functions → Secrets*. Sem eles a esteira roda até a
-hora de escrever a mensagem e para — de propósito, sem mandar nada genérico.
+Você me disse que já estão configurados neste projeto — então provavelmente
+não há nada a fazer. Vale só conferir que os seis existem em *Project
+Settings → Edge Functions → Secrets*:
 
 `DEEPSEEK_API_KEY`, `LOVABLE_API_KEY`, `EVOLUTION_API_URL`,
 `EVOLUTION_API_KEY`, `HUNTER_API_KEY`, `FIRECRAWL_API_KEY`.
 
-Depois: `supabase functions deploy`.
+O que falta mesmo é o **deploy**: `supabase functions deploy`. As functions
+mudaram bastante — sem o deploy, o banco atualizado conversa com código
+antigo.
 
 ### 3. Rotacionar três credenciais — isto é urgente
 
@@ -154,12 +167,17 @@ devo parar antes de fazer.
 
 | Credencial | Onde | Gravidade |
 |---|---|---|
-| Token do GitHub `ghp_...` | Settings → Developer settings → Revoke | alta |
-| `sb_secret_...` | Project Settings → API → Rotate | alta |
-| JWT `service_role` | mesma tela | **crítica** — ignora RLS, dá acesso total |
+| Token do GitHub `ghp_...` | Settings → Developer settings → Revoke | **alta** — dá escrita neste repositório |
+| `sb_secret_...` do projeto não usado | Project Settings → API → Rotate | média |
+| JWT `service_role` do projeto não usado | mesma tela | média |
 
-O `service_role` não está em nenhum arquivo do repositório, e o `client.ts`
-derruba o app na inicialização se alguém tentar configurá-lo como `VITE_*`.
+As duas últimas perderam gravidade quando ficamos no projeto atual: são chaves
+de um banco vazio que ninguém vai usar. Ainda assim, chave colada em chat é
+chave pública.
+
+Nada disso está em arquivo do repositório, e o `client.ts` derruba o app na
+inicialização se alguém tentar configurar uma chave `service_role` como
+`VITE_*`.
 
 ---
 
