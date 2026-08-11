@@ -4,13 +4,13 @@ O que foi feito enquanto você esteve fora, o que você precisa fazer, e o que
 eu faria em seguida.
 
 Ponto de partida: `a22652f`, 118 testes.
-Agora: `9ab71ac`, **220 testes**, 10 ciclos, tudo commitado e no GitHub.
+Agora: `f14a26a`, **241 testes**, 12 ciclos, tudo commitado e no GitHub.
 
 ---
 
 ## O resumo em três frases
 
-Não implementei funcionalidade nova. Passei os dez ciclos consertando coisas
+Não implementei funcionalidade nova. Passei os doze ciclos consertando coisas
 que **pareciam prontas e não estavam** — e quatro delas eram graves o bastante
 para justificar sozinhas o tempo todo: o lead que pedia "pare" continuava
 recebendo mensagem, a parada de emergência não parava metade dos envios, o
@@ -107,6 +107,8 @@ inteligente" — e é a parte em que o modelo não tinha culpa nenhuma.
 | 8 | Os 32 templates entregues no onboarding inventavam case, percentual e lançamento de produto | `f820120` |
 | 9 | O gate barrava "me dá 2 minutos" e "como vocês agendam hoje?" — três falsos positivos no caminho principal | `163c0cb` |
 | 10 | Sem dono identificado, blacklist e parada de emergência eram puladas — e pedir rotação de chip produzia exatamente isso | `9ab71ac` |
+| 11 | A tela de teste A/B nunca recebeu um único dado, e decidia pela métrica que engana | `f38947b` |
+| 12 | "Melhor horário às 9h (0.0% de resposta)" — recomendação calculada sobre uma coluna que ninguém escreve | `f14a26a` |
 
 ---
 
@@ -164,11 +166,13 @@ Na ordem em que eu pegaria:
    no fim de cada migração, que pega o essencial e não pega regressão.
 2. **Tela para retomar lead que esgotou as tentativas de envio.** O rascunho
    continua gravado; falta só a interface.
-3. **Medir A/B por receita, não por resposta.** Hoje o A/B mede taxa de
-   resposta, que é a métrica que engana: a mensagem mais chamativa ganha em
-   resposta e perde em venda.
-4. **ICP Builder e Command Center prescritivo** — as duas peças da
+3. **ICP Builder e Command Center prescritivo** — as duas peças da
    especificação original que continuam sem começar.
+4. **Continuar a varredura por "tela que não mede nada".** Foi o padrão mais
+   produtivo destes doze ciclos: achei quatro (funil da missão, teste A/B,
+   melhor horário, contadores do follow-up) e cada um estava escondido atrás
+   de uma interface completa. Vale procurar o resto antes de construir
+   qualquer coisa nova.
 
 Detalhes de cada uma em `BLOCKED_TASKS.md`. O caminho de cada ciclo, com o
 raciocínio, em `AUTONOMOUS_WORK_LOG.md`.

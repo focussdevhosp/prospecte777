@@ -505,6 +505,99 @@ bloqueio.
 
 ---
 
+## Ciclo 11 — O teste A/B nunca mediu nada
+
+**Commit:** `f38947b`
+
+### Análise
+
+```
+grep -rn "ab_test_id" src/
+(vazio)
+```
+
+A tela em `/ab-testing` tem 463 linhas: criação de teste, teste-z de duas
+proporções, exibição de vencedor, de confiança e de conversões. E **nenhuma
+linha de código do produto jamais passou `ab_test_id` para o envio.**
+
+`variant_a_sent` nunca saiu de zero. `variant_a_responses` e
+`variant_a_conversions` não eram escritos por absolutamente nada — só lidos,
+pela tela e pelo cron. O teste-z dividia por zero, caía no `continue`, e
+nenhum teste jamais foi concluído.
+
+Mesma classe do funil da missão, num tamanho maior: funcionalidade inteira em
+que **todo** número é permanentemente zero.
+
+### A métrica que engana
+
+A decisão era por **taxa de resposta** — justamente a métrica que engana. A
+mensagem que promete demais ganha em resposta e perde na venda. Otimizar por
+resposta é treinar o sistema a exagerar, que é a origem de metade dos defeitos
+que este trabalho vem consertando.
+
+Agora: receita → negócio fechado → resposta, e quando é resposta que decide, a
+tela diz isso com todas as letras. Receita não passa por teste-z de propósito:
+não é proporção, é soma de valores muito diferentes, e um contrato grande
+distorce a média.
+
+Amostra mínima passou a valer **por variante**. 100 envios sendo 95 numa e 5
+na outra não é amostra de nada, e a regra anterior (`total >= min*2`) aceitava.
+
+### O defeito que o teste achou
+
+O sorteio usa hash do par (teste, lead), não `Math.random` — com sorteio, o
+mesmo lead pegaria A hoje e B no follow-up de amanhã. Só que a primeira versão
+usava o **bit mais baixo do FNV-1a**. O FNV multiplica por um primo ímpar, e
+multiplicação por ímpar preserva o bit mais baixo: aquele bit é o XOR dos
+últimos bits de todos os caracteres. Não é hash, é paridade.
+
+`"teste-1:lead-5"` e `"teste-2:lead-5"` caíam **sempre** em variantes opostas.
+Dois testes rodando juntos dividiriam a carteira exatamente ao contrário um do
+outro — anticorrelação perfeita, tão ruim quanto correlação perfeita, e
+invisível até alguém contar.
+
+---
+
+## Ciclo 12 — "Melhor horário" saía de uma coluna morta
+
+**Commit:** `f14a26a`
+
+### Análise
+
+O pior exemplo até aqui, porque este virava **conselho**.
+
+`prospecting_stats.responses_received` é escrito por um lugar só — o
+job-processor — e sempre com o valor `0`. Era o numerador da recomendação de
+horário, que respondia:
+
+> "Baseado nos seus dados: melhor horário às 9h (0.0% de resposta)"
+
+Toda hora empatada em zero, ordenação decidida pelo acaso da iteração, e a
+frase "baseado nos seus dados" dando credibilidade suficiente para alguém
+reorganizar a operação em cima de ruído. O filtro `sample >= 3` olhava só o
+volume **enviado** — que não é evidência sobre resposta.
+
+Recomendação errada custa mais que recomendação ausente, justamente porque
+alguém age.
+
+### Implementação
+
+`prospecting_hour_stats()` deriva de `chat_messages`, onde a informação sempre
+esteve. A resposta é atribuída à hora em que **nossa** mensagem saiu — a
+pergunta é "que horas devo mandar", não "que horas as pessoas respondem". A
+janela é de 72h: resposta que chega uma semana depois não foi provocada por
+aquela mensagem.
+
+A decisão de recomendar-ou-não virou módulo com teste, com três travas: sem
+resposta nenhuma não recomenda; volume mínimo por hora (três envios com uma
+resposta são 33%, que ganharia de 200 envios com 50); e diferença mínima entre
+melhor e pior, porque horários equivalentes não são descoberta.
+
+Quando não dá para recomendar pelos dados, o motivo vai junto em vez de ser
+escondido — "ainda não houve nenhuma resposta registrada" informa quanto falta.
+
+---
+
 ## Notas de método
 
 **Sobre o lint.** `npm run lint` acusa 367 problemas no repositório inteiro —
