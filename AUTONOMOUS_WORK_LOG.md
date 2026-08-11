@@ -598,6 +598,64 @@ escondido — "ainda não houve nenhuma resposta registrada" informa quanto falt
 
 ---
 
+## Ciclos 13–15 — As features que faltavam
+
+**Commits:** `f941a0c`, `3a4f8d5`, `921aa0a`
+
+Doze ciclos consertando tela que não mede nada. Estes três são a situação
+inversa: **backend pronto, lido pelo produto, e sem interface nenhuma.**
+
+### Central de IA (`/ai`)
+
+Duas coisas existiam no banco e não tinham tela:
+
+- **`ai_cost_summary()`** — o custo de IA por dia, mês e etapa da esteira.
+- **A ação `preview_lead`** — a esteira inteira em modo seco.
+
+E havia um beco sem saída que eu mesmo criei: `ai_daily_budget_usd` nasce em
+US$ 5, bloqueia o lote quando estoura, e a mensagem de erro dizia *"Ajuste o
+limite em Configurações para continuar"* — apontando para uma tela que não
+existia. **O freio foi construído sem o pedal.**
+
+O **Laboratório** é a resposta mais direta à pergunta que abriu este trabalho.
+Escolhe-se um lead e vê-se, antes de qualquer mensagem sair: cada fato com a
+origem, separado das hipóteses; cada ponto do score com a evidência; a oferta
+com o motivo e a confiança; o ângulo e o gancho; a mensagem e as seis notas.
+
+O `notaOk` da tela lê `DEFAULT_THRESHOLDS` — o mesmo objeto do gate, não uma
+cópia. Cópia acabaria discordando, e a tela pintaria de verde uma mensagem que
+o sistema recusa. Errar no sentido de *parecer aprovado* é o pior erro que
+esta tela pode cometer.
+
+### ICP: seis dos sete critérios eram inalcançáveis
+
+`qualify()` compara o lead contra sete critérios e `create_mission` aceita os
+sete. O formulário mandava **um**: exclusões.
+
+A nota que decide quem é abordado saía de um alvo que o usuário não conseguia
+configurar. Faltavam os sinais de oportunidade — que são o que separa "empresa
+do nicho certo" de "empresa que precisa do que você vende".
+
+O detalhe da missão passa a mostrar o ICP aplicado: auditar uma nota exige
+conhecer a régua.
+
+### Painel prescritivo
+
+Treze números com o mesmo peso visual não são um painel, são uma lista. A fila
+agora sai ordenada pela ordem do dinheiro — bloqueio, quem já respondeu, quem
+está quente, quem espera decisão, quem vai esfriar — e cada item carrega o
+**porquê** da posição.
+
+O estado vazio distingue "está tudo em dia" de "não aconteceu nada hoje":
+num painel de zeros parecem iguais e são opostas.
+
+### Nota de método
+
+O `tsc --noEmit` passou por cima de um erro de sintaxe (quebra de linha dentro
+de literal de regex) que só o `vite build` pegou. Vale rodar os dois.
+
+---
+
 ## Notas de método
 
 **Sobre o lint.** `npm run lint` acusa 367 problemas no repositório inteiro —

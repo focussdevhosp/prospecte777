@@ -4,13 +4,13 @@ O que foi feito enquanto você esteve fora, o que você precisa fazer, e o que
 eu faria em seguida.
 
 Ponto de partida: `a22652f`, 118 testes.
-Agora: `f14a26a`, **241 testes**, 12 ciclos, tudo commitado e no GitHub.
+Agora: `921aa0a`, **253 testes**, 15 ciclos, tudo commitado e no GitHub.
 
 ---
 
 ## O resumo em três frases
 
-Não implementei funcionalidade nova. Passei os doze ciclos consertando coisas
+Os doze primeiros ciclos não implementaram funcionalidade nova: foram consertando coisas
 que **pareciam prontas e não estavam** — e quatro delas eram graves o bastante
 para justificar sozinhas o tempo todo: o lead que pedia "pare" continuava
 recebendo mensagem, a parada de emergência não parava metade dos envios, o
@@ -110,6 +110,14 @@ inteligente" — e é a parte em que o modelo não tinha culpa nenhuma.
 | 11 | A tela de teste A/B nunca recebeu um único dado, e decidia pela métrica que engana | `f38947b` |
 | 12 | "Melhor horário às 9h (0.0% de resposta)" — recomendação calculada sobre uma coluna que ninguém escreve | `f14a26a` |
 
+E os três últimos são o inverso: **backend pronto sem tela.**
+
+| # | O que foi entregue | Commit |
+|---|---|---|
+| 13 | **Central de IA** (`/ai`): custo por etapa, teto editável — que o erro mandava ajustar numa tela inexistente — e o **Laboratório**, que mostra todo o raciocínio da IA antes de qualquer envio | `f941a0c` |
+| 14 | **ICP Builder**: seis dos sete critérios que dão a nota não tinham campo na tela | `3a4f8d5` |
+| 15 | **Painel prescritivo**: treze números viraram uma fila ordenada pela ordem do dinheiro, cada item com o porquê da posição | `921aa0a` |
+
 ---
 
 ## O que eu preciso de você
@@ -166,8 +174,9 @@ Na ordem em que eu pegaria:
    no fim de cada migração, que pega o essencial e não pega regressão.
 2. **Tela para retomar lead que esgotou as tentativas de envio.** O rascunho
    continua gravado; falta só a interface.
-3. **ICP Builder e Command Center prescritivo** — as duas peças da
-   especificação original que continuam sem começar.
+3. **Biblioteca de ICP reutilizável.** Hoje o perfil é digitado por missão.
+   Quem roda cinco missões parecidas redigita cinco vezes — e é exatamente
+   assim que as pessoas param de preencher.
 4. **Continuar a varredura por "tela que não mede nada".** Foi o padrão mais
    produtivo destes doze ciclos: achei quatro (funil da missão, teste A/B,
    melhor horário, contadores do follow-up) e cada um estava escondido atrás
