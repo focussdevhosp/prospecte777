@@ -16,6 +16,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { NewMissionDialog } from '@/components/missions/NewMissionDialog';
+import { NextActions } from '@/components/missions/NextActions';
 import { ActivityFeed } from '@/components/missions/ActivityFeed';
 import {
   useMissions, useCommandCenter, useActivityFeed,
@@ -116,6 +117,13 @@ export default function MissionsPage() {
           </Button>
         </div>
       </div>
+
+      {/* ---- POR ONDE COMEÇAR ---- */}
+      {/* Vem antes dos números de propósito: quem abre a tela de manhã não
+          quer saber quantos leads existem, quer saber o que fazer primeiro.
+          Os números continuam logo abaixo, só deixaram de ser a primeira
+          coisa. */}
+      <NextActions metrics={metrics} />
 
       {/* ---- NÚMEROS DO DIA ---- */}
       {metrics && (
