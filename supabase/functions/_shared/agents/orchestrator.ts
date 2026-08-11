@@ -19,6 +19,8 @@ import { buildStrategy } from "./strategist.ts";
 import { buildCopyPrompt, buildRewritePrompt, cleanMessage } from "./copywriter.ts";
 import { evaluate } from "./quality-gate.ts";
 import { AUTONOMY, type AutonomyLevel, type CampaignGoal, type IcpCriteria, type Offer, type QualityThresholds } from "./types.ts";
+import { isUsable, waterfall } from "../providers/enrichment.ts";
+import { emailSources } from "../providers/email-sources.ts";
 
 // deno-lint-ignore no-explicit-any
 type Supa = any;
@@ -119,21 +121,59 @@ export async function loadCatalog(
  * verificável que existe para uma empresa que nunca respondeu nada.
  */
 export async function enrichLead(supabase: Supa, lead: LeadRow): Promise<LeadRow> {
-  if (lead.site_audit && lead.site_audited_at) return lead;
+  let atualizado = lead;
 
-  try {
-    const audit = await auditSite(lead.website ?? null);
-    await supabase
-      .from("leads")
-      .update({ site_audit: audit, site_audited_at: audit.checked_at })
-      .eq("id", lead.id);
+  // ---- Auditoria de site ----
+  if (!lead.site_audit || !lead.site_audited_at) {
+    try {
+      const audit = await auditSite(lead.website ?? null);
+      await supabase
+        .from("leads")
+        .update({ site_audit: audit, site_audited_at: audit.checked_at })
+        .eq("id", lead.id);
 
-    return { ...lead, site_audit: audit, site_audited_at: audit.checked_at };
-  } catch (e) {
-    console.error(`[orchestrator] auditoria falhou para ${lead.id}:`, e);
-    // Segue sem auditoria: o dossiê fica mais pobre, mas a esteira não para.
-    return lead;
+      atualizado = { ...atualizado, site_audit: audit, site_audited_at: audit.checked_at };
+    } catch (e) {
+      console.error(`[orchestrator] auditoria falhou para ${lead.id}:`, e);
+      // Segue sem auditoria: o dossiê fica mais pobre, mas a esteira não para.
+    }
   }
+
+  // ---- E-mail, em cascata ----
+  // Só quando falta. Reenriquecer quem já tem e-mail é pagar de novo pelo
+  // mesmo dado — e a cascata cobra por consulta, não por acerto.
+  if (!lead.email && lead.website) {
+    try {
+      const resultado = await waterfall(emailSources(), {
+        businessName: lead.business_name ?? "",
+        domain: lead.website,
+        city: lead.location ?? null,
+        niche: lead.niche ?? null,
+      });
+
+      if (isUsable(resultado) && resultado.value) {
+        await supabase
+          .from("leads")
+          .update({ email: resultado.value, email_source: resultado.how })
+          .eq("id", lead.id);
+
+        atualizado = { ...atualizado, email: resultado.value };
+        console.log(
+          `[cascata] e-mail de ${lead.id} por ${resultado.source}, ` +
+            `${resultado.tried.length} fonte(s) consultada(s), custo ${resultado.cost}`,
+        );
+      } else {
+        // Não grava palpite. Um e-mail de baixa confiança bounce, e bounce
+        // queima o domínio de quem mandou — o dado ruim custa mais que a
+        // ausência dele.
+        console.log(`[cascata] sem e-mail utilizável para ${lead.id}: ${resultado.reason}`);
+      }
+    } catch (e) {
+      console.error(`[orchestrator] cascata de e-mail falhou para ${lead.id}:`, e);
+    }
+  }
+
+  return atualizado;
 }
 
 // ------------------------------------------------------------
