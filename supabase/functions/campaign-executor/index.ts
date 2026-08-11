@@ -137,9 +137,19 @@ Deno.serve(async (req) => {
       if (currentCampaign?.status === "paused") break;
 
       try {
+        // Sem template, a campanha não inventa texto. O padrão antigo era
+        // "Olá! Vi seu trabalho e fiquei interessado. Podemos conversar?" —
+        // uma frase que serve para qualquer empresa e por isso não converte
+        // em nenhuma, além de afirmar um interesse que ninguém teve.
+        if (!campaign.message_template) {
+          console.warn(`[campaign ${campaign_id}] sem template — nada enviado para ${lead.id}`);
+          continue;
+        }
+
         const messageBody = campaign.message_template
-          ? campaign.message_template.replace("{nome}", lead.business_name || "")
-          : `Olá ${lead.business_name || ""}! Vi seu trabalho e fiquei interessado. Podemos conversar?`;
+          .replace(/\{(nome|empresa|nome_empresa)\}/gi, lead.business_name || "")
+          .replace(/\{nicho\}/gi, lead.niche || "")
+          .replace(/\{(cidade|localizacao|localização)\}/gi, lead.location || "");
 
         const sendResponse = await fetch(`${supabaseUrl}/functions/v1/whatsapp-send`, {
           method: "POST",

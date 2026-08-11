@@ -88,7 +88,12 @@ const mainItems = [
 
 // ─── 1. PROSPECTAR (agrupa 4 ferramentas de busca) ──────
 const prospectItems = [
-  { title: 'Prospectar', icon: Search, path: '/prospecting', badge: 'IA', section: 'prospect',
+  // A missão vem antes das ferramentas avulsas porque é o caminho completo:
+  // buscar, qualificar, escolher a oferta e preparar a abordagem numa coisa
+  // só. As ferramentas continuam para quem quer operar passo a passo.
+  { title: 'Missões', icon: Rocket, path: '/missions', badge: 'IA', section: 'prospect',
+    matchPaths: ['/missions'] },
+  { title: 'Prospectar', icon: Search, path: '/prospecting', section: 'prospect',
     matchPaths: ['/prospecting', '/cnpj-radar', '/email-finder', '/social-extractor'] },
 ];
 

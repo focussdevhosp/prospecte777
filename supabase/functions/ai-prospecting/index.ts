@@ -8,6 +8,14 @@ import {
   resolveUserId,
 } from "../_shared/auth.ts";
 import { runCaptureJob } from "../_shared/engine.ts";
+import { callAI as aiCall, completeJson as aiCompleteJson, recordUsage } from "../_shared/ai.ts";
+import { buildDossier } from "../_shared/agents/dossier.ts";
+import { qualify } from "../_shared/agents/qualifier.ts";
+import { matchOffer } from "../_shared/agents/offer-matcher.ts";
+import { buildStrategy } from "../_shared/agents/strategist.ts";
+import { buildCopyPrompt, buildRewritePrompt, cleanMessage } from "../_shared/agents/copywriter.ts";
+import { evaluate as evaluateQuality } from "../_shared/agents/quality-gate.ts";
+import { loadCatalog } from "../_shared/agents/orchestrator.ts";
 
 
 Deno.serve(async (req) => {
@@ -30,61 +38,33 @@ Deno.serve(async (req) => {
     if (identity.error) return identity.error;
     const effectiveUserId = identity.userId;
 
-    // Use global API keys only (no per-user keys)
-    const DEEPSEEK_API_KEY = Deno.env.get("DEEPSEEK_API_KEY");
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-
-    // Helper function to call AI via DeepSeek (primary), falls back to Lovable AI
-    async function callAI(systemPrompt: string, userPrompt: string) {
-      if (DEEPSEEK_API_KEY) {
-        const response = await fetch("https://api.deepseek.com/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${DEEPSEEK_API_KEY}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            model: "deepseek-chat",
-            messages: [
-              { role: "system", content: systemPrompt },
-              { role: "user", content: userPrompt },
-            ],
-          }),
-        });
-
-        if (response.ok) {
-          const aiData = await response.json();
-          return aiData.choices?.[0]?.message?.content || "";
-        }
-        console.error("DeepSeek error, trying fallback...");
-      }
-
-      // Fallback to Lovable AI
-      if (!LOVABLE_API_KEY) {
-        throw new Error("Nenhuma API de IA configurada (DeepSeek ou Lovable).");
-      }
-
-      const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "deepseek-chat",
-          messages: [
-            { role: "system", content: systemPrompt },
-            { role: "user", content: userPrompt },
-          ],
-        }),
+    /**
+     * Ações auxiliares (classificação de grupos, sugestão de template,
+     * variantes de A/B).
+     *
+     * Antes esta função tinha o próprio `fetch` sem AbortController: uma
+     * chamada pendurada travava o item do job até a edge function morrer por
+     * tempo, e o usuário só via a barra parada. Agora delega para a camada
+     * única, que traz timeout, retry, troca de provedor e registro de custo.
+     */
+    async function callAI(systemPrompt: string, userPrompt: string): Promise<string> {
+      const result = await aiCall({
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
+        ],
+        role: "fast",
+        max_tokens: 2000,
       });
 
-      if (!response.ok) {
-        throw new Error("AI API error");
-      }
+      await recordUsage(supabase, {
+        userId: effectiveUserId,
+        usage: result.usage,
+        purpose: `ai-prospecting:${action}`,
+        agent: "assistant",
+      });
 
-      const aiData = await response.json();
-      return aiData.choices?.[0]?.message?.content || "";
+      return result.text;
     }
 
     // Action: Calculate lead quality score
@@ -312,239 +292,262 @@ Por favor, analise e sugira melhorias.`;
         });
       }
 
-      // Use AI for initial recommendation
-      const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "deepseek-chat",
-          tools: [
-            {
-              type: "function",
-              function: {
-                name: "recommend_hours",
-                description: "Recomenda os melhores horários para prospecção",
-                parameters: {
-                  type: "object",
-                  properties: {
-                    bestHours: {
-                      type: "array",
-                      items: { type: "number" },
-                      description: "Lista dos 3 melhores horários (0-23)",
-                    },
-                    explanation: {
-                      type: "string",
-                      description: "Explicação breve do porquê",
-                    },
-                  },
-                  required: ["bestHours", "explanation"],
-                },
-              },
-            },
-          ],
-          tool_choice: { type: "function", function: { name: "recommend_hours" } },
-          messages: [
-            {
-              role: "system",
-              content: "Você é um especialista em prospecção B2B no Brasil. Recomende os melhores horários para contato via WhatsApp baseado no nicho.",
-            },
-            {
-              role: "user",
-              content: `Qual o melhor horário para contatar empresas do nicho "${niche}" via WhatsApp no Brasil? Considere horários comerciais e rotina típica do nicho.`,
-            },
-          ],
-        }),
-      });
-
-      if (!aiResponse.ok) {
-        // Fallback to default hours
-        return new Response(JSON.stringify({
-          bestHours: [10, 14, 16],
-          recommendation: "Horários sugeridos: 10h, 14h e 16h (horário comercial padrão)",
-          source: "default",
-        }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-
-      const aiData = await aiResponse.json();
-      const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
-      
-      if (toolCall) {
-        const args = JSON.parse(toolCall.function.arguments);
-        return new Response(JSON.stringify({
-          bestHours: args.bestHours,
-          recommendation: args.explanation,
-          source: "ai",
-        }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-
-      return new Response(JSON.stringify({
+      // Sem dado próprio ainda: pergunta à IA uma sugestão inicial.
+      // Passa pela camada única (timeout, fallback, custo) em vez de falar
+      // com o gateway Lovable direto, que era o único caminho aqui e não
+      // tinha DeepSeek nem reserva.
+      const DEFAULT_HOURS = {
         bestHours: [10, 14, 16],
-        recommendation: "Horários sugeridos: 10h, 14h e 16h",
+        recommendation: "Horários sugeridos: 10h, 14h e 16h (horário comercial padrão).",
         source: "default",
-      }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      };
+
+      try {
+        const { data: parsed } = await aiCompleteJson<{ bestHours: number[]; explanation: string }>(
+          "Você é especialista em prospecção B2B no Brasil. Responda em JSON: " +
+            '{"bestHours": [h1, h2, h3], "explanation": "motivo curto"}. Horas de 0 a 23.',
+          `Qual o melhor horário para contatar empresas do nicho "${niche}" via WhatsApp no Brasil? ` +
+            "Considere horário comercial e a rotina típica desse tipo de negócio.",
+          { role: "fast", max_tokens: 300 },
+        );
+
+        const hours = (parsed.bestHours ?? [])
+          .map(Number)
+          .filter((h) => Number.isInteger(h) && h >= 0 && h <= 23)
+          .slice(0, 3);
+
+        if (hours.length === 0) return json(DEFAULT_HOURS);
+
+        return json({
+          bestHours: hours,
+          recommendation: parsed.explanation || DEFAULT_HOURS.recommendation,
+          source: "ai",
+        });
+      } catch (error) {
+        console.error("[ai-prospecting] sugestão de horário falhou:", error);
+        return json(DEFAULT_HOURS);
+      }
     }
 
-    // Action: Generate personalized message
+    // ------------------------------------------------------------
+    // Action: gerar a mensagem de abordagem
+    // ------------------------------------------------------------
+    // Reescrito para passar pela mesma esteira da missão: dossiê com
+    // procedência -> estratégia -> copy factual -> Quality Gate.
+    //
+    // O prompt anterior exigia "pelo menos 1 número concreto" e dava como
+    // exemplo estatísticas que não existiam em lugar nenhum ("R$ 3-5 mil/mês
+    // em vendas perdidas"). O modelo obedecia e inventava, e a mensagem saía
+    // afirmando isso ao dono de um negócio real.
+    //
+    // O caminho por template continua abaixo, intocado: quando o usuário
+    // escreveu o texto, o texto é dele.
     if (action === "generate_message") {
       const { lead, template, agentSettings, isRemarketing } = data;
 
-      // Check if this is direct AI mode (no template)
-      const isDirectMode = !template || template === null || template.trim() === '';
+      const isTemplateMode = !!(template && String(template).trim().length > 0);
 
-      // Check if a specific service was selected
-      const specificService = agentSettings?.specific_service;
-      const servicesText = specificService 
-        ? specificService 
-        : (agentSettings?.services_offered?.length ? agentSettings.services_offered.join(', ') : 'soluções digitais personalizadas');
+      if (!isTemplateMode) {
+        const { data: leadRow } = lead?.id
+          ? await supabase.from("leads").select("*").eq("id", lead.id)
+            .eq("user_id", effectiveUserId).maybeSingle()
+          : { data: null };
 
-      let systemPrompt = '';
-      let userPrompt = '';
+        // Sem lead gravado, monta o dossiê com o que veio no corpo. O dossiê
+        // fica mais pobre, e a mensagem sai mais curta — que é o certo.
+        const source = leadRow ?? {
+          id: lead?.id ?? "preview",
+          business_name: lead?.business_name ?? "",
+          phone: lead?.phone ?? "0",
+          niche: lead?.niche ?? null,
+          location: lead?.location ?? null,
+          website: lead?.website ?? null,
+          rating: lead?.rating ?? null,
+          reviews_count: lead?.reviews_count ?? null,
+          source: lead?.source ?? null,
+        };
 
-      if (isRemarketing) {
-        // Remarketing mode - SHORT follow-up message, humano e leve
-        systemPrompt = `Você é ${agentSettings?.agent_name || "um consultor"}, escrevendo no WhatsApp.
+        const [memoryResult, messageResult] = leadRow
+          ? await Promise.all([
+            supabase.from("lead_memory")
+              .select("memory_type, key, value, confidence").eq("lead_id", leadRow.id).limit(20),
+            supabase.from("chat_messages")
+              .select("sender_type, content, sent_at").eq("lead_id", leadRow.id)
+              .order("sent_at", { ascending: false }).limit(10),
+          ])
+          : [{ data: [] }, { data: [] }];
+
+        const dossier = buildDossier({
+          lead: source,
+          memories: memoryResult.data ?? [],
+          messages: (messageResult.data ?? []).slice().reverse(),
+        });
+
+        const catalog = await loadCatalog(
+          supabase,
+          effectiveUserId,
+          Array.isArray(data.offer_ids) ? data.offer_ids : [],
+        );
+
+        // Respeita a escolha manual de serviço que já existia na tela.
+        const preferred = agentSettings?.specific_service
+          ? catalog.filter((o) =>
+            o.name.toLowerCase().includes(String(agentSettings.specific_service).toLowerCase())
+          )
+          : [];
+
+        const match = matchOffer(dossier, preferred.length > 0 ? preferred : catalog);
+        const qualification = qualify(dossier, {});
+
+        const strategy = buildStrategy({
+          dossier,
+          qualification,
+          match,
+          goal: data.goal ?? "agendar_demonstracao",
+        });
+
+        // Remarketing é follow-up: o ângulo muda, o contrato de veracidade não.
+        if (isRemarketing) strategy.angle = "reativacao";
+
+        const copyContext = {
+          dossier,
+          strategy,
+          sender: {
+            agentName: agentSettings?.agent_name ?? "um consultor",
+            persona: agentSettings?.agent_persona ?? null,
+            communicationStyle: agentSettings?.communication_style ?? null,
+            emojiUsage: agentSettings?.emoji_usage ?? null,
+            companyName: null,
+          },
+        };
+
+        let message = "";
+        let verdict: ReturnType<typeof evaluateQuality> | null = null;
+
+        for (let attempt = 0; attempt <= 2; attempt++) {
+          const prompt = attempt === 0
+            ? buildCopyPrompt(copyContext)
+            : buildRewritePrompt(
+              copyContext,
+              message,
+              verdict!.issues.filter((i) => i.severity === "block"),
+            );
+
+          const result = await aiCall({
+            messages: [
+              { role: "system", content: prompt.system },
+              { role: "user", content: prompt.user },
+            ],
+            role: "primary",
+            temperature: attempt === 0 ? 0.8 : 0.4,
+            max_tokens: 400,
+          });
+
+          await recordUsage(supabase, {
+            userId: effectiveUserId,
+            usage: result.usage,
+            purpose: attempt === 0 ? "copy" : "copy_rewrite",
+            leadId: leadRow?.id ?? null,
+            agent: "copy",
+          });
+
+          message = cleanMessage(result.text);
+          verdict = evaluateQuality({ message, dossier, strategy });
+          if (verdict.approved) break;
+        }
+
+        // Reprovado depois das reescritas: devolve o motivo em vez de um
+        // texto genérico. Quem chamou decide — e o job-processor pula o lead.
+        if (!verdict?.approved) {
+          return json({
+            error: "A mensagem não passou na revisão de qualidade.",
+            code: "quality_gate_blocked",
+            quality: verdict?.scores ?? null,
+            issues: verdict?.issues ?? [],
+            draft: message,
+          }, 422);
+        }
+
+        return json({
+          message,
+          quality: verdict.scores,
+          overall: verdict.overall,
+          strategy: { angle: strategy.angle, hook: strategy.hook, offer: strategy.offer?.name ?? null },
+          offer_match: { offer: match.offer?.name ?? null, confidence: match.confidence, reasons: match.reasons },
+          score: qualification.score,
+          facts_used: dossier.facts.length,
+        });
+      }
+
+      // ------------------------------------------------------------
+      // MODO TEMPLATE
+      // ------------------------------------------------------------
+      // O usuário escreveu o texto. A IA só adapta as variáveis ao lead —
+      // não acrescenta afirmação nova, porque o que ele escreveu é
+      // responsabilidade dele e o que a IA inventaria não seria.
+      const systemPrompt = `Você é ${agentSettings?.agent_name || "um consultor de vendas"} escrevendo no WhatsApp.
 ${agentSettings?.agent_persona || ""}
 
 Estilo: ${agentSettings?.communication_style || "direto e amigável"}
 Emojis: ${agentSettings?.emoji_usage || "no máximo 1"}
 
-CONTEXTO: Follow-up. O lead JÁ foi contatado antes — não se apresente de novo.
+TAREFA: adaptar o template abaixo para este lead, mantendo a INTENÇÃO e o CTA.
+• Substitua as variáveis ({empresa}, {nicho}, {cidade}) pelos dados reais
+• Ajuste 1 ou 2 palavras para soar natural — não pareça formulário preenchido
+• Mantenha curto (máximo 3 frases)
+• Comece leve ("Oi", "Opa", "E aí"). Sem "prezado", sem "gostaria de"
+• Sem markdown, sem bullets, sem aspas em volta
 
-REGRAS:
-1. Máximo 2 frases curtas (25-45 palavras no total)
-2. Comece leve ("Oi", "Opa", "E aí") + reengaje com NOVIDADE, RESULTADO ou GATILHO
-3. Termine com pergunta curta e fácil de responder ("faz sentido?", "posso te mandar?", "quer ver?")
-4. Português brasileiro coloquial. Zero formalidade.
-5. Nunca use "prezado", "venho por meio desta", "gostaria de", "tudo bem contigo?"
-6. Nunca liste serviços
+PROIBIDO, sem exceção:
+• Acrescentar estatística, percentual, valor em reais ou prazo que não esteja no template
+• Acrescentar caso de sucesso, cliente anterior ou resultado obtido
+• Afirmar qualquer coisa sobre a operação interna da empresa
+Se o template não traz um dado, a mensagem adaptada também não traz.`;
 
-BONS EXEMPLOS:
-"Oi! Fechei essa semana um resultado bacana com uma ${lead.niche || 'empresa'} parecida com a de vocês — quer que eu te mande o print?"
-"E aí, tudo certo? Abriu uma condição nova que faz sentido pro perfil de vocês. Posso te passar rapidão?"`;
-
-        userPrompt = `LEAD (follow-up):
-• ${lead.business_name}${lead.niche ? ` — ${lead.niche}` : ''}
-${lead.location ? `• ${lead.location}` : ''}
-
-Escreva UMA mensagem curta de reengajamento. Responda APENAS com a mensagem, sem aspas, sem explicação.`;
-
-      } else if (isDirectMode) {
-        // Direct AI mode — mensagem 1:1, humana, específica, focada em CONVERSÃO
-        systemPrompt = `Você é ${agentSettings?.agent_name || "um consultor especializado"}, escrevendo pessoalmente no WhatsApp do dono de um negócio local.
-${agentSettings?.agent_persona || ""}
-
-Estilo: ${agentSettings?.communication_style || "direto, humano, consultivo"}
-Emojis: ${agentSettings?.emoji_usage || "no máximo 1, opcional"}
-${agentSettings?.knowledge_base ? `Sua expertise: ${agentSettings.knowledge_base}` : ''}
-${specificService ? `SERVIÇO A OFERECER: "${specificService}" (foque só nisso, não ofereça outros)` : `Serviços que você domina: ${servicesText}`}
-
-# OBJETIVO ÚNICO
-Fazer o lead RESPONDER. Não é vender, não é agendar reunião ainda. É gerar curiosidade suficiente pra ele dizer "manda", "como assim?", "me explica".
-A melhor mensagem é aquela que ele lê e PRECISA responder.
-
-# FÓRMULA DE ALTA CONVERSÃO (PAS adaptado)
-1. GANCHO PESSOAL (1 frase): use o nome real da empresa + 1 observação específica e verdadeira sobre ELE (nicho, cidade, rating, ausência de site, poucos reviews). Mostre que você olhou de verdade.
-2. PROBLEMA COM CUSTO (1-2 frases): traduza a observação em DINHEIRO PERDIDO ou OPORTUNIDADE que ele está deixando escapar. Use um número concreto (ex: "70% dos clientes desistem", "R$ 3-5 mil/mês em vendas perdidas", "cada review a menos = 12% menos ligação"). Nada abstrato tipo "melhorar presença digital".
-3. CTA MICRO (1 frase): peça algo minúsculo — "posso te mandar?", "quer ver um print?", "faz sentido eu te explicar em 1 minuto?". NUNCA peça reunião, ligação ou horário na primeira mensagem.
-
-# REGRAS DE OURO
-• 45-80 palavras. 2 a 3 frases. Nada de textão.
-• Português BR coloquial. Escreva como você falaria no WhatsApp com um conhecido.
-• Comece com "Oi", "Opa", "E aí" ou o primeiro nome do negócio. NUNCA "Prezado", "Olá, meu nome é", "Espero que esteja bem", "Tudo bem?".
-• UM foco só. Um problema, uma solução, um CTA. Não misture.
-• Números > adjetivos. "40% mais agendamentos" > "muito mais agendamentos".
-• Prova social sutil quando fizer sentido: "outro ${lead.niche || 'cliente'} daqui de ${lead.location || 'perto'}...", "acabei de fazer pra um...".
-• Se o lead NÃO TEM SITE → esse é o gancho. Se tem RATING BAIXO/POUCOS REVIEWS → esse é o gancho. Escolha o mais forte.
-• Não invente dados sobre o lead (faturamento, funcionários, concorrentes) — use SÓ o que está no LEAD abaixo.
-• Nada de markdown, bullets, aspas, títulos, "assinatura".
-• Não diga o preço. Não liste serviços. Não prometa "resultados garantidos".
-
-# EXEMPLOS DE MENSAGENS QUE CONVERTEM
-"Oi! Passei aqui na ${lead.business_name || '[empresa]'} e vi que vocês ainda não têm site — 8 em cada 10 clientes hoje pesquisam no Google antes de ligar, e sem site eles caem no concorrente que aparece primeiro.
-Montei semana passada um pra uma ${lead.niche || 'empresa parecida'} e ele dobrou os contatos em 3 semanas. Posso te mandar o print pra você ver?"
-
-"Opa, tô olhando aqui a ${lead.business_name || '[empresa]'} — 4.2★ com 18 reviews. Cada 10 reviews a mais rende em média +30% de ligação, e tem um jeito simples de pedir review no automático depois de cada atendimento.
-Quer que eu te mostre como funciona rapidão?"`;
-
-        userPrompt = `LEAD:
-• Empresa: ${lead.business_name}
-• Nicho: ${lead.niche || "negócio local"}
-• Cidade: ${lead.location || "—"}
-• Avaliação: ${lead.rating ? `${lead.rating}★ com ${lead.reviews_count || 0} reviews` : 'sem avaliações no Google'}
-• Site: ${lead.website ? 'tem site' : 'NÃO TEM SITE'}
-${specificService ? `\nOFEREÇA APENAS: ${specificService}` : ''}
-
-Escolha O GANCHO mais forte disponível (sem site > rating baixo > poucos reviews > nicho + cidade).
-Escreva UMA mensagem seguindo GANCHO → PROBLEMA COM CUSTO → CTA MICRO.
-Use o nome real da empresa e pelo menos 1 número concreto.
-Responda APENAS com a mensagem final, sem aspas, sem título, sem explicação.`;
-
-      } else {
-        // Template mode - personalize existing template
-        systemPrompt = `Você é ${agentSettings?.agent_name || "um consultor de vendas"} escrevendo no WhatsApp.
-${agentSettings?.agent_persona || "Você ajuda empresas locais a crescerem com soluções digitais."}
-
-Estilo: ${agentSettings?.communication_style || "direto e amigável"}
-Emojis: ${agentSettings?.emoji_usage || "no máximo 1"}
-
-TAREFA: adaptar o template abaixo para este lead específico, mantendo a INTENÇÃO e o CTA, mas:
-• Substitua variáveis ({empresa}, {nicho}, {cidade}) pelos dados reais
-• Reescreva de forma NATURAL — não pareça template. Ajuste 1-2 palavras pra soar humano
-• Se o lead tem uma característica marcante (sem site, rating baixo, muitos reviews), incorpore sutilmente
-• Mantenha CURTO (máx 3 frases, 40-80 palavras)
-• Zero formalidade ("prezado", "gostaria"). Comece leve ("Oi", "Opa", "E aí")
-• Nunca use markdown, bullets ou aspas na saída`;
-
-        userPrompt = `LEAD:
+      const userPrompt = `LEAD:
 • Empresa: ${lead.business_name}
 • Nicho: ${lead.niche || "não especificado"}
 • Cidade: ${lead.location || "não especificada"}
-• Rating: ${lead.rating ? `${lead.rating}★ (${lead.reviews_count || 0} reviews)` : "sem avaliações"}
-• Site: ${lead.website ? 'tem' : 'NÃO TEM'}
+• Site: ${lead.website ? "tem site" : "não tem site"}
 
 TEMPLATE BASE:
 ${template}
 
-Retorne APENAS a mensagem final personalizada, sem aspas, sem explicação.`;
-      }
+Retorne APENAS a mensagem final adaptada.`;
 
       try {
-        const message = await callAI(systemPrompt, userPrompt);
-        
-        // Clean up the message - remove any markdown or extra formatting
-        const cleanMessage = message
-          .replace(/^["']|["']$/g, '') // Remove quotes at start/end
-          .replace(/^\*\*|\*\*$/g, '') // Remove bold markdown
-          .trim();
-
-        return new Response(JSON.stringify({ message: cleanMessage }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        const result = await aiCall({
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userPrompt },
+          ],
+          role: "fast",
+          temperature: 0.6,
+          max_tokens: 400,
         });
-      } catch (error: any) {
-        console.error("AI API error:", error);
-        
-        // Fallback for template mode
-        if (!isDirectMode) {
-          const fallbackMessage = template
-            .replace(/\{empresa\}/gi, lead.business_name)
-            .replace(/\{nicho\}/gi, lead.niche || 'seu segmento')
-            .replace(/\{cidade\}/gi, lead.location || 'sua região');
-          
-          return new Response(JSON.stringify({ message: fallbackMessage }), {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
-        }
-        
-        throw new Error("Falha ao gerar mensagem. Verifique sua chave API.");
+
+        await recordUsage(supabase, {
+          userId: effectiveUserId,
+          usage: result.usage,
+          purpose: "template_personalization",
+          leadId: lead?.id ?? null,
+          agent: "copy",
+        });
+
+        return json({ message: cleanMessage(result.text) });
+      } catch (error) {
+        // Aqui o fallback é legítimo: o texto é do próprio usuário, e trocar
+        // as variáveis não inventa nada. É o único caso em que seguir sem IA
+        // não coloca uma afirmação falsa no WhatsApp de ninguém.
+        console.error("[ai-prospecting] IA indisponível, aplicando template cru:", error);
+
+        const fallback = String(template)
+          .replace(/\{(empresa|nome_empresa|nome)\}/gi, lead.business_name ?? "")
+          .replace(/\{nicho\}/gi, lead.niche ?? "seu segmento")
+          .replace(/\{(cidade|localização|localizacao)\}/gi, lead.location ?? "sua região")
+          .replace(/\{telefone\}/gi, lead.phone ?? "");
+
+        return json({ message: fallback, used_fallback: true });
       }
     }
 
@@ -642,153 +645,125 @@ Retorne APENAS a mensagem final personalizada, sem aspas, sem explicação.`;
       });
     }
 
-    // Action: Analyze lead pain points and generate personalized message
-    if (action === "analyze_and_personalize") {
-      const { lead, agentSettings } = data;
+    // ------------------------------------------------------------
+    // Análise de dores + mensagem (uma ou várias empresas)
+    // ------------------------------------------------------------
+    // As duas ações antigas ("analyze_and_personalize" e "batch_analyze")
+    // faziam a mesma coisa com prompts diferentes, chamavam o gateway Lovable
+    // direto — sem DeepSeek e sem fallback — e, quando falhavam, devolviam
+    // "Olá! Vi que a X pode crescer mais. Posso ajudar?".
+    //
+    // Agora as duas passam pela esteira. As dores deixam de ser adivinhadas:
+    // vêm da auditoria do site e do que o lead já disse.
+    if (action === "analyze_and_personalize" || action === "batch_analyze") {
+      const targets = action === "batch_analyze"
+        ? (Array.isArray(data.leads) ? data.leads.slice(0, 5) : [])
+        : [data.lead].filter(Boolean);
 
-      const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "deepseek-chat",
-          response_format: { type: "json_object" },
-          messages: [
-            {
-              role: "system",
-              content: `Você é um especialista em análise de negócios e vendas consultivas no Brasil.
-
-Analise o negócio fornecido e:
-1. Identifique 2-4 dores/problemas comuns que esse tipo de negócio enfrenta
-2. Crie uma mensagem de primeiro contato altamente personalizada que:
-   - Mencione a empresa pelo nome
-   - Identifique uma dor específica do nicho
-   - Ofereça uma solução relevante de forma sutil
-   - Termine com uma pergunta aberta
-
-Considere:
-- Nicho: ${lead.niche}
-- Localização: ${lead.location}
-- Avaliação: ${lead.rating ? `${lead.rating} estrelas` : "não disponível"}
-- Quantidade de reviews: ${lead.reviews_count || 0}
-- Tem website: ${lead.website ? "Sim" : "Não"}
-
-Serviços oferecidos pelo vendedor: ${(agentSettings?.services_offered || []).join(", ")}
-Estilo de comunicação: ${agentSettings?.communication_style || "profissional"}
-Uso de emojis: ${agentSettings?.emoji_usage || "moderado"}
-
-Responda em JSON com:
-{
-  "painPoints": ["dor1", "dor2", ...],
-  "message": "mensagem personalizada"
-}`,
-            },
-            {
-              role: "user",
-              content: `Analise e crie uma mensagem para: ${lead.business_name}`,
-            },
-          ],
-        }),
-      });
-
-      if (!aiResponse.ok) {
-        console.error("AI error:", await aiResponse.text());
-        return new Response(JSON.stringify({ 
-          painPoints: ["Falta de presença digital", "Dificuldade em captar clientes"],
-          message: `Olá! Vi que a ${lead.business_name} atua no segmento de ${lead.niche}. Posso ajudar a aumentar sua visibilidade online?`
-        }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+      if (targets.length === 0) {
+        return json({ error: "Informe ao menos um lead." }, 400);
       }
 
-      const aiData = await aiResponse.json();
-      const content = aiData.choices?.[0]?.message?.content || "{}";
+      const agentSettings = data.agentSettings ?? {};
+      const catalog = await loadCatalog(supabase, effectiveUserId, []);
 
-      try {
-        const parsed = JSON.parse(content.replace(/```json\n?|\n?```/g, ""));
-        return new Response(JSON.stringify(parsed), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+      const analyzeOne = async (input: Record<string, unknown>) => {
+        const leadId = typeof input.id === "string" ? input.id : null;
+
+        const { data: stored } = leadId
+          ? await supabase.from("leads").select("*").eq("id", leadId)
+            .eq("user_id", effectiveUserId).maybeSingle()
+          : { data: null };
+
+        const source = stored ?? {
+          id: leadId ?? "preview",
+          business_name: String(input.business_name ?? ""),
+          phone: String(input.phone ?? "0"),
+          niche: (input.niche as string) ?? null,
+          location: (input.location as string) ?? null,
+          website: (input.website as string) ?? null,
+          rating: (input.rating as number) ?? null,
+          reviews_count: (input.reviews_count as number) ?? null,
+        };
+
+        const dossier = buildDossier({ lead: source });
+        const qualification = qualify(dossier, {});
+        const match = matchOffer(dossier, catalog);
+        const strategy = buildStrategy({
+          dossier, qualification, match, goal: "agendar_demonstracao",
         });
-      } catch {
-        return new Response(JSON.stringify({ 
-          painPoints: ["Falta de presença digital", "Dificuldade em captar clientes"],
-          message: `Olá! Vi que a ${lead.business_name} atua no segmento de ${lead.niche}. Posso ajudar a aumentar sua visibilidade online?`
-        }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-    }
 
-    // Action: Batch analyze multiple leads
-    if (action === "batch_analyze") {
-      const { leads, agentSettings, prospectingType } = data;
+        // As "dores" agora são o que foi observado, não o que a IA supôs.
+        // Quando não há nada observado, o campo volta vazio — e vazio é a
+        // resposta honesta para uma empresa sobre a qual não se sabe nada.
+        const painPoints = dossier.observedNeeds.slice(0, 4);
 
-      const results = await Promise.all(
-        leads.slice(0, 5).map(async (lead: any) => {
-          try {
-            const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-              method: "POST",
-              headers: {
-                Authorization: `Bearer ${LOVABLE_API_KEY}`,
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                model: "deepseek-chat",
-                response_format: { type: "json_object" },
-                messages: [
-                  {
-                    role: "system",
-                    content: `Você é um especialista em vendas B2B no Brasil.
+        try {
+          const prompt = buildCopyPrompt({
+            dossier,
+            strategy,
+            sender: {
+              agentName: (agentSettings.agent_name as string) ?? "um consultor",
+              persona: (agentSettings.agent_persona as string) ?? null,
+              communicationStyle: (agentSettings.communication_style as string) ?? null,
+              emojiUsage: (agentSettings.emoji_usage as string) ?? null,
+              companyName: null,
+            },
+          });
 
-Crie uma mensagem de prospecção para o negócio abaixo.
+          const result = await aiCall({
+            messages: [
+              { role: "system", content: prompt.system },
+              { role: "user", content: prompt.user },
+            ],
+            role: "primary",
+            temperature: 0.8,
+            max_tokens: 400,
+          });
 
-Estilo: ${prospectingType?.settings?.messageStyle || "Profissional e direto"}
-Tom: ${prospectingType?.settings?.tone || "moderado"}
+          await recordUsage(supabase, {
+            userId: effectiveUserId,
+            usage: result.usage,
+            purpose: "analyze_and_personalize",
+            leadId,
+            agent: "copy",
+          });
 
-Serviços oferecidos: ${(agentSettings?.services_offered || []).join(", ")}
+          const message = cleanMessage(result.text);
+          const verdict = evaluateQuality({ message, dossier, strategy });
 
-Responda em JSON: {"painPoints": ["dor1"], "message": "mensagem curta"}`,
-                  },
-                  {
-                    role: "user",
-                    content: `Empresa: ${lead.business_name}, Nicho: ${lead.niche}, Rating: ${lead.rating || "N/A"}`,
-                  },
-                ],
-              }),
-            });
+          return {
+            leadId,
+            painPoints,
+            hypotheses: dossier.hypotheses.map((h) => h.statement).slice(0, 3),
+            message: verdict.approved ? message : null,
+            blocked: !verdict.approved,
+            quality: verdict.scores,
+            issues: verdict.issues,
+            score: qualification.score,
+            offer: match.offer?.name ?? null,
+          };
+        } catch (error) {
+          console.error("[ai-prospecting] análise falhou:", error);
+          return {
+            leadId,
+            painPoints,
+            hypotheses: dossier.hypotheses.map((h) => h.statement).slice(0, 3),
+            message: null,
+            blocked: true,
+            error: "IA indisponível. Nenhuma mensagem genérica foi gerada no lugar.",
+            score: qualification.score,
+            offer: match.offer?.name ?? null,
+          };
+        }
+      };
 
-            if (!aiResponse.ok) {
-              return {
-                leadId: lead.id,
-                painPoints: ["Falta de presença digital"],
-                message: `Olá! Vi que a ${lead.business_name} pode crescer mais. Posso ajudar?`,
-              };
-            }
+      const results = await Promise.all(targets.map(analyzeOne));
 
-            const aiData = await aiResponse.json();
-            const content = aiData.choices?.[0]?.message?.content || "{}";
-            const parsed = JSON.parse(content.replace(/```json\n?|\n?```/g, ""));
-
-            return {
-              leadId: lead.id,
-              painPoints: parsed.painPoints || ["Falta de presença digital"],
-              message: parsed.message || `Olá! Posso ajudar a ${lead.business_name}?`,
-            };
-          } catch {
-            return {
-              leadId: lead.id,
-              painPoints: ["Falta de presença digital"],
-              message: `Olá! Vi que a ${lead.business_name} pode crescer mais. Posso ajudar?`,
-            };
-          }
-        })
-      );
-
-      return new Response(JSON.stringify({ results }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      // Compatibilidade: a tela de diagnóstico espera o objeto direto.
+      return action === "batch_analyze"
+        ? json({ results })
+        : json(results[0]);
     }
 
     // Action: Generate A/B test variants

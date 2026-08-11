@@ -46,3 +46,9 @@ verify_jwt = false
 
 [functions.hunter]
 verify_jwt = false
+
+# Esteira comercial. Autentica no próprio código (requireUserOrInternal);
+# precisa aceitar também o `x-internal-secret` do pg_cron, que processa os
+# lotes pendentes das missões ativas.
+[functions.sales-orchestrator]
+verify_jwt = false

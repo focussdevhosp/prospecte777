@@ -20,6 +20,8 @@ const LandingPage = lazy(() => import("./pages/Landing"));
 const AuthPage = lazy(() => import("./pages/Auth"));
 const DashboardPage = lazy(() => import("./pages/Dashboard"));
 const ProspectingPage = lazy(() => import("./pages/Prospecting"));
+const MissionsPage = lazy(() => import("./pages/Missions"));
+const MissionDetailPage = lazy(() => import("./pages/MissionDetail"));
 const CampaignsPage = lazy(() => import("./pages/Campaigns"));
 
 const MassSendPage = lazy(() => import("./pages/MassSend"));
@@ -96,6 +98,10 @@ const App = () => (
                   
                   {/* Prospecção */}
                   <Route path="/prospecting" element={<ProtectedRoute><ProspectingPage /></ProtectedRoute>} />
+
+                  {/* Esteira comercial: missão -> pesquisa -> qualificação -> oferta -> abordagem */}
+                  <Route path="/missions" element={<ProtectedRoute><MissionsPage /></ProtectedRoute>} />
+                  <Route path="/missions/:id" element={<ProtectedRoute><MissionDetailPage /></ProtectedRoute>} />
                   
                   <Route path="/mass-send" element={<ProtectedRoute><MassSendPage /></ProtectedRoute>} />
                   

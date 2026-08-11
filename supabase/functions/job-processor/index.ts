@@ -22,36 +22,24 @@ interface BackgroundJob {
   max_retries: number;
 }
 
-// Fallback humanizado — usado quando a IA falha. Rotativo por hash do lead.
-function buildFallbackMessage(lead: any): string {
-  const name = lead.business_name || "sua empresa";
-  const niche = lead.niche || "seu segmento";
-  const city = lead.location || "sua região";
-  const hasSite = !!lead.website;
-  const lowRating = lead.rating && lead.rating < 4;
-  const fewReviews = (lead.reviews_count || 0) < 15;
-
-  const openings = ["Oi!", "Opa, tudo bem?", "E aí, tudo certo?"];
-  const opening = openings[Math.abs(hashCode(name)) % openings.length];
-
-  // Escolhe gancho baseado no que o lead tem/não tem
-  if (!hasSite) {
-    return `${opening} Passei aqui na ${name} e reparei que vocês ainda não têm site. Hoje quase todo cliente pesquisa no Google antes de escolher — sem uma página, muita venda escapa.\n\nConsigo montar uma pra vocês em poucos dias. Posso te mandar 2 exemplos que fiz pra ${niche}?`;
-  }
-  if (lowRating) {
-    return `${opening} Vi a ${name} aqui em ${city} e reparei que a avaliação no Google tá abaixo de 4 estrelas — isso derruba MUITO a conversão de quem pesquisa vocês.\n\nTenho uma estratégia que já subiu de 3.6 pra 4.7 em 30 dias em ${niche}. Quer que eu te explique rapidão?`;
-  }
-  if (fewReviews) {
-    return `${opening} Curti a ${name} e vi que vocês têm poucas avaliações no Google — isso faz o cliente escolher o concorrente antes mesmo de conhecer vocês.\n\nTenho um sistema que triplica reviews em 60 dias sem esforço. Posso te mandar como funciona?`;
-  }
-  return `${opening} Passei aqui na ${name}${city !== "sua região" ? ` de ${city}` : ""} e queria trocar uma ideia rápida sobre como trazer mais clientes pra ${niche} de forma previsível.\n\nTem 2 min pra eu te mostrar o que funcionou com empresas parecidas?`;
-}
-
-function hashCode(s: string): number {
-  let h = 0;
-  for (let i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0;
-  return h;
-}
+// ------------------------------------------------------------
+// POR QUE NÃO EXISTE MAIS MENSAGEM DE RESERVA
+// ------------------------------------------------------------
+// Aqui havia um `buildFallbackMessage` que entrava quando a IA falhava. Ele
+// afirmava, em texto fixo, coisas que nunca aconteceram:
+//
+//   "Tenho uma estratégia que já subiu de 3.6 pra 4.7 em 30 dias"
+//   "Tenho um sistema que triplica reviews em 60 dias sem esforço"
+//   "Posso te mandar 2 exemplos que fiz pra [nicho]?"
+//
+// Nenhum desses resultados existia, nenhum desses exemplos existia. Como era
+// fallback, saía justamente quando ninguém estava olhando — e ia para o
+// WhatsApp de uma empresa real, em nome do usuário.
+//
+// A regra passou a ser: se a IA não conseguiu escrever, o lead fica para a
+// próxima rodada. Um lead não abordado hoje continua sendo um lead amanhã.
+// Um lead que recebeu uma promessa falsa está perdido, e possivelmente
+// levou o número junto.
 
 async function logToDb(
   supabase: any,
@@ -105,10 +93,13 @@ async function processJobItem(
           await logToDb(supabase, job.id, job.user_id, 'info', `Gerando mensagem ${isRemarketing ? 'de remarketing' : 'IA'} para ${lead.business_name}...`);
           
           try {
-            // Call AI with retry on 429 (rate limit)
+            // A camada de IA já faz retry e troca de provedor por dentro.
+            // A repetição que sobra aqui é para o 429 do próprio gateway
+            // das edge functions, que é outro limite.
             let aiResponse: Response | null = null;
             let lastErrorText = "";
-            const maxAttempts = 4;
+            const maxAttempts = 3;
+
             for (let attempt = 1; attempt <= maxAttempts; attempt++) {
               aiResponse = await fetch(
                 `${Deno.env.get("SUPABASE_URL")}/functions/v1/ai-prospecting`,
@@ -122,8 +113,13 @@ async function processJobItem(
                     action: "generate_message",
                     user_id: job.user_id,
                     data: {
+                      // O id vai junto: com ele a esteira lê a auditoria do
+                      // site, a memória e o histórico direto do banco em vez
+                      // de trabalhar com os seis campos que cabiam aqui.
                       lead: {
+                        id: lead.id,
                         business_name: lead.business_name,
+                        phone: lead.phone,
                         niche: lead.niche,
                         location: lead.location,
                         rating: lead.rating,
@@ -132,7 +128,8 @@ async function processJobItem(
                       },
                       template: null,
                       agentSettings: payload.agent_settings || {},
-                      isRemarketing: isRemarketing,
+                      isRemarketing,
+                      goal: payload.goal || "agendar_demonstracao",
                     },
                   }),
                 }
@@ -141,10 +138,14 @@ async function processJobItem(
               if (aiResponse.ok) break;
 
               lastErrorText = await aiResponse.text();
+
+              // 422 = o Quality Gate reprovou. Repetir não adianta: a decisão
+              // foi sobre o conteúdo, não sobre disponibilidade.
+              if (aiResponse.status === 422) break;
+
               const isRateLimit = aiResponse.status === 429 || /rate limit/i.test(lastErrorText);
               if (!isRateLimit || attempt === maxAttempts) break;
 
-              // Parse "Retry after XXXXms" from error
               const retryMatch = lastErrorText.match(/Retry after (\d+)ms/i);
               const waitMs = retryMatch
                 ? Math.min(parseInt(retryMatch[1]) + 500, 30000)
@@ -153,24 +154,42 @@ async function processJobItem(
               await new Promise((r) => setTimeout(r, waitMs));
             }
 
+            // Sem mensagem aprovada, o lead é PULADO. Não existe texto de
+            // reserva: o que existia aqui afirmava resultados inventados.
             if (!aiResponse || !aiResponse.ok) {
-              // Fallback humanizado (rotativo) para não parecer template
-              console.warn(`[Job ${job.id}] AI unavailable after retries, using fallback message`);
-              await logToDb(supabase, job.id, job.user_id, 'info', `IA indisponível para ${lead.business_name} — usando mensagem padrão`);
-              message = buildFallbackMessage(lead);
-            } else {
-              const aiData = await aiResponse.json();
-              message = aiData.message || "";
-              if (!message) {
-                message = buildFallbackMessage(lead);
-              }
+              const blockedByGate = aiResponse?.status === 422;
+              const reason = blockedByGate
+                ? "a mensagem não passou na revisão de qualidade"
+                : "a IA está indisponível";
+
+              await logToDb(
+                supabase, job.id, job.user_id, 'warning',
+                `${lead.business_name} pulado: ${reason}. Nada foi enviado.`,
+                { lead_id: lead.id, status: aiResponse?.status ?? null, detail: lastErrorText.slice(0, 300) },
+              );
+              return { success: true, skipped: true };
+            }
+
+            const aiData = await aiResponse.json();
+            message = (aiData.message || "").trim();
+
+            if (!message) {
+              await logToDb(
+                supabase, job.id, job.user_id, 'warning',
+                `${lead.business_name} pulado: a IA devolveu mensagem vazia.`,
+                { lead_id: lead.id },
+              );
+              return { success: true, skipped: true };
             }
           } catch (aiError: any) {
-            console.error(`[Job ${job.id}] AI error for lead ${index}:`, aiError);
-            await logToDb(supabase, job.id, job.user_id, 'info', `Erro IA (${aiError.message}) — usando mensagem padrão para ${lead.business_name}`);
-            message = buildFallbackMessage(lead);
+            console.error(`[Job ${job.id}] erro de IA no lead ${index}:`, aiError);
+            await logToDb(
+              supabase, job.id, job.user_id, 'warning',
+              `${lead.business_name} pulado por erro de IA (${aiError.message}). Nada foi enviado.`,
+              { lead_id: lead.id },
+            );
+            return { success: true, skipped: true };
           }
-
 
         } else if (payload.use_ai_personalization) {
           // Use AI to personalize template

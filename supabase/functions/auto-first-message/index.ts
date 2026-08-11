@@ -53,12 +53,19 @@ Deno.serve(async (req) => {
           .ilike("name", "1º Contato%")
           .single();
 
-        let message = template?.content || `Olá! Vi o ${lead.business_name} e gostaria de apresentar uma solução que pode te interessar. Posso falar mais?`;
+        // Sem template de 1º contato cadastrado, o lead é pulado. O padrão
+        // antigo — "Olá! Vi o X e gostaria de apresentar uma solução que pode
+        // te interessar" — é exatamente a mensagem genérica que faz o lead
+        // ignorar e o número ser denunciado.
+        if (!template?.content) {
+          console.log(`[auto-first-message] ${lead.business_name} pulado: sem template de 1º contato.`);
+          continue;
+        }
 
-        message = message
-          .replace(/\{nome_empresa\}/g, lead.business_name)
-          .replace(/\{localização\}/g, lead.location || "")
-          .replace(/\{nicho\}/g, lead.niche || "");
+        const message = template.content
+          .replace(/\{(nome_empresa|empresa|nome)\}/gi, lead.business_name)
+          .replace(/\{(localização|localizacao|cidade)\}/gi, lead.location || "")
+          .replace(/\{nicho\}/gi, lead.niche || "");
 
         const { error } = await supabase.functions.invoke("whatsapp-send", {
           body: {
