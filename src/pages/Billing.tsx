@@ -122,7 +122,7 @@ export default function BillingPage() {
   const leadsCount = leads?.length || 0;
   const currentPlanId = subscription?.plan || 'free';
 
-  const webhookUrl = `https://oeztpxyprifabkvysroh.supabase.co/functions/v1/cakto-webhook`;
+  const webhookUrl = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/cakto-webhook`;
 
   const getCheckoutUrl = () => {
     const email = user?.email;

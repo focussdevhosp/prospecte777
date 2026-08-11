@@ -25,7 +25,11 @@ import {
   Heart,
 } from 'lucide-react';
 
-const BASE_URL = `https://oeztpxyprifabkvysroh.supabase.co/functions/v1/api`;
+// Sai do ambiente: a URL exibida aqui é a que o cliente vai colar no
+// código dele. Apontar para o projeto errado quebra a integração dele,
+// não a nossa — e o erro só aparece do lado de fora.
+const PROJECT_REF = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+const BASE_URL = `https://${PROJECT_REF}.supabase.co/functions/v1/api`;
 
 interface Endpoint {
   method: 'GET' | 'POST' | 'PUT' | 'DELETE';

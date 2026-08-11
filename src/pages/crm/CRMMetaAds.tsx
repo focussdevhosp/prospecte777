@@ -33,7 +33,7 @@ export default function CRMMetaAdsPage() {
   const metaToken = (settings as any)?.meta_access_token;
   const isConnected = !!metaToken;
 
-  const projectRef = import.meta.env.VITE_SUPABASE_PROJECT_ID || 'oeztpxyprifabkvysroh';
+  const projectRef = import.meta.env.VITE_SUPABASE_PROJECT_ID;
   const webhookUrl = `https://${projectRef}.supabase.co/functions/v1/webhook`;
 
   const callMetaFn = async (action: string, payload: any = {}) => {
