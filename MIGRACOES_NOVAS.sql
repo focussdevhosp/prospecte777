@@ -1,7 +1,7 @@
 -- ============================================================
 -- MIGRAÇÕES NOVAS — PARA O BANCO QUE JÁ EXISTE
 -- ============================================================
--- São 11 migrações, todas ADITIVAS: criam tabela, função, gatilho e
+-- São 12 migrações, todas ADITIVAS: criam tabela, função, gatilho e
 -- coluna. Nenhuma apaga dado, nenhuma remove coluna, nenhuma altera tipo de
 -- coluna existente.
 --
@@ -31,7 +31,7 @@
 
 
 -- ############################################################
--- [01/11] 20260811120000_b7c8d9e0-0005-4a55-9c05-000000000005.sql
+-- [01/12] 20260811120000_b7c8d9e0-0005-4a55-9c05-000000000005.sql
 -- ############################################################
 
 -- ============================================================
@@ -552,7 +552,7 @@ CREATE TRIGGER trg_mission_leads_touch
 
 
 -- ############################################################
--- [02/11] 20260811140000_c8d9e0f1-0006-4a66-9c06-000000000006.sql
+-- [02/12] 20260811140000_c8d9e0f1-0006-4a66-9c06-000000000006.sql
 -- ############################################################
 
 -- ============================================================
@@ -886,7 +886,7 @@ CREATE TRIGGER trg_provider_states_touch
 
 
 -- ############################################################
--- [03/11] 20260811160000_d9e0f1a2-0007-4a77-9c07-000000000007.sql
+-- [03/12] 20260811160000_d9e0f1a2-0007-4a77-9c07-000000000007.sql
 -- ############################################################
 
 -- ============================================================
@@ -1060,7 +1060,7 @@ $$;
 
 
 -- ############################################################
--- [04/11] 20260811180000_e0f1a2b3-0008-4a88-9c08-000000000008.sql
+-- [04/12] 20260811180000_e0f1a2b3-0008-4a88-9c08-000000000008.sql
 -- ############################################################
 
 -- ============================================================
@@ -1406,7 +1406,7 @@ COMMENT ON FUNCTION public.mission_refresh_counters(UUID) IS
 
 
 -- ############################################################
--- [05/11] 20260811200000_f1a2b3c4-0009-4a99-9c09-000000000009.sql
+-- [05/12] 20260811200000_f1a2b3c4-0009-4a99-9c09-000000000009.sql
 -- ############################################################
 
 -- ============================================================
@@ -1629,7 +1629,7 @@ $$;
 
 
 -- ############################################################
--- [06/11] 20260811220000_a2b3c4d5-0010-4aaa-9c10-000000000010.sql
+-- [06/12] 20260811220000_a2b3c4d5-0010-4aaa-9c10-000000000010.sql
 -- ############################################################
 
 -- ============================================================
@@ -1781,7 +1781,7 @@ $$;
 
 
 -- ############################################################
--- [07/11] 20260812000000_b3c4d5e6-0011-4abb-9c11-000000000011.sql
+-- [07/12] 20260812000000_b3c4d5e6-0011-4abb-9c11-000000000011.sql
 -- ############################################################
 
 -- ============================================================
@@ -1849,7 +1849,7 @@ $$;
 
 
 -- ############################################################
--- [08/11] 20260812020000_c4d5e6f7-0012-4acc-9c12-000000000012.sql
+-- [08/12] 20260812020000_c4d5e6f7-0012-4acc-9c12-000000000012.sql
 -- ############################################################
 
 -- ============================================================
@@ -2148,7 +2148,7 @@ $$;
 
 
 -- ############################################################
--- [09/11] 20260812040000_d5e6f7a8-0013-4add-9c13-000000000013.sql
+-- [09/12] 20260812040000_d5e6f7a8-0013-4add-9c13-000000000013.sql
 -- ############################################################
 
 -- ============================================================
@@ -2277,7 +2277,7 @@ $$;
 
 
 -- ############################################################
--- [10/11] 20260812060000_e6f7a8b9-0014-4aee-9c14-000000000014.sql
+-- [10/12] 20260812060000_e6f7a8b9-0014-4aee-9c14-000000000014.sql
 -- ############################################################
 
 -- ============================================================
@@ -2406,7 +2406,7 @@ $$;
 
 
 -- ############################################################
--- [11/11] 20260812080000_f7a8b9c0-0015-4aff-9c15-000000000015.sql
+-- [11/12] 20260812080000_f7a8b9c0-0015-4aff-9c15-000000000015.sql
 -- ############################################################
 
 -- ============================================================
@@ -2573,6 +2573,119 @@ BEGIN
     WHERE n.nspname = 'public' AND p.proname = 'lead_handoff_brief'
   ) THEN
     RAISE EXCEPTION 'lead_handoff_brief não foi criada.';
+  END IF;
+END;
+$$;
+
+
+-- ############################################################
+-- [12/12] 20260812100000_a8b9c0d1-0016-4b00-9c16-000000000016.sql
+-- ############################################################
+
+-- ============================================================
+-- O QUE JÁ FOI ENVIADO TEM MUITO A DIZER, E NINGUÉM PERGUNTOU
+-- ============================================================
+-- Cada linha de `mission_leads` guarda a estratégia usada — ângulo, gancho,
+-- oferta — e o desfecho: `replied_at`, `status = 'meeting_booked'`. São
+-- milhares de experimentos rodando desde o primeiro dia.
+--
+-- Nenhuma consulta nunca leu isso. O produto acumulava a resposta para "que
+-- tipo de abordagem funciona no meu nicho?" e não sabia responder.
+--
+-- Os números saem derivados, como em todo o resto deste trabalho: contador
+-- desnormalizado é contador que alguém esquece de incrementar, e aí a
+-- conclusão sai de um zero que ninguém escreveu.
+-- ============================================================
+
+/**
+ * Desempenho por ângulo de abordagem.
+ *
+ * Conta só o que foi ENVIADO: rascunho que ficou na fila não testou nada. E o
+ * ângulo vem de `strategy->>'angle'`, gravado na hora em que a mensagem foi
+ * escrita — não recalculado agora, que daria outro resultado se a régua
+ * tivesse mudado no meio.
+ */
+CREATE OR REPLACE FUNCTION public.outreach_by_angle(
+  p_user_id UUID,
+  p_days    INTEGER DEFAULT 180
+)
+RETURNS TABLE (angle TEXT, sent BIGINT, replied BIGINT, meetings BIGINT)
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT
+    COALESCE(ml.strategy->>'angle', 'sem ângulo') AS angle,
+    COUNT(*)::BIGINT,
+    COUNT(*) FILTER (WHERE ml.replied_at IS NOT NULL)::BIGINT,
+    COUNT(*) FILTER (WHERE ml.status = 'meeting_booked')::BIGINT
+  FROM public.mission_leads ml
+  WHERE ml.user_id = p_user_id
+    AND ml.sent_at IS NOT NULL
+    AND ml.sent_at >= NOW() - (GREATEST(p_days, 1) || ' days')::INTERVAL
+  GROUP BY 1
+  ORDER BY 2 DESC;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.outreach_by_angle(UUID, INTEGER)
+  TO authenticated, service_role;
+
+/**
+ * Desempenho por oferta.
+ *
+ * Responde uma pergunta diferente da anterior e igualmente sem dono: entre o
+ * que você vende, o que abre porta? Uma oferta que ninguém responde não é
+ * necessariamente ruim — pode estar sendo oferecida para quem não precisa —,
+ * mas é o primeiro lugar para olhar.
+ */
+CREATE OR REPLACE FUNCTION public.outreach_by_offer(
+  p_user_id UUID,
+  p_days    INTEGER DEFAULT 180
+)
+RETURNS TABLE (offer TEXT, sent BIGINT, replied BIGINT, meetings BIGINT)
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT
+    COALESCE(ml.offer_match->'offer'->>'name', 'sem oferta') AS offer,
+    COUNT(*)::BIGINT,
+    COUNT(*) FILTER (WHERE ml.replied_at IS NOT NULL)::BIGINT,
+    COUNT(*) FILTER (WHERE ml.status = 'meeting_booked')::BIGINT
+  FROM public.mission_leads ml
+  WHERE ml.user_id = p_user_id
+    AND ml.sent_at IS NOT NULL
+    AND ml.sent_at >= NOW() - (GREATEST(p_days, 1) || ' days')::INTERVAL
+  GROUP BY 1
+  ORDER BY 2 DESC;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.outreach_by_offer(UUID, INTEGER)
+  TO authenticated, service_role;
+
+-- Índice para as duas: sem ele, cada abertura da tela varre a tabela inteira.
+CREATE INDEX IF NOT EXISTS idx_mission_leads_user_sent
+  ON public.mission_leads (user_id, sent_at DESC)
+  WHERE sent_at IS NOT NULL;
+
+COMMENT ON FUNCTION public.outreach_by_angle(UUID, INTEGER) IS
+  'Resposta e reunião por ângulo de abordagem, derivadas de mission_leads. '
+  'Quem decide o que fazer com isso é `_shared/agents/learning.ts`, que exige '
+  'amostra bem maior para mudar comportamento do que para exibir.';
+
+-- ------------------------------------------------------------
+-- CONFERÊNCIA
+-- ------------------------------------------------------------
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+    WHERE n.nspname = 'public' AND p.proname = 'outreach_by_angle'
+  ) THEN
+    RAISE EXCEPTION 'outreach_by_angle não foi criada.';
   END IF;
 END;
 $$;

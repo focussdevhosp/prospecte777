@@ -2862,6 +2862,16 @@ export type Database = {
       }
       ai_cost_summary: { Args: { p_user_id: string }; Returns: Json }
 
+      // ---- Aprendizado com o que já foi enviado ----
+      outreach_by_angle: {
+        Args: { p_user_id: string; p_days?: number }
+        Returns: { angle: string; sent: number; replied: number; meetings: number }[]
+      }
+      outreach_by_offer: {
+        Args: { p_user_id: string; p_days?: number }
+        Returns: { offer: string; sent: number; replied: number; meetings: number }[]
+      }
+
       // ---- Handoff ----
       lead_handoff_brief: { Args: { p_lead_id: string }; Returns: Json }
 
