@@ -234,8 +234,8 @@ describe('buildConversationEvidence', () => {
 describe('renderConversationEvidence', () => {
   it('separa o que foi observado do que foi deduzido', () => {
     const texto = renderConversationEvidence(
-      [{ label: 'Empresa', value: 'Clínica Bella Itu', source: 'cadastro do lead' }],
-      [{ statement: 'pode estar perdendo agendamentos', basedOn: 'análise automática' }],
+      [{ label: 'Empresa', value: 'Clínica Bella Itu', source: 'cadastro do lead', confidence: 1 }],
+      [{ statement: 'pode estar perdendo agendamentos', basedOn: ['análise automática'], confidence: 0.5 }],
     );
 
     expect(texto).toContain('FATOS OBSERVADOS');

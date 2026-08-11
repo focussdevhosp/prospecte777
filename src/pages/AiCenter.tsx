@@ -6,7 +6,7 @@ import { IcpProfilesPanel } from '@/components/ai/IcpProfilesPanel';
 
 export default function AiCenterPage() {
   return (
-    <DashboardLayout>
+    <DashboardLayout title="Central de IA">
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-semibold">Central de IA</h1>

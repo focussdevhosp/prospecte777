@@ -952,7 +952,7 @@ ${(portfolio && portfolio.length)
 
     const addFact = (label: string, value: unknown, source: string) => {
       const texto = typeof value === "string" ? value.trim() : value == null ? "" : String(value);
-      if (texto) factsForPrompt.push({ label, value: texto, source });
+      if (texto) factsForPrompt.push({ label, value: texto, source, confidence: 1 });
     };
 
     addFact("Empresa", lead.business_name, "cadastro do lead");
@@ -977,7 +977,11 @@ ${(portfolio && portfolio.length)
       // O impacto do achado é projeção, não observação: "site lento" foi
       // medido, "você está perdendo clientes por isso" não.
       if (finding.impact) {
-        hypothesesForPrompt.push({ statement: finding.impact, basedOn: finding.title || "auditoria" });
+        hypothesesForPrompt.push({
+          statement: finding.impact,
+          basedOn: [finding.title || "auditoria do site"],
+          confidence: 0.5,
+        });
       }
     }
 
@@ -988,10 +992,18 @@ ${(portfolio && portfolio.length)
     }
 
     for (const dor of (lead.pain_points as string[] | null) || []) {
-      hypothesesForPrompt.push({ statement: dor, basedOn: "análise automática do lead" });
+      hypothesesForPrompt.push({
+        statement: dor,
+        basedOn: ["análise automática do lead"],
+        confidence: 0.4,
+      });
     }
     for (const oportunidade of (lead.service_opportunities as string[] | null) || []) {
-      hypothesesForPrompt.push({ statement: oportunidade, basedOn: "análise automática do lead" });
+      hypothesesForPrompt.push({
+        statement: oportunidade,
+        basedOn: ["análise automática do lead"],
+        confidence: 0.4,
+      });
     }
 
     const leadEvidenceBlock = renderConversationEvidence(factsForPrompt, hypothesesForPrompt);

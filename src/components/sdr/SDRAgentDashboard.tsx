@@ -17,6 +17,7 @@ import { useActivityLog } from '@/hooks/use-activity-log';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/auth';
+import { HandoffBrief } from '@/components/sdr/HandoffBrief';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
@@ -83,6 +84,7 @@ export function SDRAgentDashboard() {
   const [saving, setSaving] = useState(false);
 
   const [escalations, setEscalations] = useState<Escalation[]>([]);
+  const [briefLeadId, setBriefLeadId] = useState<string | null>(null);
   const [topObjections, setTopObjections] = useState<{ category: string; count: number }[]>([]);
   const [kpis, setKpis] = useState({
     conversations7d: 0,
@@ -320,7 +322,12 @@ export function SDRAgentDashboard() {
                         )}
                       </div>
                       <div className="flex flex-col gap-1 shrink-0">
-                        <Button size="sm" variant="outline" onClick={() => navigate(`/crm/inbox?lead=${e.lead_id}`)}>Abrir</Button>
+                        {/* Antes ia direto para o inbox, e a pessoa lia a
+                            conversa do começo para descobrir o que estava
+                            acontecendo. O resumo vem primeiro. */}
+                        <Button size="sm" variant="outline" onClick={() => setBriefLeadId(e.lead_id)}>
+                          Assumir
+                        </Button>
                         <Button size="sm" variant="ghost" onClick={() => resolveEscalation(e.id)}>
                           <XCircle className="h-3 w-3 mr-1" /> Resolver
                         </Button>
@@ -524,6 +531,17 @@ export function SDRAgentDashboard() {
           </ScrollArea>
         </CardContent>
       </Card>
+
+      <HandoffBrief
+        leadId={briefLeadId}
+        open={!!briefLeadId}
+        onOpenChange={(v) => !v && setBriefLeadId(null)}
+        onOpenConversation={() => {
+          const id = briefLeadId;
+          setBriefLeadId(null);
+          if (id) navigate(`/crm/inbox?lead=${id}`);
+        }}
+      />
     </div>
   );
 }

@@ -2470,12 +2470,12 @@ export type Database = {
         }
         Insert: {
           active_chip_ids?: string[] | null
-          ai_daily_budget_usd: number | null
-          ai_monthly_budget_usd: number | null
-          outbound_paused: boolean | null
-          outbound_paused_at: string | null
-          outbound_paused_reason: string | null
-          default_autonomy_level: string | null
+          ai_daily_budget_usd?: number | null
+          ai_monthly_budget_usd?: number | null
+          outbound_paused?: boolean | null
+          outbound_paused_at?: string | null
+          outbound_paused_reason?: string | null
+          default_autonomy_level?: string | null
           agent_name?: string | null
           agent_persona?: string | null
           agent_type?: string | null
@@ -2552,12 +2552,12 @@ export type Database = {
         }
         Update: {
           active_chip_ids?: string[] | null
-          ai_daily_budget_usd: number | null
-          ai_monthly_budget_usd: number | null
-          outbound_paused: boolean | null
-          outbound_paused_at: string | null
-          outbound_paused_reason: string | null
-          default_autonomy_level: string | null
+          ai_daily_budget_usd?: number | null
+          ai_monthly_budget_usd?: number | null
+          outbound_paused?: boolean | null
+          outbound_paused_at?: string | null
+          outbound_paused_reason?: string | null
+          default_autonomy_level?: string | null
           agent_name?: string | null
           agent_persona?: string | null
           agent_type?: string | null
@@ -2861,6 +2861,9 @@ export type Database = {
         Returns: string | null
       }
       ai_cost_summary: { Args: { p_user_id: string }; Returns: Json }
+
+      // ---- Handoff ----
+      lead_handoff_brief: { Args: { p_lead_id: string }; Returns: Json }
 
       // ---- Horário de contato ----
       // Derivada de chat_messages. Substitui prospecting_stats.responses_received,
