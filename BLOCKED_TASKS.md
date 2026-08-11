@@ -82,20 +82,33 @@ comparado com o mesmo comando no `git stash`.
 
 ---
 
-## 5. Envio que falha por erro transitório perde o rascunho
+## 5. Não há tela para retomar lead que esgotou as tentativas
 
-**Bloqueio:** nenhum. Escolhi não fazer no ciclo 2 para não misturar duas
-mudanças de comportamento de envio no mesmo commit.
+**Bloqueio:** nenhum. É continuação do ciclo 3, que resolveu a parte urgente.
 
-**Por que atrapalha:** quando o `whatsapp-send` devolve erro que não é
-opt-out, `sendMessage` marca o lead como `failed` e o rascunho fica perdido.
-Um 500 momentâneo da Evolution custa um lead bom, com mensagem já escrita e
-já aprovada pelo Quality Gate.
+**Por que atrapalha:** o ciclo 3 fez o envio transitório tentar de novo até
+cinco vezes. Depois disso o lead vira `failed` e continua sem caminho de
+volta pela interface — a diferença é que agora isso só acontece depois de
+cinco falhas reais, não na primeira oscilação.
 
-**O que destrava:** coluna `send_attempts` em `mission_leads` e distinção
-entre falha definitiva (opt-out, número inválido) e transitória (rede, 5xx),
-com a transitória voltando para `approved` até um teto — três tentativas, por
-exemplo. É meia hora de trabalho e está no topo da fila dos próximos ciclos.
+**O que destrava:** um filtro "falharam no envio" na tela da missão com botão
+de recolocar na fila (zerar `send_attempts`, status `approved`). O rascunho
+continua gravado, então é só interface.
+
+---
+
+## 7. O follow-up ainda decide pouco
+
+**Bloqueio:** nenhum; é a próxima fatia grande, não cabia nos ciclos até aqui.
+
+**Por que atrapalha:** hoje o follow-up dispara por tempo. Não decide entre
+insistir, esperar, encerrar, transferir para humano ou criar tarefa — que é o
+que a especificação pede. Lead que respondeu "esse mês não dá" recebe a mesma
+cadência de quem nunca respondeu.
+
+**O que destrava:** usar `lead_memory` (que já guarda `objection` e
+`commitment`) e o sentimento da última resposta para escolher a ação, em vez
+de só contar dias. A infraestrutura toda já existe.
 
 ---
 

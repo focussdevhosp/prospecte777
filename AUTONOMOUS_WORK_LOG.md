@@ -133,6 +133,194 @@ conta de bloqueio.
 
 ---
 
+## Ciclo 3 — Oscilação de rede custava um lead qualificado
+
+**Commit:** `d963d1d`
+
+### Análise
+
+`sendMessage` tratava qualquer resposta ruim do `whatsapp-send` do mesmo
+jeito: `status: optedOut ? 'opted_out' : 'failed'`. E `failed` é estado
+final — nada volta a olhar para ele e não existe botão na tela para tentar de
+novo.
+
+Um 502 momentâneo da Evolution — a coisa mais banal que acontece com API de
+WhatsApp — apagava para sempre um lead já pesquisado, qualificado, casado com
+uma oferta, escrito pela IA, revisado pelo Quality Gate e, no modo assistido,
+aprovado por uma pessoa.
+
+### Implementação
+
+Três categorias, só duas finais:
+
+| | Exemplo | Decisão |
+|---|---|---|
+| Definitiva | número inválido (HTTP 400) | `failed` |
+| Opt-out | 409 + `blacklisted` | `opted_out` |
+| Transitória | sem chip, 502, 503, rede | volta para `approved`, até 5 vezes |
+
+O 409 exigiu cuidado: significa tanto "na blacklist" quanto "nenhum chip
+disponível". Tratar todo 409 como opt-out marcaria como "pediu para não
+receber" um lead que nunca respondeu nada — ele sairia da fila para sempre
+porque a *conta* estava sem chip. A distinção é pelo corpo e tem teste.
+
+Incremento e decisão na mesma instrução SQL: ler, somar em TypeScript e
+gravar tem janela para duas execuções do cron lerem o mesmo valor, e contador
+que anda devagar é teto que não segura.
+
+### Validação
+
+129 testes (11 novos).
+
+---
+
+## Ciclo 4 — A resposta automática furava o opt-out
+
+**Commit:** `dcf77eb`
+
+### Análise
+
+```
+grep -n "blacklist\|outbound_paused" supabase/functions/whatsapp-ai-reply/
+(vazio)
+```
+
+O `whatsapp-ai-reply` falava direto com a Evolution API. Tudo que protege um
+envio mora no `whatsapp-send`, e nada disso valia por aquele caminho.
+
+O caso concreto: o lead responde "pare". O gatilho
+`auto_blacklist_on_response` grava a blacklist na mesma transação. O webhook
+chama o `whatsapp-ai-reply`, que gera a resposta e manda direto — sem nunca
+consultar a lista que acabou de ser escrita. **A pessoa pede para parar e
+recebe mais uma mensagem.**
+
+Junto, o segundo furo: a parada de emergência foi criada com a promessa de
+que "quem aperta o botão espera que TUDO pare" — está escrito na migração que
+a criou. Mas `outbound_paused` só era consultado por `mission_can_send()`.
+Agente conversacional e follow-ups agendados continuavam mandando. Freio que
+para uma parte é pior que freio nenhum: sem freio a pessoa desconecta o
+WhatsApp na mão; com freio pela metade ela acha que resolveu e vai dormir.
+
+### Implementação
+
+Mesma causa, mesma correção: existia um segundo caminho de envio. A resposta
+automática passa a ir pelo `whatsapp-send`, e a parada de emergência é
+checada lá dentro — no único ponto por onde toda mensagem passa.
+
+A distinção não é qual função chamou, é se **uma pessoa** decidiu mandar
+aquela mensagem específica agora. Chat e teste de diagnóstico passam; IA
+respondendo sozinha, follow-up agendado, lote de missão e campanha param.
+
+O campo `initiated_by` falha fechado: qualquer coisa que não seja exatamente
+`"human"` conta como automação. Tem teste para `"Human"`, `" human "` e
+objeto — é essa linha que sustenta o resto.
+
+O botão "enviar follow-ups" **não** é exceção: um clique dispara para todos os
+leads vencidos. Isso é automação, ainda que começada por um clique.
+
+### Validação
+
+136 testes (7 novos).
+
+---
+
+## Ciclo 5 — O contrato de veracidade parava na primeira mensagem
+
+**Commit:** `fba7d97`
+
+### Análise
+
+A primeira abordagem passava por seis avaliações antes de sair. A segunda
+mensagem em diante, por nenhuma. Isso é ao contrário do risco real: a
+primeira mensagem é curta e o lead desconfia dela por natureza; é na
+conversa, depois que ele começou a confiar, que um número inventado vira
+decisão de compra tomada em cima de coisa que nunca aconteceu.
+
+E o prompt não só deixava passar — ele pedia:
+
+```
+✅ Prova > promessa. "fiz pra outro X e deu Y" > "vou fazer sua empresa crescer".
+```
+
+Sem nenhum case no contexto, isso é instrução direta para inventar um cliente
+e um resultado. **É o mesmo defeito da geração da primeira mensagem, no mesmo
+formato:** uma regra específica mandando fabricar, e duas linhas depois uma
+regra vaga dizendo para não inventar. A específica ganha.
+
+### Implementação
+
+- Prova passa a ser a do portfólio cadastrado — link real, nome real.
+- `pain_points` e `service_opportunities` saem do bloco de fatos e viram
+  hipóteses, com a instrução colada ("vire pergunta").
+- A resposta é conferida antes de sair; reprovou, reescreve uma vez; reprovou
+  de novo, não envia e escala.
+
+A decisão mais delicada: **número dito pelo lead é fato.** Se ele escreveu
+"hoje eu faturo uns 40 mil", o agente pode responder falando em 40 mil.
+Número que o *agente* escreveu antes não vale — senão bastava inventar uma vez
+para virar "fato" e poder repetir para sempre, a mentira se lavando no próprio
+histórico.
+
+### Dois falsos positivos que o teste revelou
+
+Ambos já existiam e atingiam **também a primeira abordagem**:
+
+1. Qualquer "N mil" era tratado como preço sem catálogo. "Você comentou que
+   fatura 40 mil" era barrado — o agente não conseguia demonstrar que prestou
+   atenção. Agora exige indício de preço, a conferência é por frase, e
+   pergunta não conta: *"cabe 500 no seu orçamento?"* é qualificação, *"fica
+   500 por mês"* é proposta. Mesma quantia, papéis opostos.
+2. "seu orçamento", "seu faturamento" eram bloqueados **mesmo em pergunta** —
+   mas o prompt manda "vire pergunta". A saída que o próprio sistema oferecia
+   era uma armadilha: o modelo obedecia e continuava reprovado.
+
+Nos dois casos o teste estava certo e o código errado.
+
+### Validação
+
+156 testes (20 novos). Os 40 testes do gate continuam passando sem alteração,
+o que era o ponto: a extração de `checkFactuality` não podia mudar
+comportamento.
+
+---
+
+## Ciclo 6 — A conversa gastava sem aparecer na conta
+
+**Commit:** `b267b2f`
+
+### Análise
+
+O `whatsapp-ai-reply` chamava `api.deepseek.com` direto, em três lugares:
+
+- **Sem reserva.** Uma queda do DeepSeek derrubava toda resposta a cliente —
+  inclusive de quem estava no meio de uma negociação — enquanto a primeira
+  abordagem seguia funcionando pelo provedor reserva. O caminho mais crítico
+  era o menos protegido.
+- **Sem custo.** A conversa é de longe o maior gasto de IA do produto: manda o
+  histórico inteiro no contexto, a cada mensagem, e ainda faz segunda rodada
+  quando usa ferramenta. Era o único caminho fora de `ai_usage`. Um número que
+  exclui o maior item é pior que número nenhum, porque parece confiável.
+
+### Implementação
+
+As três chamadas passam por `callAI` + `recordUsage`, cada uma com seu
+`purpose`. `AIMessage` ganhou `tool_calls` — sem esse campo, todo agente que
+usa ferramenta é obrigado a falar com o provedor por fora, que é exatamente
+como este acabou de fora.
+
+Falha na segunda rodada não perde mais o trabalho: a ferramenta já rodou, a
+reunião já foi marcada. Só o texto final falhou.
+
+Junto, a tela de escalações deixou de mostrar o valor cru do banco
+(`factuality_block`) — quem abre aquela lista está decidindo o que atender
+primeiro.
+
+### Validação
+
+156 testes, `tsc` limpo, build ok, nenhuma chamada direta ao DeepSeek restou.
+
+---
+
 ## Notas de método
 
 **Sobre o lint.** `npm run lint` acusa 367 problemas no repositório inteiro —
