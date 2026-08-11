@@ -18,6 +18,16 @@ export interface AIMessage {
   role: "system" | "user" | "assistant" | "tool";
   content: string;
   tool_call_id?: string;
+  /**
+   * Chamadas de ferramenta que o modelo pediu na rodada anterior.
+   *
+   * Precisa voltar na mensagem do assistente na rodada seguinte: a API
+   * rejeita uma mensagem `role: "tool"` que não responda a nenhuma chamada
+   * declarada. Sem este campo, todo agente que usa ferramenta era obrigado a
+   * falar com o provedor por fora — e ficava sem fallback e sem registro de
+   * custo, que é exatamente o que esta camada existe para dar.
+   */
+  tool_calls?: unknown[];
 }
 
 export interface AICallOptions {

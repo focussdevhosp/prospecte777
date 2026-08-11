@@ -41,6 +41,27 @@ interface Escalation {
   lead?: { business_name: string | null };
 }
 
+// A tela mostrava o valor cru do banco — "factuality_block", "sentiment_negative".
+// Quem abre esta lista está decidindo o que atender primeiro; ler nome de
+// coluna atrasa essa decisão sem motivo.
+const MOTIVO_ESCALACAO: Record<string, string> = {
+  complex_objection: 'Objeção que a IA não soube responder',
+  high_value_opportunity: 'Oportunidade de valor alto',
+  complaint: 'Reclamação',
+  technical_question: 'Pergunta técnica',
+  urgent_request: 'Pedido urgente',
+  closing_opportunity: 'Pronto para fechar',
+  competitor_threat: 'Citou concorrente',
+  custom_request: 'Pedido fora do padrão',
+  sentiment_negative: 'Cliente irritado',
+  factuality_block: 'A IA preferiu não responder a inventar',
+  opt_out_requested: 'Pediu para não receber mais',
+};
+
+function rotuloEscalacao(reason: string): string {
+  return MOTIVO_ESCALACAO[reason] ?? reason.replace(/_/g, ' ');
+}
+
 export function SDRAgentDashboard() {
   const { user } = useAuth();
   const { settings, updateSettings, isUpdating, isLoading } = useUserSettings();
@@ -292,7 +313,7 @@ export function SDRAgentDashboard() {
                       </Badge>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium truncate">{e.lead?.business_name || 'Lead'}</p>
-                        <p className="text-xs text-muted-foreground">{e.escalation_reason}</p>
+                        <p className="text-xs text-muted-foreground">{rotuloEscalacao(e.escalation_reason)}</p>
                         {e.context && <p className="text-xs mt-1 line-clamp-2">{e.context}</p>}
                         {e.recommended_action && (
                           <p className="text-[11px] mt-1 text-primary/80">→ {e.recommended_action}</p>

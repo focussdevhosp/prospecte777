@@ -5,6 +5,7 @@ import {
   requirePaidPlan,
   requireUserOrInternal,
 } from "../_shared/auth.ts";
+import { callAI, recordUsage, type AIMessage } from "../_shared/ai.ts";
 import { checkFactuality } from "../_shared/agents/quality-gate.ts";
 import {
   buildConversationEvidence,
@@ -846,9 +847,9 @@ ${s.objection_responses ? `- Objeções: ${JSON.stringify(s.objection_responses)
       .limit(6);
 
     // Build conversation context
-    const conversationHistory = (messages || []).map((m) => ({
+    const conversationHistory: AIMessage[] = (messages || []).map((m) => ({
       role: m.sender_type === "lead" ? "user" : "assistant",
-      content: m.content,
+      content: m.content ?? "",
     }));
 
 
@@ -1135,52 +1136,53 @@ ${qualification?.close_probability && qualification.close_probability >= 70 ? "\
       content: message_content,
     });
 
-    // Call DeepSeek AI
-    const DEEPSEEK_API_KEY = Deno.env.get("DEEPSEEK_API_KEY");
-    if (!DEEPSEEK_API_KEY) {
-      throw new Error("DEEPSEEK_API_KEY not configured");
-    }
+    // ---- CHAMADA DO MODELO ----
+    // Antes esta função falava direto com a api.deepseek.com. Duas coisas se
+    // perdiam por causa disso, e as duas só apareciam depois:
+    //
+    //   - sem fallback. Uma indisponibilidade do DeepSeek derrubava TODA
+    //     resposta a cliente, enquanto a primeira abordagem — que passa pela
+    //     camada comum — seguia funcionando pelo provedor reserva;
+    //   - sem registro de consumo. A conversa é de longe o maior gasto de IA
+    //     do produto (histórico inteiro no contexto, a cada mensagem), e era
+    //     o único que não entrava em `ai_usage`. O painel de custo mostrava
+    //     um número que não incluía o principal item da conta.
+    console.log(`[ai-reply] gerando resposta para o lead ${lead_id}`);
 
-    console.log(`Processing intelligent reply for lead ${lead_id} via DeepSeek`);
+    const firstPass = await callAI({
+      messages: [
+        { role: "system", content: systemPrompt },
+        ...conversationHistory,
+      ],
+      role: "primary",
+      tools: AI_TOOLS,
+      tool_choice: "auto",
+      temperature: 0.7,
+      max_tokens: 1500,
+      purpose: "conversation_reply",
+    });
 
-    const aiResponse = await fetch(
-      "https://api.deepseek.com/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${DEEPSEEK_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "deepseek-chat",
-          messages: [
-            { role: "system", content: systemPrompt },
-            ...conversationHistory,
-          ],
-          tools: AI_TOOLS,
-          tool_choice: "auto",
-          temperature: 0.7,
-          max_tokens: 1500,
-        }),
-      }
-    );
+    await recordUsage(supabase, {
+      userId: lead.user_id,
+      usage: firstPass.usage,
+      purpose: "conversation_reply",
+      leadId: lead_id,
+      agent: "conversation",
+    });
 
-    if (!aiResponse.ok) {
-      const errorText = await aiResponse.text();
-      console.error("AI API error:", errorText);
-      throw new Error("Failed to generate AI response");
-    }
-
-    const aiData = await aiResponse.json();
+    const aiData = firstPass.raw as { choices?: Array<{ message?: Record<string, unknown> }> };
     const choice = aiData.choices?.[0];
-    const assistantMessage = choice?.message;
+    const assistantMessage = choice?.message as
+      | { content?: string; tool_calls?: Array<{ id: string; function: { name: string; arguments: string } }> }
+      | undefined;
 
     // Process tool calls
     const toolResults: string[] = [];
-    if (assistantMessage?.tool_calls?.length > 0) {
-      console.log(`AI requested ${assistantMessage.tool_calls.length} tool calls`);
-      
-      for (const toolCall of assistantMessage.tool_calls) {
+    const toolCalls = assistantMessage?.tool_calls ?? [];
+    if (toolCalls.length > 0) {
+      console.log(`AI requested ${toolCalls.length} tool calls`);
+
+      for (const toolCall of toolCalls) {
         const toolName = toolCall.function.name;
         let toolArgs;
         try {
@@ -1203,43 +1205,52 @@ ${qualification?.close_probability && qualification.close_probability >= 70 ? "\
         console.log(`Tool ${toolName}: ${result}`);
       }
 
-      // Follow-up call for final response
-      const followUpMessages = [
+      // Segunda rodada: agora o modelo sabe o que as ferramentas devolveram
+      // e escreve a resposta final. A mensagem do assistente volta com os
+      // `tool_calls` — a API recusa `role: "tool"` que não responda a uma
+      // chamada declarada.
+      const followUpMessages: AIMessage[] = [
         ...conversationHistory,
-        assistantMessage,
-        ...assistantMessage.tool_calls.map((tc: any, i: number) => ({
-          role: "tool",
+        {
+          role: "assistant",
+          content: assistantMessage?.content ?? "",
+          tool_calls: toolCalls,
+        },
+        ...toolCalls.map((tc, i) => ({
+          role: "tool" as const,
           tool_call_id: tc.id,
           content: toolResults[i] || "Executado",
         })),
       ];
 
-      const followUpResponse = await fetch(
-        "https://api.deepseek.com/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${DEEPSEEK_API_KEY}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            model: "deepseek-chat",
-            messages: [
-              { role: "system", content: systemPrompt },
-              ...followUpMessages,
-            ],
-            temperature: 0.7,
-            max_tokens: 500,
-          }),
-        }
-      );
+      try {
+        const secondPass = await callAI({
+          messages: [
+            { role: "system", content: systemPrompt },
+            ...followUpMessages,
+          ],
+          role: "primary",
+          temperature: 0.7,
+          max_tokens: 500,
+          purpose: "conversation_reply_after_tools",
+        });
 
-      if (followUpResponse.ok) {
-        const followUpData = await followUpResponse.json();
-        const finalContent = followUpData.choices?.[0]?.message?.content;
-        if (finalContent) {
-          assistantMessage.content = finalContent;
+        await recordUsage(supabase, {
+          userId: lead.user_id,
+          usage: secondPass.usage,
+          purpose: "conversation_reply_after_tools",
+          leadId: lead_id,
+          agent: "conversation",
+        });
+
+        if (secondPass.text && assistantMessage) {
+          assistantMessage.content = secondPass.text;
         }
+      } catch (e) {
+        // A ferramenta já rodou — a reunião foi marcada, a memória foi
+        // gravada. Só o texto final falhou. Seguir com o que o modelo tinha
+        // escrito antes é melhor que perder o efeito colateral já aplicado.
+        console.error("[ai-reply] segunda rodada falhou:", e);
       }
     }
 
@@ -1266,14 +1277,8 @@ ${qualification?.close_probability && qualification.close_probability >= 70 ? "\
 
       // Uma reescrita, apontando o problema. Não é castigo: o modelo quase
       // sempre acerta quando sabe exatamente o que tirar.
-      const rewrite = await fetch("https://api.deepseek.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${DEEPSEEK_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "deepseek-chat",
+      try {
+        const rewrite = await callAI({
           messages: [
             { role: "system", content: systemPrompt },
             ...conversationHistory,
@@ -1287,14 +1292,21 @@ ${qualification?.close_probability && qualification.close_probability >= 70 ? "\
                 `a afirmação em pergunta. Devolva SÓ a mensagem, sem explicação.`,
             },
           ],
+          role: "primary",
           temperature: 0.5,
           max_tokens: 400,
-        }),
-      });
+          purpose: "conversation_rewrite",
+        });
 
-      if (rewrite.ok) {
-        const rewriteData = await rewrite.json();
-        const rewritten = rewriteData.choices?.[0]?.message?.content?.trim();
+        await recordUsage(supabase, {
+          userId: lead.user_id,
+          usage: rewrite.usage,
+          purpose: "conversation_rewrite",
+          leadId: lead_id,
+          agent: "conversation",
+        });
+
+        const rewritten = rewrite.text.trim();
         if (rewritten) {
           const recheck = checkFactuality(rewritten, factualityEvidence);
           if (recheck.approved) {
@@ -1302,6 +1314,10 @@ ${qualification?.close_probability && qualification.close_probability >= 70 ? "\
             factCheck = recheck;
           }
         }
+      } catch (e) {
+        // Falhou a reescrita: segue reprovado e escala logo abaixo. Melhor
+        // que mandar o texto original, que é o que tem o problema.
+        console.error("[ai-reply] reescrita falhou:", e);
       }
     }
 
