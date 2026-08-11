@@ -2793,6 +2793,14 @@ export type Database = {
       }
       ai_cost_summary: { Args: { p_user_id: string }; Returns: Json }
 
+      // ---- Horário de contato ----
+      // Derivada de chat_messages. Substitui prospecting_stats.responses_received,
+      // que nunca saiu de zero e ainda assim virava recomendação.
+      prospecting_hour_stats: {
+        Args: { p_user_id: string; p_days?: number }
+        Returns: { hour_of_day: number; sent: number; replied: number }[]
+      }
+
       // ---- Teste A/B ----
       // Os contadores saíram das colunas e passaram a ser derivados de
       // `ab_assignments`: contador que ninguém incrementa vira zero eterno.

@@ -16,6 +16,7 @@ import { buildStrategy } from "../_shared/agents/strategist.ts";
 import { buildCopyPrompt, buildRewritePrompt, cleanMessage } from "../_shared/agents/copywriter.ts";
 import { evaluate as evaluateQuality } from "../_shared/agents/quality-gate.ts";
 import { loadCatalog } from "../_shared/agents/orchestrator.ts";
+import { bestHours } from "../_shared/agents/timing.ts";
 
 
 Deno.serve(async (req) => {
@@ -252,45 +253,46 @@ Por favor, analise e sugira melhorias.`;
       }
     }
 
-    // Action: Get best time recommendation
+    // Action: recomendacao de horario
+    //
+    // A versao anterior somava `stat.responses_received`, uma coluna que
+    // NUNCA foi incrementada por nenhum codigo -- so escrita com o valor 0
+    // pelo job-processor. Toda hora empatava em 0,0%, a ordenacao virava
+    // acaso, e o produto respondia "Baseado nos seus dados: melhor horario as
+    // 9h (0.0% de resposta)". A frase fazia a pessoa reorganizar a operacao em
+    // cima de ruido.
+    //
+    // Os numeros agora vem de `prospecting_hour_stats`, derivada da conversa
+    // real, e a decisao de recomendar-ou-nao mora em `_shared/agents/timing`,
+    // com teste.
     if (action === "get_best_time") {
-      const { niche, stats } = data;
+      const { niche } = data;
 
-      // Calculate best hours from stats
-      const hourlyData: Record<number, { sent: number; responses: number }> = {};
-      
-      for (const stat of stats) {
-        if (stat.hour_of_day !== null) {
-          if (!hourlyData[stat.hour_of_day]) {
-            hourlyData[stat.hour_of_day] = { sent: 0, responses: 0 };
-          }
-          hourlyData[stat.hour_of_day].sent += stat.messages_sent;
-          hourlyData[stat.hour_of_day].responses += stat.responses_received;
-        }
-      }
+      const { data: horas } = await supabase.rpc("prospecting_hour_stats", {
+        p_user_id: effectiveUserId,
+        p_days: 90,
+      });
 
-      const hourlyRates = Object.entries(hourlyData)
-        .map(([hour, data]) => ({
-          hour: parseInt(hour),
-          rate: data.sent > 0 ? (data.responses / data.sent) * 100 : 0,
-          sample: data.sent,
-        }))
-        .filter(h => h.sample >= 3)
-        .sort((a, b) => b.rate - a.rate);
+      const advice = bestHours(
+        (horas ?? []).map((h: { hour_of_day: number; sent: number; replied: number }) => ({
+          hour: Number(h.hour_of_day),
+          sent: Number(h.sent),
+          replied: Number(h.replied),
+        })),
+      );
 
-      // If we have data, use it; otherwise, use AI to suggest based on niche
-      if (hourlyRates.length > 0) {
-        const bestHours = hourlyRates.slice(0, 3).map(h => h.hour);
-        const recommendation = `Baseado nos seus dados: melhor horário às ${bestHours[0]}h (${hourlyRates[0].rate.toFixed(1)}% de resposta)`;
-
-        return new Response(JSON.stringify({ 
-          bestHours,
-          recommendation,
-          source: "data"
-        }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+      if (advice.fromData) {
+        return json({
+          bestHours: advice.hours,
+          recommendation: advice.reason,
+          source: "data",
         });
       }
+
+      // Sem evidencia propria, o motivo vai junto da sugestao generica. Dizer
+      // POR QUE ainda nao da para recomendar pelos dados vale mais que um
+      // numero bonito: informa quanto falta para a resposta ser confiavel.
+      const semDados = advice.reason;
 
       // Sem dado próprio ainda: pergunta à IA uma sugestão inicial.
       // Passa pela camada única (timeout, fallback, custo) em vez de falar
@@ -298,7 +300,8 @@ Por favor, analise e sugira melhorias.`;
       // tinha DeepSeek nem reserva.
       const DEFAULT_HOURS = {
         bestHours: [10, 14, 16],
-        recommendation: "Horários sugeridos: 10h, 14h e 16h (horário comercial padrão).",
+        recommendation:
+          `${semDados} Enquanto isso: 10h, 14h e 16h, que é horário comercial padrão.`,
         source: "default",
       };
 
@@ -320,7 +323,9 @@ Por favor, analise e sugira melhorias.`;
 
         return json({
           bestHours: hours,
-          recommendation: parsed.explanation || DEFAULT_HOURS.recommendation,
+          // O motivo de nao haver dado proprio vem primeiro. Sem isso, a
+          // sugestao da IA seria lida como se fosse medicao da conta.
+          recommendation: `${semDados} Sugestão geral para o nicho: ${parsed.explanation || DEFAULT_HOURS.recommendation}`,
           source: "ai",
         });
       } catch (error) {

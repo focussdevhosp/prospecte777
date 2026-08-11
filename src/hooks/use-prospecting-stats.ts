@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/auth';
+import { bestHours } from '../../supabase/functions/_shared/agents/timing';
 
 export interface ProspectingStats {
   id: string;
@@ -10,7 +11,9 @@ export interface ProspectingStats {
   hour_of_day: number | null;
   day_of_week: number | null;
   messages_sent: number;
+  /** OBSOLETA: nunca foi incrementada. 0 aqui significa "não medido". */
   responses_received: number;
+  /** OBSOLETA: mesma situação de `responses_received`. */
   positive_responses: number;
   date: string;
   created_at: string;
@@ -52,61 +55,22 @@ export function useProspectingStats() {
     enabled: !!user?.id,
   });
 
-  // Calculate best time slots based on response rates
-  const getBestTimeSlots = (niche?: string): BestTimeSlot[] => {
-    if (!stats) return [];
-
-    const filteredStats = niche 
-      ? stats.filter(s => s.niche === niche)
-      : stats;
-
-    const hourlyData: Record<number, { sent: number; responses: number }> = {};
-
-    for (const stat of filteredStats) {
-      if (stat.hour_of_day !== null) {
-        if (!hourlyData[stat.hour_of_day]) {
-          hourlyData[stat.hour_of_day] = { sent: 0, responses: 0 };
-        }
-        hourlyData[stat.hour_of_day].sent += stat.messages_sent;
-        hourlyData[stat.hour_of_day].responses += stat.responses_received;
-      }
-    }
-
-    return Object.entries(hourlyData)
-      .map(([hour, data]) => ({
-        hour: parseInt(hour),
-        messagesSent: data.sent,
-        responseRate: data.sent > 0 ? (data.responses / data.sent) * 100 : 0,
-      }))
-      .filter(slot => slot.messagesSent >= 5) // Minimum sample size
-      .sort((a, b) => b.responseRate - a.responseRate);
-  };
-
-  // Calculate niche performance
-  const getNichePerformance = (): NichePerformance[] => {
-    if (!stats) return [];
-
-    const nicheData: Record<string, { sent: number; responses: number; positive: number }> = {};
-
-    for (const stat of stats) {
-      if (!nicheData[stat.niche]) {
-        nicheData[stat.niche] = { sent: 0, responses: 0, positive: 0 };
-      }
-      nicheData[stat.niche].sent += stat.messages_sent;
-      nicheData[stat.niche].responses += stat.responses_received;
-      nicheData[stat.niche].positive += stat.positive_responses;
-    }
-
-    return Object.entries(nicheData)
-      .map(([niche, data]) => ({
-        niche,
-        totalSent: data.sent,
-        totalResponses: data.responses,
-        responseRate: data.sent > 0 ? (data.responses / data.sent) * 100 : 0,
-        positiveRate: data.responses > 0 ? (data.positive / data.responses) * 100 : 0,
-      }))
-      .sort((a, b) => b.responseRate - a.responseRate);
-  };
+  // ------------------------------------------------------------
+  // As três funções que ficavam aqui foram removidas
+  // ------------------------------------------------------------
+  // `getBestTimeSlots`, `getNichePerformance` e `getBestHourForNiche`
+  // somavam `stat.responses_received` e `stat.positive_responses` — duas
+  // colunas que NENHUM código jamais incrementou. O job-processor as escreve
+  // sempre com 0, e ponto.
+  //
+  // O resultado era uma taxa de resposta de 0% para toda hora e todo nicho,
+  // com a ordenação decidida pelo acaso da iteração. Nenhuma tela chegou a
+  // consumi-las, o que é a única razão de isso não ter virado conselho ruim
+  // na cara do usuário — o `ai-prospecting` fazia a mesma conta e virava.
+  //
+  // Quem precisa desse número usa `useBestHours()` abaixo, que lê de
+  // `prospecting_hour_stats` — derivada da conversa real, sem coluna
+  // intermediária para alguém esquecer de atualizar.
 
   // Record a stat entry
   const recordStat = useMutation({
@@ -127,18 +91,44 @@ export function useProspectingStats() {
     },
   });
 
-  // Get the best hour to contact for a specific niche
-  const getBestHourForNiche = (niche: string): number | null => {
-    const slots = getBestTimeSlots(niche);
-    return slots.length > 0 ? slots[0].hour : null;
-  };
-
   return {
     stats: stats || [],
     isLoading,
-    getBestTimeSlots,
-    getNichePerformance,
-    getBestHourForNiche,
     recordStat: recordStat.mutate,
   };
+}
+
+/**
+ * Horários com envio e resposta de verdade, vindos do banco.
+ *
+ * `bestHours` decide se há evidência suficiente para recomendar. Quando não
+ * há, devolve `hours: []` e o motivo — e a tela mostra o motivo em vez de um
+ * horário inventado. É a mesma função que o `ai-prospecting` usa, para os
+ * dois nunca discordarem.
+ */
+export function useBestHours(days = 90) {
+  const { user } = useAuth();
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['best-hours', user?.id, days],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('prospecting_hour_stats', {
+        p_user_id: user!.id,
+        p_days: days,
+      });
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!user?.id,
+  });
+
+  const advice = bestHours(
+    (data ?? []).map((row) => ({
+      hour: Number(row.hour_of_day),
+      sent: Number(row.sent),
+      replied: Number(row.replied),
+    })),
+  );
+
+  return { ...advice, hourly: data ?? [], isLoading };
 }
