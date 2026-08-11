@@ -128,6 +128,13 @@ function pickHook(dossier: Dossier): Fact | null {
   const byLabel = (label: string) =>
     dossier.facts.find((f) => f.label === label && f.confidence >= 0.7);
 
+  // Mudança recente ganha de tudo. É a diferença entre "reparei que o site de
+  // vocês saiu do ar" e "vi que vocês não têm site" — a primeira tem data e
+  // motivo para a mensagem chegar hoje; a segunda vale há dois anos e o
+  // destinatário sabe disso.
+  const mudanca = dossier.facts.find((f) => f.label === "Mudança recente");
+  if (mudanca) return mudanca;
+
   const siteProblem = dossier.facts.find(
     (f) => f.label === "Problema verificado no site",
   );

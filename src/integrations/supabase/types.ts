@@ -2862,6 +2862,22 @@ export type Database = {
       }
       ai_cost_summary: { Args: { p_user_id: string }; Returns: Json }
 
+      // ---- Sinais: o motivo de falar com a empresa hoje ----
+      lead_active_signals: {
+        Args: { p_lead_id: string }
+        Returns: {
+          id: string
+          type: string
+          summary: string
+          evidence: Json
+          strength: number
+          detected_at: string
+          expires_at: string
+        }[]
+      }
+      signals_overview: { Args: { p_user_id: string }; Returns: Json }
+      expire_lead_signals: { Args: never; Returns: number }
+
       // ---- Aprendizado com o que já foi enviado ----
       outreach_by_angle: {
         Args: { p_user_id: string; p_days?: number }

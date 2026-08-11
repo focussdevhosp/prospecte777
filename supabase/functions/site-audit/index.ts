@@ -8,6 +8,7 @@ import {
   requireUserOrInternal,
 } from "../_shared/auth.ts";
 import { auditSite } from "../_shared/site-audit.ts";
+import { recordSignals } from "../_shared/signals-runtime.ts";
 
 // ============================================================
 // AUDITORIA DE SITE
@@ -50,7 +51,12 @@ Deno.serve(async (req) => {
         if (!limit.allowed) return rateLimited(limit.resetIn);
       }
 
-      const query = supabase.from("leads").select("id, business_name, website").eq("id", leadId);
+      // `signal_snapshot` entra no select: sem o estado anterior não há como
+      // saber o que mudou, e sem isso não existe sinal.
+      const query = supabase
+        .from("leads")
+        .select("id, user_id, business_name, website, rating, reviews_count, site_audit, signal_snapshot")
+        .eq("id", leadId);
       if (auth.ctx.kind === "user") query.eq("user_id", auth.ctx.userId);
 
       const { data: lead } = await query.maybeSingle();
@@ -58,12 +64,16 @@ Deno.serve(async (req) => {
 
       const audit = await auditSite(lead.website);
 
+      // A detecção vem ANTES da gravação da auditoria nova: ela compara o
+      // estado anterior com o recém-medido, e o anterior ainda está na linha.
+      const sinais = await recordSignals(supabase, { ...lead, site_audit: audit });
+
       await supabase
         .from("leads")
         .update({ site_audit: audit, site_audited_at: audit.checked_at })
         .eq("id", leadId);
 
-      return json({ lead_id: leadId, business_name: lead.business_name, audit });
+      return json({ lead_id: leadId, business_name: lead.business_name, audit, signals: sinais });
     }
 
     // ------------------------------------------------------------

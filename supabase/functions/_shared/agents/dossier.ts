@@ -45,6 +45,13 @@ export interface LeadRow {
   enriched_at?: string | null;
 }
 
+/** Linha de `lead_signals` já filtrada por validade. */
+export interface SignalRow {
+  type?: string;
+  summary?: string;
+  detected_at?: string | null;
+}
+
 interface SiteAuditRow {
   url?: string | null;
   reachable?: boolean;
@@ -105,6 +112,14 @@ export function buildDossier(input: {
   lead: LeadRow;
   memories?: MemoryRow[];
   messages?: MessageRow[];
+  /**
+   * Sinais ativos: mudanças observadas com data e evidência.
+   *
+   * Entram como FATO, e no topo da lista. São o material mais valioso que o
+   * dossiê pode ter — não descrevem como a empresa é, descrevem o que
+   * aconteceu com ela agora, que é o que justifica a mensagem existir hoje.
+   */
+  signals?: SignalRow[];
 }): Dossier {
   const { lead } = input;
   const facts: Fact[] = [];
@@ -114,6 +129,22 @@ export function buildDossier(input: {
 
   const origin = sourceLabel(lead.source);
   origins.push(origin);
+
+  // ---- Sinais primeiro ----
+  // Vêm antes da identidade de propósito: `pickHook` percorre os fatos em
+  // ordem, e um sinal fresco é sempre melhor gancho que uma característica
+  // estática. "O site saiu do ar semana passada" abre conversa; "vocês não
+  // têm site" é uma observação que vale há dois anos.
+  for (const sinal of input.signals ?? []) {
+    if (!sinal?.summary) continue;
+    facts.push({
+      label: "Mudança recente",
+      value: sinal.summary,
+      source: `observado em ${formatDate(sinal.detected_at)}`,
+      confidence: 1,
+    });
+    origins.push("monitoramento de mudanças");
+  }
 
   // ---- Identidade ----
   facts.push({

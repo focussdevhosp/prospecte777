@@ -104,6 +104,21 @@ function makePipeline(lead: Record<string, unknown>, allowed?: string[]) {
   return { dossier, qualification, match, strategy };
 }
 
+
+function makePipelineComSinais(
+  lead: Record<string, unknown>,
+  signals: Array<{ type: string; summary: string; detected_at: string }>,
+) {
+  const dossier = buildDossier({ lead: lead as never, signals });
+  const qualification = qualify(dossier, {
+    niches: ['Clínicas de Estética', 'Clínicas Odontológicas'],
+    locations: ['Itu', 'Sorocaba'],
+  });
+  const match = matchOffer(dossier, catalogo);
+  const strategy = buildStrategy({ dossier, qualification, match, goal: 'agendar_demonstracao' });
+  return { dossier, qualification, match, strategy };
+}
+
 // ------------------------------------------------------------
 // DOSSIÊ
 // ------------------------------------------------------------
@@ -548,4 +563,67 @@ describe('Quality Gate — mensagem boa não pode ser barrada', () => {
       expect(v.approved).toBe(true);
     });
   }
+});
+
+// ------------------------------------------------------------
+// SINAL COMO GANCHO
+// ------------------------------------------------------------
+// É o encaixe que dá valor ao detector: sem ele, o sinal seria mais uma
+// linha no dossiê e a mensagem continuaria abrindo pelo mesmo fato estático
+// de sempre.
+
+describe('sinal ativo vira gancho da abordagem', () => {
+  const sinal = {
+    type: 'site_fora_do_ar',
+    summary: 'O site parou de responder — estava no ar na conferência anterior.',
+    detected_at: '2026-08-10T12:00:00.000Z',
+  };
+
+  it('entra como FATO, com a data da observação na fonte', () => {
+    const d = buildDossier({ lead: leadComSiteRuim as never, signals: [sinal] });
+    const fato = d.facts.find((f) => f.label === 'Mudança recente');
+
+    expect(fato).toBeDefined();
+    expect(fato!.value).toContain('parou de responder');
+    // Sem a data, "mudança recente" é uma afirmação sem prazo — e o gate
+    // trata fato sem origem como invenção.
+    expect(fato!.source).toContain('observado em');
+  });
+
+  it('ganha do problema estático do site na escolha do gancho', () => {
+    // "Reparei que o site saiu do ar" tem motivo para chegar hoje.
+    // "Vi que o site não é responsivo" vale há dois anos, e o lead sabe.
+    const comSinal = makePipelineComSinais(leadComSiteRuim, [sinal]);
+    expect(comSinal.strategy.hook?.value).toContain('parou de responder');
+
+    const semSinal = makePipeline(leadComSiteRuim);
+    expect(semSinal.strategy.hook?.value).not.toContain('parou de responder');
+  });
+
+  it('sem sinal, nada muda no comportamento anterior', () => {
+    const d = buildDossier({ lead: leadComSiteRuim as never, signals: [] });
+    expect(d.facts.some((f) => f.label === 'Mudança recente')).toBe(false);
+  });
+
+  it('mensagem construída sobre o sinal passa no gate', () => {
+    // O sinal só serve se der para usá-lo sem tropeçar na revisão.
+    const p = makePipelineComSinais(leadComSiteRuim, [sinal]);
+    const v = evaluate({
+      // Reaproveita as palavras do fato de propósito. O gate pontua
+      // personalização por uso do fato, e paráfrase distante não é
+      // reconhecida — o que é o preço de ter uma defesa contra mensagem
+      // genérica que não depende de julgar estilo.
+      message:
+        'Oi! O site da Odonto Sorriso parou de responder — estava no ar quando conferi antes. Quer que eu veja o que houve?',
+      dossier: p.dossier,
+      strategy: p.strategy,
+    });
+
+    if (!v.approved) {
+      throw new Error(
+        v.issues.filter((i) => i.severity === 'block').map((i) => i.message).join(' | '),
+      );
+    }
+    expect(v.approved).toBe(true);
+  });
 });

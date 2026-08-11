@@ -136,6 +136,18 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Vence os sinais fora da janela. Sem isto, um gatilho de seis meses atrás
+    // continuaria virando gancho de abordagem — e falar de algo tão velho não
+    // soa atento, soa automatizado.
+    if (!task || task === "expire_signals") {
+      try {
+        const { data: vencidos } = await supabase.rpc("expire_lead_signals");
+        results.signals_expired = vencidos ?? 0;
+      } catch (e) {
+        console.error("[cron] erro ao vencer sinais:", e);
+      }
+    }
+
     // Limpa o cache de busca vencido. Barato e evita a tabela crescer sem fim.
     if (!task || task === "purge_cache") {
       const hour = new Date().getUTCHours();
