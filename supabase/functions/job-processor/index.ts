@@ -7,6 +7,7 @@ import {
   requireUserOrInternal,
   resolveUserId,
 } from "../_shared/auth.ts";
+import { selectAbTemplate, recordAbSend } from "../_shared/ab-runtime.ts";
 
 interface BackgroundJob {
   id: string;
@@ -85,6 +86,12 @@ async function processJobItem(
         }
 
         let message = "";
+        // Preenchido quando o lead entra num teste A/B. Fica nulo na
+        // trilha de IA, que escreve mensagem unica por lead.
+        let abSelection: { testId: string | null; variant: "a" | "b" | null } = {
+          testId: null,
+          variant: null,
+        };
 
         // Check if using direct AI mode (no template)
         if (payload.direct_ai_mode || !payload.message_template) {
@@ -246,8 +253,17 @@ async function processJobItem(
               .replace(/{telefone}/gi, lead.phone || "");
           }
         } else {
-          // Simple variable replacement
-          message = payload.message_template
+          // Trilha de template puro: e a unica em que o teste A/B faz sentido.
+          // Na trilha de IA a mensagem e escrita do zero para cada lead, entao
+          // nao ha duas versoes fixas para comparar.
+          abSelection = await selectAbTemplate(supabase, {
+            userId: job.user_id,
+            leadId: lead.id,
+            niche: lead.niche,
+            fallback: payload.message_template,
+          });
+
+          message = abSelection.template
             .replace(/{nome}/gi, lead.business_name || "")
             .replace(/{empresa}/gi, lead.business_name || "")
             .replace(/{nicho}/gi, lead.niche || "seu segmento")
@@ -289,6 +305,16 @@ async function processJobItem(
 
         // Log success
         await logToDb(supabase, job.id, job.user_id, 'success', `Mensagem enviada para ${lead.business_name}`);
+
+        // Amostra do teste A/B: so conta o que saiu de verdade.
+        if (abSelection.testId && abSelection.variant && lead.id) {
+          await recordAbSend(supabase, {
+            testId: abSelection.testId,
+            variant: abSelection.variant,
+            leadId: lead.id,
+            userId: job.user_id,
+          });
+        }
 
         // Save message to database
         if (lead.id) {

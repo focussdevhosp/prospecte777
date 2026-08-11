@@ -23,6 +23,15 @@ export interface ABTestRow {
   variant_b_conversions: number;
   winner: string | null;
   confidence: number | null;
+  /**
+   * Qual métrica decidiu: `receita`, `conversao` ou `resposta`.
+   *
+   * A coluna `winner` sozinha guardava "variant_a" e mais nada. Quem abre a
+   * tela três semanas depois não tinha como saber se aquilo foi decidido por
+   * venda ou por curiosidade — e são conclusões muito diferentes.
+   */
+  decision_metric: string | null;
+  decision_reason: string | null;
   min_sample_size: number;
   started_at: string | null;
   completed_at: string | null;

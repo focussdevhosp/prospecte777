@@ -1,4 +1,5 @@
 import { corsHeaders, handleCors, requireInternal } from "../_shared/auth.ts";
+import { decideWinner } from "../_shared/agents/ab.ts";
 
 // Motor de manutenção. Roda a cada 5 minutos pelo pg_cron, que se identifica
 // com o segredo interno guardado em private.app_config.
@@ -171,37 +172,54 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Task 8: Auto-complete A/B tests with statistical significance
+    // Task 8: conclui teste A/B quando ha motivo para concluir.
+    //
+    // A versao anterior decidia por TAXA DE RESPOSTA, que e justamente a
+    // metrica que engana: a mensagem que promete demais ganha em resposta e
+    // perde na venda. Otimizar por resposta e treinar o sistema a exagerar.
+    //
+    // E, na pratica, nunca decidia nada: `variant_a_responses` nao era
+    // escrito por nada, entao a taxa era sempre 0/0 e o calculo caia no
+    // `continue`. Os numeros agora saem de `ab_test_stats`, contados a partir
+    // das atribuicoes reais.
     if (!task || task === "check_ab_tests") {
-      const { data: runningTests } = await supabase
-        .from("ab_tests")
-        .select("*")
-        .eq("status", "running");
+      const { data: pending } = await supabase.rpc("ab_tests_to_evaluate");
 
       let completed = 0;
-      for (const test of runningTests || []) {
-        const totalSent = test.variant_a_sent + test.variant_b_sent;
-        if (totalSent < test.min_sample_size * 2) continue;
+      for (const row of pending || []) {
+        try {
+          await supabase.rpc("ab_sync_counters", { p_test_id: row.test_id });
 
-        const rateA = test.variant_a_sent > 0 ? test.variant_a_responses / test.variant_a_sent : 0;
-        const rateB = test.variant_b_sent > 0 ? test.variant_b_responses / test.variant_b_sent : 0;
-        const pooledRate = (test.variant_a_responses + test.variant_b_responses) / totalSent;
-        if (pooledRate === 0 || pooledRate === 1) continue;
+          const { data: stats } = await supabase.rpc("ab_test_stats", { p_test_id: row.test_id });
+          if (!stats) continue;
 
-        const se = Math.sqrt(pooledRate * (1 - pooledRate) * (1 / test.variant_a_sent + 1 / test.variant_b_sent));
-        if (se === 0) continue;
-        const z = Math.abs(rateA - rateB) / se;
+          const lado = (v: Record<string, number>) => ({
+            sent: Number(v?.sent ?? 0),
+            replied: Number(v?.replied ?? 0),
+            converted: Number(v?.converted ?? 0),
+            revenueCents: Number(v?.revenue_cents ?? 0),
+          });
 
-        if (z >= 1.96) {
-          const winner = rateA > rateB ? "variant_a" : "variant_b";
-          const confidence = z >= 2.576 ? 99 : z >= 1.96 ? 95 : 90;
+          const decisao = decideWinner(
+            lado(stats.a),
+            lado(stats.b),
+            row.min_sample ?? 50,
+          );
+
+          if (!decisao.winner) continue;
+
           await supabase.from("ab_tests").update({
             status: "completed",
-            winner,
-            confidence,
+            winner: decisao.winner === "a" ? "variant_a" : "variant_b",
+            confidence: decisao.confidence,
+            decision_metric: decisao.metric,
+            decision_reason: decisao.reason,
             completed_at: new Date().toISOString(),
-          }).eq("id", test.id);
+          }).eq("id", row.test_id);
+
           completed++;
+        } catch (e) {
+          console.error(`[cron] falha ao avaliar teste ${row.test_id}:`, e);
         }
       }
       results.ab_tests_completed = completed;

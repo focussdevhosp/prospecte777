@@ -1,7 +1,7 @@
 -- ============================================================
 -- SCHEMA COMPLETO — PROJETO NOVO E VAZIO
 -- ============================================================
--- Contém as 67 migrações do projeto, na ordem cronológica em que foram
+-- Contém as 68 migrações do projeto, na ordem cronológica em que foram
 -- criadas. É o schema inteiro: nenhum dado de nenhum projeto anterior.
 --
 -- Gerado por `node scripts/build-schema.mjs`. Não edite à mão: edite a
@@ -31,7 +31,7 @@
 
 
 -- ############################################################
--- [01/67] 20260205182010_95dad26d-4d67-46dc-85fc-fa36d32d2c98.sql
+-- [01/68] 20260205182010_95dad26d-4d67-46dc-85fc-fa36d32d2c98.sql
 -- ############################################################
 
 -- ===========================================
@@ -282,7 +282,7 @@ CREATE TRIGGER on_auth_user_created
 
 
 -- ############################################################
--- [02/67] 20260205183050_1edecf76-2e28-4262-bb1d-96cee3c59fe6.sql
+-- [02/68] 20260205183050_1edecf76-2e28-4262-bb1d-96cee3c59fe6.sql
 -- ############################################################
 
 -- Add advanced agent configuration columns to user_settings
@@ -309,7 +309,7 @@ ADD COLUMN IF NOT EXISTS value_proposition_focus TEXT DEFAULT 'beneficios'
 
 
 -- ############################################################
--- [03/67] 20260205232207_11dbefe6-cb8b-4d08-8877-d7e15ec72b81.sql
+-- [03/68] 20260205232207_11dbefe6-cb8b-4d08-8877-d7e15ec72b81.sql
 -- ############################################################
 
 -- Create campaigns table for scheduled prospecting
@@ -364,7 +364,7 @@ CREATE INDEX idx_campaigns_status ON public.campaigns(status);
 
 
 -- ############################################################
--- [04/67] 20260205233003_d7e90fd5-d57d-43a2-b6c2-75a59cad978e.sql
+-- [04/68] 20260205233003_d7e90fd5-d57d-43a2-b6c2-75a59cad978e.sql
 -- ############################################################
 
 -- Add new columns to leads table for advanced management
@@ -465,7 +465,7 @@ CREATE INDEX IF NOT EXISTS idx_leads_quality ON public.leads(user_id, quality_sc
 
 
 -- ############################################################
--- [05/67] 20260206013150_326004c7-83f9-4d47-baf3-b254a1eabaf8.sql
+-- [05/68] 20260206013150_326004c7-83f9-4d47-baf3-b254a1eabaf8.sql
 -- ############################################################
 
 -- Add columns for user's own API keys
@@ -479,7 +479,7 @@ COMMENT ON COLUMN public.user_settings.serpapi_api_key IS 'User personal SerpAPI
 
 
 -- ############################################################
--- [06/67] 20260206025213_b7aba049-3f33-48cb-a5ad-2b78bce18a79.sql
+-- [06/68] 20260206025213_b7aba049-3f33-48cb-a5ad-2b78bce18a79.sql
 -- ############################################################
 
 -- Create follow_up_sequences table for automated follow-up flows
@@ -558,7 +558,7 @@ EXECUTE FUNCTION public.update_updated_at_column();
 
 
 -- ############################################################
--- [07/67] 20260206030514_4679ed9c-38e4-4a7f-9fea-911d4e73a679.sql
+-- [07/68] 20260206030514_4679ed9c-38e4-4a7f-9fea-911d4e73a679.sql
 -- ############################################################
 
 -- Enable required extensions for cron jobs
@@ -571,7 +571,7 @@ GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA cron TO postgres;
 
 
 -- ############################################################
--- [08/67] 20260206030544_aace4901-3975-4864-b0fa-2fd040667be5.sql
+-- [08/68] 20260206030544_aace4901-3975-4864-b0fa-2fd040667be5.sql
 -- ############################################################
 
 -- Schedule prospecting check every hour at minute 0
@@ -602,7 +602,7 @@ SELECT cron.schedule(
 
 
 -- ############################################################
--- [09/67] 20260206032342_54e9428d-72ee-4ad7-8067-a161bd42881c.sql
+-- [09/68] 20260206032342_54e9428d-72ee-4ad7-8067-a161bd42881c.sql
 -- ############################################################
 
 -- Create teams table
@@ -737,7 +737,7 @@ CREATE TRIGGER update_teams_updated_at
 
 
 -- ############################################################
--- [10/67] 20260206032756_618904bf-0d9d-4f71-b626-a996d477d968.sql
+-- [10/68] 20260206032756_618904bf-0d9d-4f71-b626-a996d477d968.sql
 -- ############################################################
 
 -- Create background jobs table for persistent task processing
@@ -836,7 +836,7 @@ GRANT EXECUTE ON FUNCTION public.recover_stale_jobs() TO service_role;
 
 
 -- ############################################################
--- [11/67] 20260206032811_dc4a3f58-87ef-4409-85ed-04872494ad39.sql
+-- [11/68] 20260206032811_dc4a3f58-87ef-4409-85ed-04872494ad39.sql
 -- ############################################################
 
 -- Fix search_path for recover_stale_jobs function
@@ -868,7 +868,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 
 -- ############################################################
--- [12/67] 20260206033315_a5b3a612-f86f-4b86-a0bc-c85e51f3dc2b.sql
+-- [12/68] 20260206033315_a5b3a612-f86f-4b86-a0bc-c85e51f3dc2b.sql
 -- ############################################################
 
 -- Add lead_score columns
@@ -983,7 +983,7 @@ GRANT EXECUTE ON FUNCTION public.calculate_lead_score(UUID) TO service_role;
 
 
 -- ############################################################
--- [13/67] 20260206200655_77b5d629-91cf-44ac-bcec-133c992ce14b.sql
+-- [13/68] 20260206200655_77b5d629-91cf-44ac-bcec-133c992ce14b.sql
 -- ############################################################
 
 -- Create prospecting_history table to track all prospecting sessions
@@ -1045,7 +1045,7 @@ EXECUTE FUNCTION public.update_updated_at_column();
 
 
 -- ############################################################
--- [14/67] 20260207011238_f3316bde-b3fb-4cd8-95ff-96f57096b1e1.sql
+-- [14/68] 20260207011238_f3316bde-b3fb-4cd8-95ff-96f57096b1e1.sql
 -- ############################################################
 
 -- Add anti-block configuration columns to user_settings
@@ -1065,7 +1065,7 @@ ADD COLUMN IF NOT EXISTS cooldown_minutes integer DEFAULT 15;
 
 
 -- ############################################################
--- [15/67] 20260207011903_ae6663ad-d073-45e7-905d-c8372aa0dea7.sql
+-- [15/68] 20260207011903_ae6663ad-d073-45e7-905d-c8372aa0dea7.sql
 -- ############################################################
 
 -- Add remaining anti-block configuration columns to user_settings
@@ -1081,7 +1081,7 @@ ADD COLUMN IF NOT EXISTS slowdown_threshold integer DEFAULT 5;
 
 
 -- ############################################################
--- [16/67] 20260207013757_2a426a67-937e-4efa-8032-b61e1ba388ad.sql
+-- [16/68] 20260207013757_2a426a67-937e-4efa-8032-b61e1ba388ad.sql
 -- ############################################################
 
 -- Create a table to store job logs for persistence
@@ -1117,7 +1117,7 @@ CREATE INDEX idx_job_logs_created_at ON public.job_logs(created_at DESC);
 
 
 -- ############################################################
--- [17/67] 20260207013812_6b0dd7ce-fa90-4e59-9576-b6965df18b78.sql
+-- [17/68] 20260207013812_6b0dd7ce-fa90-4e59-9576-b6965df18b78.sql
 -- ############################################################
 
 -- Drop the permissive INSERT policy
@@ -1128,7 +1128,7 @@ DROP POLICY IF EXISTS "Service role can insert job logs" ON public.job_logs;
 
 
 -- ############################################################
--- [18/67] 20260207020000_2e40c0df-7429-4f05-8598-00a037a871d8.sql
+-- [18/68] 20260207020000_2e40c0df-7429-4f05-8598-00a037a871d8.sql
 -- ############################################################
 
 -- Add message_sent field to track if a lead received a message or not
@@ -1149,7 +1149,7 @@ WHERE EXISTS (
 
 
 -- ############################################################
--- [19/67] 20260207190348_008f6d76-52cd-4fa7-a2c2-ffe883337c03.sql
+-- [19/68] 20260207190348_008f6d76-52cd-4fa7-a2c2-ffe883337c03.sql
 -- ############################################################
 
 -- Add Serper.dev API key and preferred search API fields to user_settings
@@ -1159,7 +1159,7 @@ ADD COLUMN IF NOT EXISTS preferred_search_api text DEFAULT 'serper';
 
 
 -- ############################################################
--- [20/67] 20260208181338_9f789e7f-1480-4a0c-8773-34bef8d7a82b.sql
+-- [20/68] 20260208181338_9f789e7f-1480-4a0c-8773-34bef8d7a82b.sql
 -- ############################################################
 
 -- Tabela de estados brasileiros
@@ -1310,7 +1310,7 @@ INSERT INTO public.brazil_cep_ranges (state_code, cep_start, cep_end, region_nam
 
 
 -- ############################################################
--- [21/67] 20260208181733_3a06c0bd-d400-42e8-8cf6-47de6e9a325a.sql
+-- [21/68] 20260208181733_3a06c0bd-d400-42e8-8cf6-47de6e9a325a.sql
 -- ############################################################
 
 -- Inserir as principais cidades de cada estado brasileiro
@@ -1602,7 +1602,7 @@ ON CONFLICT (state_code, name) DO NOTHING;
 
 
 -- ############################################################
--- [22/67] 20260208181913_67e4009f-8e27-4bab-a6ef-e5db40438894.sql
+-- [22/68] 20260208181913_67e4009f-8e27-4bab-a6ef-e5db40438894.sql
 -- ############################################################
 
 -- Add photo_url column to leads for storing Google Maps photos
@@ -1624,7 +1624,7 @@ COMMENT ON COLUMN public.leads.service_opportunities IS 'Oportunidades de servi�
 
 
 -- ############################################################
--- [23/67] 20260208191417_7ebee322-8a33-43ae-9602-9c38aad61370.sql
+-- [23/68] 20260208191417_7ebee322-8a33-43ae-9602-9c38aad61370.sql
 -- ############################################################
 
 -- Create service_intelligence table for storing AI knowledge per service
@@ -1700,7 +1700,7 @@ COMMENT ON TABLE public.service_intelligence IS 'AI knowledge base per service w
 
 
 -- ############################################################
--- [24/67] 20260208192047_0d894ef8-33c4-4d98-9509-12ce48d017c6.sql
+-- [24/68] 20260208192047_0d894ef8-33c4-4d98-9509-12ce48d017c6.sql
 -- ############################################################
 
 -- Tabela para armazenar padrões de aprendizado por nicho
@@ -1931,7 +1931,7 @@ CREATE INDEX idx_intelligent_followups_lead ON public.intelligent_followups(lead
 
 
 -- ############################################################
--- [25/67] 20260208195031_bf2c8644-1704-4ecf-a45a-9ca0a5f8c758.sql
+-- [25/68] 20260208195031_bf2c8644-1704-4ecf-a45a-9ca0a5f8c758.sql
 -- ############################################################
 
 -- Enable realtime for meetings table
@@ -1939,7 +1939,7 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.meetings;
 
 
 -- ############################################################
--- [26/67] 20260208195200_88e7efb1-fb27-4ff8-aa12-9c0fa9f3690f.sql
+-- [26/68] 20260208195200_88e7efb1-fb27-4ff8-aa12-9c0fa9f3690f.sql
 -- ############################################################
 
 -- Fix infinite recursion in team_members policies
@@ -2009,7 +2009,7 @@ USING (user_id = auth.uid() OR team_id IN (SELECT public.get_user_team_ids(auth.
 
 
 -- ############################################################
--- [27/67] 20260208195526_433de59b-e7b9-4d0c-9cf0-58464dd974d8.sql
+-- [27/68] 20260208195526_433de59b-e7b9-4d0c-9cf0-58464dd974d8.sql
 -- ############################################################
 
 -- Add Google Meet link field to user_settings
@@ -2018,7 +2018,7 @@ ADD COLUMN IF NOT EXISTS google_meet_link text;
 
 
 -- ############################################################
--- [28/67] 20260208202514_2db69d76-7698-4c32-af96-89c766fabc87.sql
+-- [28/68] 20260208202514_2db69d76-7698-4c32-af96-89c766fabc87.sql
 -- ############################################################
 
 -- =====================================================
@@ -2292,7 +2292,7 @@ CREATE TRIGGER auto_blacklist_on_response
 
 
 -- ############################################################
--- [29/67] 20260208203508_962a4715-6ff9-43a3-b3bb-8364db4c3a9d.sql
+-- [29/68] 20260208203508_962a4715-6ff9-43a3-b3bb-8364db4c3a9d.sql
 -- ############################################################
 
 -- Update default values for antiban_config to be more comprehensive
@@ -2427,7 +2427,7 @@ WHERE NOT EXISTS (SELECT 1 FROM public.message_variations mv WHERE mv.user_id = 
 
 
 -- ############################################################
--- [30/67] 20260208203846_41eabf8e-be44-4a47-bf48-9dc7477d56ce.sql
+-- [30/68] 20260208203846_41eabf8e-be44-4a47-bf48-9dc7477d56ce.sql
 -- ############################################################
 
 -- Delete existing variations for the user
@@ -2674,7 +2674,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 
 -- ############################################################
--- [31/67] 20260208204347_d389c481-8bae-44c0-b691-4330f935bb53.sql
+-- [31/68] 20260208204347_d389c481-8bae-44c0-b691-4330f935bb53.sql
 -- ############################################################
 
 -- Add missing UPDATE and DELETE policies for activity_log for security completeness
@@ -2711,7 +2711,7 @@ USING (false);
 
 
 -- ############################################################
--- [32/67] 20260208204430_450f473b-c41b-4ece-8aba-b9020ff72f5f.sql
+-- [32/68] 20260208204430_450f473b-c41b-4ece-8aba-b9020ff72f5f.sql
 -- ############################################################
 
 -- Update handle_new_user to also create antiban_config (which triggers message variations)
@@ -2740,7 +2740,7 @@ $function$;
 
 
 -- ############################################################
--- [33/67] 20260208210947_6e7aa69a-8dd1-4d1b-9ef0-d5918a404679.sql
+-- [33/68] 20260208210947_6e7aa69a-8dd1-4d1b-9ef0-d5918a404679.sql
 -- ############################################################
 
 -- Create table for long-term memory of conversations
@@ -2828,14 +2828,14 @@ $$;
 
 
 -- ############################################################
--- [34/67] 20260328202602_78e85876-d6c6-4a03-a3cd-6e4aa2202088.sql
+-- [34/68] 20260328202602_78e85876-d6c6-4a03-a3cd-6e4aa2202088.sql
 -- ############################################################
 
 ALTER TABLE public.user_settings RENAME COLUMN gemini_api_key TO deepseek_api_key;
 
 
 -- ############################################################
--- [35/67] 20260328204246_c329713f-3cf9-4d76-9ca6-11e412aeedb3.sql
+-- [35/68] 20260328204246_c329713f-3cf9-4d76-9ca6-11e412aeedb3.sql
 -- ############################################################
 
 ALTER TABLE public.leads ADD COLUMN IF NOT EXISTS deal_value numeric DEFAULT NULL;
@@ -2843,14 +2843,14 @@ ALTER TABLE public.leads ADD COLUMN IF NOT EXISTS tasks jsonb DEFAULT '[]'::json
 
 
 -- ############################################################
--- [36/67] 20260328210134_bf4793c2-e64e-40aa-bc06-f1ef05813138.sql
+-- [36/68] 20260328210134_bf4793c2-e64e-40aa-bc06-f1ef05813138.sql
 -- ############################################################
 
 ALTER TABLE public.user_settings ADD COLUMN IF NOT EXISTS apify_token text DEFAULT NULL;
 
 
 -- ############################################################
--- [37/67] 20260328231723_d8ed585b-aff0-4bc6-b27c-a67205f70b3b.sql
+-- [37/68] 20260328231723_d8ed585b-aff0-4bc6-b27c-a67205f70b3b.sql
 -- ############################################################
 
 
@@ -2902,7 +2902,7 @@ WITH CHECK (public.has_role(auth.uid(), 'admin'));
 
 
 -- ############################################################
--- [38/67] 20260328231751_2eec8b54-2651-48bc-9182-20bbb7ae3f2e.sql
+-- [38/68] 20260328231751_2eec8b54-2651-48bc-9182-20bbb7ae3f2e.sql
 -- ############################################################
 
 
@@ -2913,7 +2913,7 @@ ON CONFLICT (user_id, role) DO NOTHING;
 
 
 -- ############################################################
--- [39/67] 20260328232818_81bfd73f-bdee-4c64-bcfe-9ba76c491aa6.sql
+-- [39/68] 20260328232818_81bfd73f-bdee-4c64-bcfe-9ba76c491aa6.sql
 -- ############################################################
 
 
@@ -2930,7 +2930,7 @@ ALTER TABLE public.user_settings
 
 
 -- ############################################################
--- [40/67] 20260329003158_6d4bd183-7fdd-451a-b49f-9c9064bead99.sql
+-- [40/68] 20260329003158_6d4bd183-7fdd-451a-b49f-9c9064bead99.sql
 -- ############################################################
 
 
@@ -3020,7 +3020,7 @@ CREATE TRIGGER update_subscriptions_updated_at
 
 
 -- ############################################################
--- [41/67] 20260329021300_505bb8c1-042a-4ef9-9d1d-5812ceb566fe.sql
+-- [41/68] 20260329021300_505bb8c1-042a-4ef9-9d1d-5812ceb566fe.sql
 -- ############################################################
 
 SELECT cron.schedule(
@@ -3037,7 +3037,7 @@ SELECT cron.schedule(
 
 
 -- ############################################################
--- [42/67] 20260401152401_c80f3733-7b19-479b-8325-1a526c9997fc.sql
+-- [42/68] 20260401152401_c80f3733-7b19-479b-8325-1a526c9997fc.sql
 -- ############################################################
 
 -- Fix: Add INSERT policy for job_logs
@@ -3058,7 +3058,7 @@ ALTER PUBLICATION supabase_realtime ADD TABLE meetings;
 
 
 -- ############################################################
--- [43/67] 20260402001353_c4b56a47-7609-46d3-bd08-3f6127f6025f.sql
+-- [43/68] 20260402001353_c4b56a47-7609-46d3-bd08-3f6127f6025f.sql
 -- ############################################################
 
 
@@ -3102,7 +3102,7 @@ CREATE INDEX IF NOT EXISTS idx_leads_lat_lng ON public.leads (lat, lng) WHERE la
 
 
 -- ############################################################
--- [44/67] 20260402013057_546d18d8-3a9c-495a-a6a7-7279233ad85b.sql
+-- [44/68] 20260402013057_546d18d8-3a9c-495a-a6a7-7279233ad85b.sql
 -- ############################################################
 
 ALTER TABLE public.user_settings
@@ -3113,7 +3113,7 @@ ALTER TABLE public.user_settings
 
 
 -- ############################################################
--- [45/67] 20260402013636_fcf655ab-d593-4ee0-b149-d6591196a030.sql
+-- [45/68] 20260402013636_fcf655ab-d593-4ee0-b149-d6591196a030.sql
 -- ############################################################
 
 
@@ -3155,7 +3155,7 @@ CREATE POLICY "Anyone authenticated can insert community leads"
 
 
 -- ############################################################
--- [46/67] 20260405054816_83c5706b-d6c1-4d23-951e-c37435792c52.sql
+-- [46/68] 20260405054816_83c5706b-d6c1-4d23-951e-c37435792c52.sql
 -- ############################################################
 
 
@@ -3591,7 +3591,7 @@ USING (auth.uid() = user_id);
 
 
 -- ############################################################
--- [47/67] 20260405055222_4d29b25e-c8a3-4c70-87a0-a53cff46692f.sql
+-- [47/68] 20260405055222_4d29b25e-c8a3-4c70-87a0-a53cff46692f.sql
 -- ############################################################
 
 -- Fix user_settings RLS policy to use authenticated role instead of public
@@ -3606,7 +3606,7 @@ WITH CHECK (auth.uid() = user_id);
 
 
 -- ############################################################
--- [48/67] 20260406145742_a790410a-815e-4fd7-aa69-26d07b7618db.sql
+-- [48/68] 20260406145742_a790410a-815e-4fd7-aa69-26d07b7618db.sql
 -- ############################################################
 
 
@@ -3707,7 +3707,7 @@ CREATE TRIGGER update_support_tickets_updated_at BEFORE UPDATE ON public.support
 
 
 -- ############################################################
--- [49/67] 20260406174649_42c7ffce-cdac-4b27-a99b-1269c4103f0d.sql
+-- [49/68] 20260406174649_42c7ffce-cdac-4b27-a99b-1269c4103f0d.sql
 -- ############################################################
 
 SELECT cron.schedule(
@@ -3724,7 +3724,7 @@ SELECT cron.schedule(
 
 
 -- ############################################################
--- [50/67] 20260406174934_0c16818d-cfa6-4d24-aae9-fe2c173260ca.sql
+-- [50/68] 20260406174934_0c16818d-cfa6-4d24-aae9-fe2c173260ca.sql
 -- ############################################################
 
 
@@ -3764,14 +3764,14 @@ CREATE POLICY "Users manage own AB tests" ON public.ab_tests
 
 
 -- ############################################################
--- [51/67] 20260406175538_34e59281-80c0-4ccc-a870-876f6d285ee4.sql
+-- [51/68] 20260406175538_34e59281-80c0-4ccc-a870-876f6d285ee4.sql
 -- ############################################################
 
 ALTER TABLE public.user_settings ADD COLUMN IF NOT EXISTS meta_access_token text;
 
 
 -- ############################################################
--- [52/67] 20260423021202_b85849e1-27e8-4902-8e36-061b8c04a873.sql
+-- [52/68] 20260423021202_b85849e1-27e8-4902-8e36-061b8c04a873.sql
 -- ############################################################
 
 DO $$
@@ -3837,7 +3837,7 @@ END $$;
 
 
 -- ############################################################
--- [53/67] 20260724192641_cf1ef2c1-ea12-4683-853e-6f88396ac174.sql
+-- [53/68] 20260724192641_cf1ef2c1-ea12-4683-853e-6f88396ac174.sql
 -- ############################################################
 
 
@@ -3919,7 +3919,7 @@ CREATE TRIGGER meta_ads_tokens_updated_at
 
 
 -- ############################################################
--- [54/67] 20260724224950_289cdd27-aabd-45d6-9750-793cc1db5dad.sql
+-- [54/68] 20260724224950_289cdd27-aabd-45d6-9750-793cc1db5dad.sql
 -- ############################################################
 
 
@@ -3979,7 +3979,7 @@ INSERT INTO public.objection_responses (user_id, is_template, category, objectio
 
 
 -- ############################################################
--- [55/67] 20260724225410_1166ed0e-5ccc-4fe9-97ee-d027644c91ee.sql
+-- [55/68] 20260724225410_1166ed0e-5ccc-4fe9-97ee-d027644c91ee.sql
 -- ############################################################
 
 
@@ -4029,7 +4029,7 @@ INSERT INTO public.portfolio_sites (user_id, is_template, title, url, category, 
 
 
 -- ############################################################
--- [56/67] 20260726013856_bff0b923-c11a-4d26-aff9-dc6a702bd9ca.sql
+-- [56/68] 20260726013856_bff0b923-c11a-4d26-aff9-dc6a702bd9ca.sql
 -- ############################################################
 
 DELETE FROM public.subscriptions WHERE user_id = '4ab898dc-d738-4e01-ab2d-48e7554af43d';
@@ -4038,7 +4038,7 @@ VALUES ('4ab898dc-d738-4e01-ab2d-48e7554af43d', 'enterprise', 'active', NOW(), N
 
 
 -- ############################################################
--- [57/67] 20260805210000_a1b2c3d4-0001-4a11-9c01-000000000001.sql
+-- [57/68] 20260805210000_a1b2c3d4-0001-4a11-9c01-000000000001.sql
 -- ############################################################
 
 -- ============================================================
@@ -4288,7 +4288,7 @@ END $$;
 
 
 -- ############################################################
--- [58/67] 20260805220000_a1b2c3d4-0002-4a22-9c02-000000000002.sql
+-- [58/68] 20260805220000_a1b2c3d4-0002-4a22-9c02-000000000002.sql
 -- ############################################################
 
 -- ============================================================
@@ -4572,7 +4572,7 @@ GRANT EXECUTE ON FUNCTION public.prune_lead_memory() TO service_role;
 
 
 -- ############################################################
--- [59/67] 20260805230000_a1b2c3d4-0003-4a33-9c03-000000000003.sql
+-- [59/68] 20260805230000_a1b2c3d4-0003-4a33-9c03-000000000003.sql
 -- ############################################################
 
 -- ============================================================
@@ -4654,7 +4654,7 @@ GRANT EXECUTE ON FUNCTION public.get_chip_usage_today(UUID) TO authenticated, se
 
 
 -- ############################################################
--- [60/67] 20260806000000_a1b2c3d4-0004-4a44-9c04-000000000004.sql
+-- [60/68] 20260806000000_a1b2c3d4-0004-4a44-9c04-000000000004.sql
 -- ############################################################
 
 -- ============================================================
@@ -4775,7 +4775,7 @@ GRANT EXECUTE ON FUNCTION public.opportunity_radar(UUID, INTEGER) TO authenticat
 
 
 -- ############################################################
--- [61/67] 20260811120000_b7c8d9e0-0005-4a55-9c05-000000000005.sql
+-- [61/68] 20260811120000_b7c8d9e0-0005-4a55-9c05-000000000005.sql
 -- ############################################################
 
 -- ============================================================
@@ -5296,7 +5296,7 @@ CREATE TRIGGER trg_mission_leads_touch
 
 
 -- ############################################################
--- [62/67] 20260811140000_c8d9e0f1-0006-4a66-9c06-000000000006.sql
+-- [62/68] 20260811140000_c8d9e0f1-0006-4a66-9c06-000000000006.sql
 -- ############################################################
 
 -- ============================================================
@@ -5630,7 +5630,7 @@ CREATE TRIGGER trg_provider_states_touch
 
 
 -- ############################################################
--- [63/67] 20260811160000_d9e0f1a2-0007-4a77-9c07-000000000007.sql
+-- [63/68] 20260811160000_d9e0f1a2-0007-4a77-9c07-000000000007.sql
 -- ############################################################
 
 -- ============================================================
@@ -5794,7 +5794,7 @@ $$;
 
 
 -- ############################################################
--- [64/67] 20260811180000_e0f1a2b3-0008-4a88-9c08-000000000008.sql
+-- [64/68] 20260811180000_e0f1a2b3-0008-4a88-9c08-000000000008.sql
 -- ############################################################
 
 -- ============================================================
@@ -6140,7 +6140,7 @@ COMMENT ON FUNCTION public.mission_refresh_counters(UUID) IS
 
 
 -- ############################################################
--- [65/67] 20260811200000_f1a2b3c4-0009-4a99-9c09-000000000009.sql
+-- [65/68] 20260811200000_f1a2b3c4-0009-4a99-9c09-000000000009.sql
 -- ############################################################
 
 -- ============================================================
@@ -6363,7 +6363,7 @@ $$;
 
 
 -- ############################################################
--- [66/67] 20260811220000_a2b3c4d5-0010-4aaa-9c10-000000000010.sql
+-- [66/68] 20260811220000_a2b3c4d5-0010-4aaa-9c10-000000000010.sql
 -- ############################################################
 
 -- ============================================================
@@ -6515,7 +6515,7 @@ $$;
 
 
 -- ############################################################
--- [67/67] 20260812000000_b3c4d5e6-0011-4abb-9c11-000000000011.sql
+-- [67/68] 20260812000000_b3c4d5e6-0011-4abb-9c11-000000000011.sql
 -- ############################################################
 
 -- ============================================================
@@ -6577,6 +6577,305 @@ BEGIN
     RAISE EXCEPTION
       'O CHECK de escalation_reason não aceita factuality_block — o escalonamento '
       'da conferência de factualidade falharia calado, com um lead esperando resposta.';
+  END IF;
+END;
+$$;
+
+
+-- ############################################################
+-- [68/68] 20260812020000_c4d5e6f7-0012-4acc-9c12-000000000012.sql
+-- ############################################################
+
+-- ============================================================
+-- O TESTE A/B NUNCA MEDIU NADA
+-- ============================================================
+-- A tela em /ab-testing tem 463 linhas: criação de teste, teste-z de duas
+-- proporções, exibição de vencedor, de confiança e de conversões.
+--
+-- E nenhuma linha de código do produto jamais passou `ab_test_id` para o
+-- envio. Uma busca de dois segundos mostra:
+--
+--   grep -rn "ab_test_id" src/
+--   (vazio)
+--
+-- Então `variant_a_sent` nunca saiu de zero. E `variant_a_responses` e
+-- `variant_a_conversions` não eram escritos por absolutamente nada — só
+-- lidos, pela tela e pelo cron. O teste-z do cron dividia por zero, caía no
+-- `continue`, e nenhum teste jamais foi concluído.
+--
+-- É a mesma classe do funil da missão, num tamanho maior: uma funcionalidade
+-- inteira que parece pronta e em que TODO número é permanentemente zero.
+--
+-- O QUE MUDA
+-- Os contadores saem das colunas e passam a ser derivados de uma tabela de
+-- atribuição — uma linha por lead por teste. Contador desnormalizado que
+-- ninguém incrementa vira zero eterno; contador derivado não tem como
+-- divergir do que aconteceu.
+-- ============================================================
+
+-- ------------------------------------------------------------
+-- 1. QUEM RECEBEU O QUÊ
+-- ------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS public.ab_assignments (
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  ab_test_id   UUID NOT NULL REFERENCES public.ab_tests(id) ON DELETE CASCADE,
+  lead_id      UUID NOT NULL REFERENCES public.leads(id) ON DELETE CASCADE,
+  user_id      UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+
+  variant      TEXT NOT NULL CHECK (variant IN ('a', 'b')),
+
+  sent_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  replied_at   TIMESTAMPTZ,
+  converted_at TIMESTAMPTZ,
+  -- Em centavos: somar dinheiro em ponto flutuante acumula erro, e o número
+  -- que vai aparecer na tela como "receita da variante" precisa fechar.
+  revenue_cents BIGINT NOT NULL DEFAULT 0,
+
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+  -- O mesmo lead não entra duas vezes no mesmo teste. Sem isto, um
+  -- reprocessamento de lote contaria a mesma pessoa como duas amostras e a
+  -- significância viraria ficção.
+  CONSTRAINT ab_assignments_unique UNIQUE (ab_test_id, lead_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_ab_assignments_test
+  ON public.ab_assignments (ab_test_id, variant);
+
+CREATE INDEX IF NOT EXISTS idx_ab_assignments_lead
+  ON public.ab_assignments (lead_id, sent_at DESC);
+
+ALTER TABLE public.ab_assignments ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "own ab assignments" ON public.ab_assignments;
+
+-- Só leitura pelo cliente: quem escreve é a edge function. O usuário poder
+-- editar a própria amostra tira o sentido de medir.
+CREATE POLICY "own ab assignments" ON public.ab_assignments
+  FOR SELECT USING (user_id = auth.uid());
+
+-- ------------------------------------------------------------
+-- 2. O LEAD RESPONDEU
+-- ------------------------------------------------------------
+
+/**
+ * Marca a resposta na atribuição mais recente deste lead.
+ *
+ * Mesma escolha do funil da missão: gatilho, não chamada espalhada. A
+ * resposta do lead entra por mais de um caminho, e o caminho que for escrito
+ * amanhã nasceria esquecendo de contar.
+ *
+ * `replied_at` só na primeira resposta — a métrica é "respondeu ou não", e
+ * sobrescrever a cada mensagem transformaria a amostra em outra coisa.
+ */
+CREATE OR REPLACE FUNCTION public.ab_on_reply()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  UPDATE public.ab_assignments
+  SET replied_at = NEW.created_at
+  WHERE id = (
+    SELECT id FROM public.ab_assignments
+    WHERE lead_id = NEW.lead_id
+      AND replied_at IS NULL
+      AND sent_at <= NEW.created_at
+    ORDER BY sent_at DESC
+    LIMIT 1
+  );
+
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_ab_on_reply ON public.chat_messages;
+CREATE TRIGGER trg_ab_on_reply
+  AFTER INSERT ON public.chat_messages
+  FOR EACH ROW
+  WHEN (NEW.sender_type = 'lead')
+  EXECUTE FUNCTION public.ab_on_reply();
+
+-- ------------------------------------------------------------
+-- 3. O NEGÓCIO FECHOU
+-- ------------------------------------------------------------
+
+/**
+ * Marca conversão e receita quando o lead entra em "Ganho".
+ *
+ * `leads.deal_value` é o valor do negócio quando existe. Sem valor, a
+ * conversão ainda conta — negócio fechado sem valor preenchido é falha de
+ * cadastro, não motivo para ignorar a venda na hora de decidir qual mensagem
+ * funciona.
+ */
+CREATE OR REPLACE FUNCTION public.ab_on_won()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_valor BIGINT := 0;
+BEGIN
+  IF NEW.stage IS NOT DISTINCT FROM OLD.stage THEN
+    RETURN NEW;
+  END IF;
+
+  IF NEW.stage <> 'Ganho' THEN
+    RETURN NEW;
+  END IF;
+
+  BEGIN
+    v_valor := COALESCE(ROUND(NEW.deal_value * 100), 0)::BIGINT;
+  EXCEPTION WHEN OTHERS THEN
+    v_valor := 0;
+  END;
+
+  UPDATE public.ab_assignments
+  SET converted_at = NOW(),
+      revenue_cents = v_valor
+  WHERE id = (
+    SELECT id FROM public.ab_assignments
+    WHERE lead_id = NEW.id
+      AND converted_at IS NULL
+    ORDER BY sent_at DESC
+    LIMIT 1
+  );
+
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_ab_on_won ON public.leads;
+CREATE TRIGGER trg_ab_on_won
+  AFTER UPDATE OF stage ON public.leads
+  FOR EACH ROW
+  EXECUTE FUNCTION public.ab_on_won();
+
+-- ------------------------------------------------------------
+-- 4. OS NÚMEROS, DERIVADOS
+-- ------------------------------------------------------------
+
+/**
+ * Estatísticas de um teste, contadas a partir das atribuições.
+ *
+ * Substitui as seis colunas de contador. A tela e o cron passam a ler daqui,
+ * e some a única maneira de esses números estarem errados: ninguém precisa
+ * lembrar de incrementá-los.
+ */
+CREATE OR REPLACE FUNCTION public.ab_test_stats(p_test_id UUID)
+RETURNS JSONB
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT jsonb_build_object(
+    'a', jsonb_build_object(
+      'sent',          COUNT(*) FILTER (WHERE variant = 'a'),
+      'replied',       COUNT(*) FILTER (WHERE variant = 'a' AND replied_at IS NOT NULL),
+      'converted',     COUNT(*) FILTER (WHERE variant = 'a' AND converted_at IS NOT NULL),
+      'revenue_cents', COALESCE(SUM(revenue_cents) FILTER (WHERE variant = 'a'), 0)
+    ),
+    'b', jsonb_build_object(
+      'sent',          COUNT(*) FILTER (WHERE variant = 'b'),
+      'replied',       COUNT(*) FILTER (WHERE variant = 'b' AND replied_at IS NOT NULL),
+      'converted',     COUNT(*) FILTER (WHERE variant = 'b' AND converted_at IS NOT NULL),
+      'revenue_cents', COALESCE(SUM(revenue_cents) FILTER (WHERE variant = 'b'), 0)
+    )
+  )
+  FROM public.ab_assignments
+  WHERE ab_test_id = p_test_id;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.ab_test_stats(UUID) TO authenticated, service_role;
+
+/**
+ * Sincroniza as colunas antigas a partir das atribuições.
+ *
+ * As seis colunas continuam existindo porque a tela antiga lê delas e porque
+ * apagar coluna é destrutivo. Deixam de ser a verdade e passam a ser cópia —
+ * atualizada por esta função, nunca escrita à mão.
+ */
+CREATE OR REPLACE FUNCTION public.ab_sync_counters(p_test_id UUID)
+RETURNS VOID
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  UPDATE public.ab_tests t
+  SET variant_a_sent        = c.a_sent,
+      variant_b_sent        = c.b_sent,
+      variant_a_responses   = c.a_repl,
+      variant_b_responses   = c.b_repl,
+      variant_a_conversions = c.a_conv,
+      variant_b_conversions = c.b_conv,
+      updated_at            = NOW()
+  FROM (
+    SELECT
+      COUNT(*) FILTER (WHERE variant = 'a')::INTEGER AS a_sent,
+      COUNT(*) FILTER (WHERE variant = 'b')::INTEGER AS b_sent,
+      COUNT(*) FILTER (WHERE variant = 'a' AND replied_at IS NOT NULL)::INTEGER AS a_repl,
+      COUNT(*) FILTER (WHERE variant = 'b' AND replied_at IS NOT NULL)::INTEGER AS b_repl,
+      COUNT(*) FILTER (WHERE variant = 'a' AND converted_at IS NOT NULL)::INTEGER AS a_conv,
+      COUNT(*) FILTER (WHERE variant = 'b' AND converted_at IS NOT NULL)::INTEGER AS b_conv
+    FROM public.ab_assignments
+    WHERE ab_test_id = p_test_id
+  ) c
+  WHERE t.id = p_test_id;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.ab_sync_counters(UUID) TO authenticated, service_role;
+
+/** Testes rodando que têm atribuição — os únicos que vale reavaliar. */
+CREATE OR REPLACE FUNCTION public.ab_tests_to_evaluate()
+RETURNS TABLE (test_id UUID, user_id UUID, min_sample INTEGER)
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT t.id, t.user_id, t.min_sample_size
+  FROM public.ab_tests t
+  WHERE t.status = 'running'
+    AND EXISTS (SELECT 1 FROM public.ab_assignments a WHERE a.ab_test_id = t.id);
+$$;
+
+GRANT EXECUTE ON FUNCTION public.ab_tests_to_evaluate() TO service_role;
+
+-- ------------------------------------------------------------
+-- 5. A DECISÃO PRECISA CARREGAR O MOTIVO
+-- ------------------------------------------------------------
+-- A coluna `winner` guardava "variant_a" e nada mais. Quem abre a tela três
+-- semanas depois não tem como saber se aquilo foi decidido por venda ou por
+-- curiosidade — e são conclusões muito diferentes.
+
+ALTER TABLE public.ab_tests
+  ADD COLUMN IF NOT EXISTS decision_metric TEXT,
+  ADD COLUMN IF NOT EXISTS decision_reason TEXT;
+
+COMMENT ON COLUMN public.ab_tests.decision_metric IS
+  'Qual métrica decidiu: receita, conversao ou resposta. Resposta é a mais '
+  'fraca das três — a mensagem que promete demais ganha ali e perde na venda.';
+
+-- ------------------------------------------------------------
+-- 6. CONFERÊNCIA
+-- ------------------------------------------------------------
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger WHERE tgname = 'trg_ab_on_reply' AND NOT tgisinternal
+  ) THEN
+    RAISE EXCEPTION 'trg_ab_on_reply não foi criado — as respostas do teste A/B continuariam em zero.';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger WHERE tgname = 'trg_ab_on_won' AND NOT tgisinternal
+  ) THEN
+    RAISE EXCEPTION 'trg_ab_on_won não foi criado — as conversões do teste A/B continuariam em zero.';
   END IF;
 END;
 $$;

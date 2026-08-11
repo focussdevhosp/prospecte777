@@ -15,6 +15,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { useTemplates } from '@/hooks/use-templates';
+import { decideWinner } from '../../../supabase/functions/_shared/agents/ab';
 import { useABTests } from '@/hooks/use-ab-tests';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -40,20 +41,34 @@ export function ABTestingTab() {
   const runningTests = tests.filter(t => t.status === 'running');
   const completedTests = tests.filter(t => t.status === 'completed');
 
-  const calculateSignificance = (aSent: number, aResp: number, bSent: number, bResp: number) => {
-    if (aSent === 0 || bSent === 0) return 0;
-    const rateA = aResp / aSent;
-    const rateB = bResp / bSent;
-    const pooledRate = (aResp + bResp) / (aSent + bSent);
-    if (pooledRate === 0 || pooledRate === 1) return 0;
-    const se = Math.sqrt(pooledRate * (1 - pooledRate) * (1 / aSent + 1 / bSent));
-    if (se === 0) return 0;
-    const z = Math.abs(rateA - rateB) / se;
-    if (z >= 2.576) return 99;
-    if (z >= 1.96) return 95;
-    if (z >= 1.645) return 90;
-    return Math.min(89, Math.round(z * 30));
-  };
+  // A conta que existia aqui era uma copia da do cron, e as duas decidiam por
+  // TAXA DE RESPOSTA. E a metrica que engana: a mensagem que promete demais
+  // ganha em resposta e perde na venda. Pior, o botao "Declarar Vencedor"
+  // colocava essa conclusao errada na mao do usuario com ar de estatistica.
+  //
+  // Agora a decisao e uma so, compartilhada com o cron, e olha receita
+  // primeiro, negocio fechado depois, resposta so em ultimo caso -- dizendo
+  // qual das tres decidiu.
+  const decisionFor = (test: {
+    variant_a_sent: number; variant_a_responses: number; variant_a_conversions: number;
+    variant_b_sent: number; variant_b_responses: number; variant_b_conversions: number;
+    min_sample_size: number;
+  }) =>
+    decideWinner(
+      {
+        sent: test.variant_a_sent,
+        replied: test.variant_a_responses,
+        converted: test.variant_a_conversions,
+        revenueCents: 0,
+      },
+      {
+        sent: test.variant_b_sent,
+        replied: test.variant_b_responses,
+        converted: test.variant_b_conversions,
+        revenueCents: 0,
+      },
+      test.min_sample_size,
+    );
 
   const toggleTemplateSelection = (templateId: string) => {
     setSelectedTemplates(prev => {
@@ -253,13 +268,11 @@ export function ABTestingTab() {
             {runningTests.map(test => {
               const totalSent = test.variant_a_sent + test.variant_b_sent;
               const progress = Math.min(100, (totalSent / (test.min_sample_size * 2)) * 100);
-              const significance = calculateSignificance(
-                test.variant_a_sent, test.variant_a_responses,
-                test.variant_b_sent, test.variant_b_responses
-              );
+              const decision = decisionFor(test);
+              const significance = decision.confidence;
               const rateA = test.variant_a_sent > 0 ? test.variant_a_responses / test.variant_a_sent : 0;
               const rateB = test.variant_b_sent > 0 ? test.variant_b_responses / test.variant_b_sent : 0;
-              const aLeading = rateA >= rateB;
+              const aLeading = decision.winner ? decision.winner === 'a' : rateA >= rateB;
 
               const variants = [
                 { key: 'a', name: test.variant_a_name, content: test.variant_a_content, sent: test.variant_a_sent, responses: test.variant_a_responses, conversions: test.variant_a_conversions, leading: aLeading },
@@ -277,24 +290,28 @@ export function ABTestingTab() {
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      {significance >= 90 && totalSent >= test.min_sample_size * 2 && (
+                      {decision.winner && (
                         <Button
                           size="sm"
                           className="bg-success hover:bg-success"
                           onClick={() => {
-                            const winner = aLeading ? 'variant_a' : 'variant_b';
                             updateTest({
                               id: test.id,
                               status: 'completed',
-                              winner,
-                              confidence: significance,
+                              winner: decision.winner === 'a' ? 'variant_a' : 'variant_b',
+                              confidence: decision.confidence,
+                              decision_metric: decision.metric,
+                              decision_reason: decision.reason,
                               completed_at: new Date().toISOString(),
                             });
-                            toast({ title: '🏆 Teste concluído!', description: `Vencedor: ${aLeading ? test.variant_a_name : test.variant_b_name}` });
+                            toast({
+                              title: 'Teste concluído',
+                              description: decision.reason,
+                            });
                           }}
                         >
                           <Trophy className="h-4 w-4 mr-1" />
-                          Declarar Vencedor
+                          Declarar vencedor
                         </Button>
                       )}
                       <Button variant="outline" size="sm" onClick={() => updateTest({ id: test.id, status: 'paused' })}>
@@ -350,6 +367,13 @@ export function ABTestingTab() {
                       <span className="text-muted-foreground">Confiança estatística</span>
                       <Badge variant={significance >= 95 ? 'default' : 'secondary'}>{significance}%</Badge>
                     </div>
+                    {/* O motivo aparece sempre, inclusive quando ainda não há
+                        vencedor. "Confiança 0%" sozinho não diz se faltou
+                        amostra, se as variantes empataram ou se ninguém
+                        respondeu — e são situações que pedem ações diferentes. */}
+                    <p className="text-xs text-muted-foreground leading-relaxed pt-1">
+                      {decision.reason}
+                    </p>
                   </div>
                 </div>
               );
@@ -371,7 +395,10 @@ export function ABTestingTab() {
             {completedTests.map(test => {
               const rA = test.variant_a_sent > 0 ? test.variant_a_responses / test.variant_a_sent : 0;
               const rB = test.variant_b_sent > 0 ? test.variant_b_responses / test.variant_b_sent : 0;
-              const winnerIsA = rA >= rB;
+              // O vencedor gravado manda. Recalcular pela taxa de resposta
+              // aqui faria a tela discordar da decisao que foi tomada quando
+              // o teste fechou -- e a decisao pode ter sido por receita.
+              const winnerIsA = test.winner ? test.winner === 'variant_a' : rA >= rB;
               const improvement = Math.min(rA, rB) > 0
                 ? ((Math.max(rA, rB) - Math.min(rA, rB)) / Math.min(rA, rB)) * 100
                 : 0;
@@ -389,7 +416,25 @@ export function ABTestingTab() {
                       <div className="flex items-center gap-2 mt-1">
                         <Badge variant="outline">{test.niche}</Badge>
                         <Badge variant="secondary">Concluído</Badge>
+                        {/* Decidido por venda ou por curiosidade? São conclusões
+                            muito diferentes, e quem abre isto três semanas
+                            depois não tem como saber sem esta etiqueta. */}
+                        {test.decision_metric && (
+                          <Badge
+                            variant={test.decision_metric === 'resposta' ? 'outline' : 'default'}
+                            className={test.decision_metric === 'resposta' ? 'border-warning text-warning' : ''}
+                          >
+                            {test.decision_metric === 'receita' && 'decidido por receita'}
+                            {test.decision_metric === 'conversao' && 'decidido por venda'}
+                            {test.decision_metric === 'resposta' && 'só por resposta'}
+                          </Badge>
+                        )}
                       </div>
+                      {test.decision_reason && (
+                        <p className="text-xs text-muted-foreground mt-2 max-w-2xl leading-relaxed">
+                          {test.decision_reason}
+                        </p>
+                      )}
                     </div>
                     <Button variant="ghost" size="sm" onClick={() => deleteTest(test.id)}>
                       <Trash2 className="h-4 w-4" />

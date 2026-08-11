@@ -8,6 +8,7 @@ import {
   requireUserOrInternal,
   resolveUserId,
 } from "../_shared/auth.ts";
+import { selectAbTemplate, recordAbSend } from "../_shared/ab-runtime.ts";
 
 Deno.serve(async (req) => {
   const preflight = handleCors(req);
@@ -146,7 +147,16 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        const messageBody = campaign.message_template
+        // Entra no teste A/B se houver um rodando para este nicho. Sem
+        // teste, `template` é o da campanha e nada muda.
+        const ab = await selectAbTemplate(supabase, {
+          userId: user_id,
+          leadId: lead.id,
+          niche: lead.niche,
+          fallback: campaign.message_template,
+        });
+
+        const messageBody = ab.template
           .replace(/\{(nome|empresa|nome_empresa)\}/gi, lead.business_name || "")
           .replace(/\{nicho\}/gi, lead.niche || "")
           .replace(/\{(cidade|localizacao|localização)\}/gi, lead.location || "");
@@ -162,12 +172,24 @@ Deno.serve(async (req) => {
             lead_id: lead.id,
             phone: lead.phone,
             message: messageBody,
+            initiated_by: "automation",
           }),
         });
 
         if (sendResponse.ok) {
           contacted++;
           await supabase.from("campaigns").update({ leads_contacted: contacted }).eq("id", campaign_id);
+
+          // Só conta como amostra o que saiu de verdade. Registrar antes do
+          // envio contaria quem foi barrado pela lista de bloqueio.
+          if (ab.testId && ab.variant) {
+            await recordAbSend(supabase, {
+              testId: ab.testId,
+              variant: ab.variant,
+              leadId: lead.id,
+              userId: user_id,
+            });
+          }
         }
 
         // Delay anti-ban entre mensagens (15-30s)

@@ -2793,6 +2793,16 @@ export type Database = {
       }
       ai_cost_summary: { Args: { p_user_id: string }; Returns: Json }
 
+      // ---- Teste A/B ----
+      // Os contadores saíram das colunas e passaram a ser derivados de
+      // `ab_assignments`: contador que ninguém incrementa vira zero eterno.
+      ab_test_stats: { Args: { p_test_id: string }; Returns: Json }
+      ab_sync_counters: { Args: { p_test_id: string }; Returns: undefined }
+      ab_tests_to_evaluate: {
+        Args: never
+        Returns: { test_id: string; user_id: string; min_sample: number }[]
+      }
+
       // ---- Fontes de dados (Super Admin) ----
       data_sources_overview: { Args: never; Returns: Json }
       purge_search_cache: { Args: { p_hours?: number }; Returns: number }
