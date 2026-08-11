@@ -2750,6 +2750,34 @@ export type Database = {
         }
         Returns: string
       }
+
+      // ---- Esteira comercial (missões) ----
+      // Devolvem NULL quando a operação é permitida, ou o motivo do bloqueio
+      // em texto. Falha fechada: na dúvida, não envia.
+      mission_can_send: { Args: { p_mission_id: string }; Returns: string | null }
+      emergency_stop: {
+        Args: { p_user_id: string; p_reason?: string }
+        Returns: number
+      }
+      resume_outbound: { Args: { p_user_id: string }; Returns: undefined }
+      command_center: { Args: { p_user_id: string }; Returns: Json }
+      missions_pending_batch: {
+        Args: { p_limit?: number }
+        Returns: { mission_id: string; user_id: string; pending: number }[]
+      }
+
+      // ---- Custo de IA ----
+      ai_budget_check: {
+        Args: { p_user_id: string; p_mission_id?: string }
+        Returns: string | null
+      }
+      ai_cost_summary: { Args: { p_user_id: string }; Returns: Json }
+
+      // ---- Fontes de dados (Super Admin) ----
+      data_sources_overview: { Args: never; Returns: Json }
+      purge_search_cache: { Args: { p_hours?: number }; Returns: number }
+
+      lead_site_score: { Args: { p_audit: Json }; Returns: number }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"

@@ -27,7 +27,7 @@ import {
   requireUserOrInternal,
   resolveUserId,
 } from "../_shared/auth.ts";
-import { captureLeads } from "../_shared/engine.ts";
+import { aggregateSearch, expandQuery, suggestExpansion } from "../_shared/providers/search.ts";
 import {
   loadCatalog,
   logEvent,
@@ -339,8 +339,14 @@ async function startMission(supabase: Supa, userId: string, body: Record<string,
 }
 
 /**
- * RESEARCH AGENT: usa o motor de captura que já existe, grava os leads e
- * registra cada empresa encontrada no feed.
+ * RESEARCH AGENT.
+ *
+ * Consulta várias fontes ao mesmo tempo, consolida o que elas acharam e
+ * grava apenas empresas únicas. Antes as fontes rodavam em sequência: a
+ * busca demorava a soma de todas, e a mesma empresa vista por três fontes
+ * virava três leads.
+ *
+ * O usuário não vê nada disso — para ele existe "buscando empresas".
  */
 async function researchAndIngest(
   supabase: Supa,
@@ -349,38 +355,81 @@ async function researchAndIngest(
   keys: { serper: string | null; serpapi: string | null },
 ): Promise<void> {
   try {
-    const report = await captureLeads({
-      niche: mission.niche,
-      location,
-      maxResults: mission.target_count,
-      serperApiKey: keys.serper,
-      serpApiKey: keys.serpapi,
+    const { businesses, report } = await aggregateSearch({
+      query: {
+        term: mission.niche,
+        location,
+        limit: mission.target_count,
+        variants: expandQuery(mission.niche),
+      },
+      supabase,
+      keys: { serper: keys.serper, serpapi: keys.serpapi },
+      budget: { maxResults: mission.target_count },
+      onProgress: async (progress) => {
+        // Resultado progressivo: a tela mostra o número subindo em vez de
+        // uma barra parada até o fim.
+        await logEvent(supabase, {
+          userId: mission.user_id, missionId: mission.id,
+          agent: "research",
+          event: "search_progress",
+          summary: progress.message,
+          detail: { completed: progress.completed, total: progress.total },
+        });
+      },
     });
 
+    // O detalhe técnico fica no `detail`, para auditoria; o resumo que o
+    // usuário lê fala de empresas, não de providers.
     await logEvent(supabase, {
       userId: mission.user_id, missionId: mission.id,
       agent: "research",
       event: "search_completed",
-      summary: `${report.leads.length} empresas encontradas (de ${report.total_raw} brutas). Fontes: ${report.sources.map((s) => `${s.source}=${s.found}`).join(", ")}`,
-      detail: { sources: report.sources, discarded: report.discarded },
-      level: report.leads.length > 0 ? "success" : "warning",
+      summary:
+        `${report.unique} empresas únicas encontradas ` +
+        `(${report.totalRaw} registros brutos, ${report.duplicatesMerged} duplicatas unificadas` +
+        `${report.fromCache > 0 ? `, ${report.fromCache} de buscas recentes` : ""}).`,
+      detail: {
+        providers: report.providers,
+        duplicates_merged: report.duplicatesMerged,
+        ambiguous: report.ambiguousForReview,
+        from_cache: report.fromCache,
+      },
+      level: report.unique > 0 ? "success" : "warning",
     });
 
-    if (report.leads.length === 0) {
+    if (businesses.length === 0) {
       await supabase.from("missions").update({ status: "completed" }).eq("id", mission.id);
       return;
     }
 
+    // Resultado magro: sugere ampliar, mas não amplia sozinho. Trocar "Itu"
+    // por "região de Itu" sem avisar muda a intenção de quem pediu Itu.
+    const expansion = suggestExpansion(
+      { term: mission.niche, location, limit: mission.target_count },
+      businesses.length,
+    );
+    if (expansion.shouldSuggest) {
+      await logEvent(supabase, {
+        userId: mission.user_id, missionId: mission.id,
+        agent: "research",
+        event: "thin_results",
+        summary: `Poucos resultados: ${expansion.reason}. Sugestão: ${expansion.suggestion}.`,
+        level: "warning",
+      });
+    }
+
     let inserted = 0;
 
-    for (const captured of report.leads) {
-      // Dedup por telefone dentro da conta: o mesmo negócio pode aparecer em
-      // duas missões, e abordar duas vezes é o caminho para a denúncia.
+    for (const business of businesses) {
+      if (!business.phone) continue; // sem telefone não há abordagem por WhatsApp
+
+      // Dedup contra a carteira que o usuário já tem: a mesma empresa pode
+      // aparecer em duas missões, e abordar duas vezes vira denúncia.
       const { data: existing } = await supabase
         .from("leads")
         .select("id")
         .eq("user_id", mission.user_id)
-        .eq("phone", captured.phone)
+        .eq("phone", business.phone)
         .maybeSingle();
 
       let leadId = existing?.id ?? null;
@@ -390,22 +439,29 @@ async function researchAndIngest(
           .from("leads")
           .insert({
             user_id: mission.user_id,
-            business_name: captured.business_name,
-            phone: captured.phone,
+            business_name: business.name,
+            phone: business.phone,
             niche: mission.niche,
-            location,
-            website: captured.website ?? null,
-            email: captured.email ?? null,
-            address: captured.address ?? null,
-            rating: captured.rating ?? null,
-            reviews_count: captured.reviews_count ?? null,
-            google_maps_url: captured.google_maps_url ?? null,
-            lat: captured.latitude ?? null,
-            lng: captured.longitude ?? null,
-            quality_score: captured.quality_score,
+            location: [business.city, business.state].filter(Boolean).join(" - ") || location,
+            website: business.website,
+            email: business.email,
+            address: business.address,
+            rating: business.rating,
+            reviews_count: business.reviewsCount,
+            google_maps_url: business.mapsUrl,
+            lat: business.latitude,
+            lng: business.longitude,
+            company_description: business.description,
+            instagram_url: business.instagramUrl,
+            facebook_url: business.facebookUrl,
+            photo_url: business.photoUrl,
+            industry: business.category,
             stage: "Contato",
             temperature: "frio",
-            source: captured.source,
+            // Guarda TODAS as fontes que viram esta empresa. Um lead
+            // confirmado por três fontes é mais confiável que um visto por
+            // uma só, e o dossiê usa isso.
+            source: business.sources.join("+"),
           })
           .select("id")
           .single();
@@ -424,32 +480,26 @@ async function researchAndIngest(
         status: "found",
       });
 
-      // 23505 = já está nesta missão. Esperado ao rodar de novo, não é erro.
+      // 23505 = já está nesta missão. Esperado ao rodar de novo.
       if (linkError && linkError.code !== "23505") {
-        console.error("[orchestrator] falha ao vincular lead à missão:", linkError.message);
+        console.error("[orchestrator] falha ao vincular lead:", linkError.message);
         continue;
       }
       if (!linkError) inserted++;
     }
 
-    await supabase
-      .from("missions")
-      .update({ leads_found: inserted })
-      .eq("id", mission.id);
+    await supabase.from("missions").update({ leads_found: inserted }).eq("id", mission.id);
 
     await logEvent(supabase, {
       userId: mission.user_id, missionId: mission.id,
       agent: "orchestrator",
       event: "ingest_completed",
-      summary: `${inserted} empresas entraram na missão. A esteira vai processá-las em lotes de ${BATCH_SIZE}.`,
+      summary: `${inserted} empresas entraram na missão. A esteira processa em lotes de ${BATCH_SIZE}.`,
       level: "success",
     });
   } catch (e) {
     console.error("[orchestrator] captura falhou:", e);
-    await supabase
-      .from("missions")
-      .update({ status: "failed" })
-      .eq("id", mission.id);
+    await supabase.from("missions").update({ status: "failed" }).eq("id", mission.id);
 
     await logEvent(supabase, {
       userId: mission.user_id, missionId: mission.id,
@@ -496,6 +546,29 @@ async function runBatch(supabase: Supa, userId: string, body: Record<string, unk
       await supabase.from("missions").update({ status: "completed" }).eq("id", missionId);
     }
     return json({ processed: 0, remaining: 0, done: true });
+  }
+
+  // Teto de gasto antes de qualquer chamada de IA. Um lote de 8 leads pode
+  // custar 24 chamadas com as reescritas; descobrir o estouro depois de
+  // gastar não serve de nada.
+  const { data: budgetBlock } = await supabase.rpc("ai_budget_check", {
+    p_user_id: userId,
+    p_mission_id: missionId,
+  });
+
+  if (budgetBlock) {
+    await logEvent(supabase, {
+      userId, missionId,
+      agent: "supervisor",
+      event: "budget_exceeded",
+      summary: `Lote não processado: ${budgetBlock}. Ajuste o limite em Configurações para continuar.`,
+      level: "warning",
+    });
+    return json({
+      error: String(budgetBlock),
+      code: "ai_budget_exceeded",
+      processed: 0,
+    }, 429);
   }
 
   const [catalog, settingsResult] = await Promise.all([

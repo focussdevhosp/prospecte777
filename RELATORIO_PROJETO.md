@@ -1,6 +1,11 @@
 # RELATÓRIO DO PROJETO
 
-Data: 2026-08-11 · Branch: `nexsilesbancodados/ai-autonomous-sales-platform` · Commit: `724ec01`
+Data: 2026-08-11 · Branch: `nexsilesbancodados/ai-autonomous-sales-platform`
+
+> **Ciclo 2 concluído.** O Multi-Source Lead Engine saiu de "núcleo pronto" para
+> completo, com registry, adaptadores, cache, teto de gasto de IA, cron e painel
+> de Super Admin. Único bloqueio remanescente: **a migração precisa ser aplicada**
+> (§4, B-1) — não há token do Supabase nesta máquina.
 
 ---
 
@@ -69,33 +74,64 @@ feed).
 **Frontend**: `/missions` (lista + funil + freio global), `/missions/:id` (fila de
 aprovação com o raciocínio completo + feed ao vivo), `NewMissionDialog`, `ActivityFeed`.
 
-### 1.4 Multi-Source Lead Engine (parcial — núcleo pronto)
+### 1.4 Multi-Source Lead Engine — NEXA SEARCH (concluído)
+
+Para o usuário existe um botão: **BUSCAR**. Ele digita "clínicas de estética" e
+"Itu/SP" e recebe empresas únicas. Quantas fontes foram consultadas, quais falharam
+e quantas duplicatas foram fundidas é problema do sistema.
 
 | Item | Estado |
 |---|---|
-| Contrato `LeadProvider` (`providers/types.ts`) | ✅ pronto |
-| Normalização (nome, telefone E.164, domínio, endereço) | ✅ pronto e testado |
-| Fingerprint (telefone → domínio → nome+cidade) | ✅ pronto e testado |
-| Entity resolution com `duplicateConfidence` 0–100 e MERGE/REVIEW/DISTINCT | ✅ pronto e testado |
-| Merge inteligente com **procedência por campo** e peso por fonte | ✅ pronto e testado |
-| Registry, circuit breaker, busca paralela, cache | ⬜ pendente |
-| Adaptadores concretos (OSM, Serper, SerpApi, DDG) | ⬜ pendente |
+| Contrato `LeadProvider` | ✅ |
+| Normalização (nome, telefone E.164, domínio, endereço) | ✅ testado |
+| Fingerprint (telefone → domínio → nome+cidade) | ✅ testado |
+| Entity resolution `duplicateConfidence` 0–100 · MERGE/REVIEW/DISTINCT | ✅ testado |
+| Merge com **procedência por campo** e peso por fonte | ✅ testado |
+| Registry com prioridade e scoring histórico | ✅ testado |
+| **Circuit breaker** — 3 falhas seguidas desligam a fonte por 10 min | ✅ testado |
+| Busca **paralela** com timeout por fonte | ✅ testado |
+| Adaptadores: OSM, Serper, SerpApi, busca web, worker de mapas | ✅ |
+| Cache global (72h) por termo + localização | ✅ |
+| Expansão de consulta por sinônimo + sugestão de ampliar área | ✅ testado |
+| Resultados progressivos no feed | ✅ |
+
+**Ganho de tempo:** as fontes rodavam em sequência, então a busca demorava a soma de
+todas. Agora demora a mais lenta — com quatro fontes de ~20s, a diferença é entre 80 e
+25 segundos.
+
+**Nunca amplia em silêncio.** Resultado magro gera *sugestão* de ampliar a área ou o
+termo. Trocar "Itu" por "região de Itu" sem avisar mudaria a intenção de quem pediu Itu.
+
+### 1.5 Custo, autonomia e operação (concluído)
+
+| Item | Onde |
+|---|---|
+| **Teto de gasto de IA** — diário, mensal e por missão | `ai_budget_check()`; checado antes de cada lote |
+| Painel de custo por agente, com latência média | `ai_cost_summary()` |
+| **Cron toca as missões sozinho** | `cron-tasks` → `missions_pending_batch()` → `run_batch` |
+| Limpeza de cache vencido | `purge_search_cache()`, 06h UTC |
+| **Super Admin → Fontes** | `data_sources_overview()` + `AdminDataSourcesTab` |
+
+O painel de fontes mostra **aproveitamento** (empresas únicas ÷ empresas devolvidas),
+não volume: uma fonte que acha 500 empresas que as outras já tinham custa tempo e não
+acrescenta carteira.
 
 ---
 
 ## 2. O QUE FOI TESTADO
 
-**103 testes automatizados, todos passando.** 67 são novos.
+**118 testes automatizados, todos passando.** 82 são novos.
 
 ```
 ✓ src/test/leads.test.ts             21 testes
 ✓ src/test/agent.test.ts             14 testes
 ✓ src/test/agents.test.ts            40 testes  (novo)
 ✓ src/test/entity-resolution.test.ts 27 testes  (novo)
+✓ src/test/providers.test.ts         15 testes  (novo)
 ✓ src/test/example.test.ts            1 teste
 ```
 
-`npx tsc --noEmit` limpo.
+`npx tsc --noEmit` limpo · `eslint` limpo · `vite build` OK (194 entradas de precache).
 
 ### Cenários de veracidade cobertos
 
@@ -111,6 +147,16 @@ O Quality Gate **reprova**, com teste dedicado para cada caso:
 - linguagem de spam (urgência artificial, caixa alta, "clique aqui").
 
 E **aprova** mensagem construída sobre a auditoria de site, com factualidade 100.
+
+### Cenários de resiliência de fonte cobertos
+
+- fonte que falha → erro isolado, as outras seguem;
+- fonte que trava → cortada no timeout (verificado: <1s em vez dos 5s do provider);
+- **3 falhas seguidas → disjuntor abre** e a fonte deixa de ser chamada;
+- uma execução boa zera o contador de falhas;
+- o disjuntor tem a palavra final mesmo quando o provider se declara saudável;
+- scoring premia quem agrega empresa **única**, não quem acha muito;
+- fonte nova, sem histórico, não é punida.
 
 ### Cenários de deduplicação cobertos
 
@@ -133,14 +179,19 @@ Os três primeiros dependem de credenciais/ambiente que não estão nesta máqui
 
 ## 3. O QUE AINDA FALTA
 
-### Próximo (P1 restante)
+### Único item bloqueante
 
-1. **Aplicar a migração** no Supabase — nada da esteira funciona antes disso.
-2. **Registry de providers** com circuit breaker, prioridade e scoring histórico.
-3. **Adaptadores** envolvendo as fontes atuais no contrato `LeadProvider`, e troca do
-   `_shared/engine.ts` para consumir o registry — sem isso o contrato é só um arquivo.
-4. **Cache global** por query + localização + período.
-5. **Cron** chamando `run_batch` das missões ativas (hoje o lote é disparado pela tela).
+1. **Aplicar as duas migrações** no Supabase. Nada da esteira funciona antes disso:
+
+```bash
+supabase link --project-ref <SEU_PROJECT_REF>
+supabase db push
+```
+
+Ou colar no SQL Editor, nesta ordem:
+`20260811120000_b7c8d9e0-...sql` → `20260811140000_c8d9e0f1-...sql`.
+
+Depois, confirmar que o cron chama `cron-tasks` (a tarefa `run_missions` já está lá).
 
 ### Depois (P2)
 

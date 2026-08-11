@@ -97,6 +97,57 @@ Deno.serve(async (req) => {
       results.cleaned_jobs = count || 0;
     }
 
+    // ------------------------------------------------------------
+    // Missões: toca a esteira sozinha
+    // ------------------------------------------------------------
+    // Sem isto o lote só andava quando alguém abria a tela e clicava —
+    // o que faz de "autônomo" um nome sem função.
+    //
+    // `missions_pending_batch` já filtra missão pausada e parada de
+    // emergência; o `run_batch` ainda confere horário, limite diário e
+    // orçamento de IA antes de gastar qualquer coisa. Duas checagens de
+    // propósito: aqui decide-se O QUE tocar, lá dentro decide-se SE pode.
+    if (!task || task === "run_missions") {
+      try {
+        const { data: pending } = await supabase.rpc("missions_pending_batch", { p_limit: 10 });
+        let triggered = 0;
+
+        for (const mission of pending ?? []) {
+          const { error } = await supabase.functions.invoke("sales-orchestrator", {
+            body: {
+              action: "run_batch",
+              mission_id: mission.mission_id,
+              user_id: mission.user_id,
+            },
+          });
+
+          if (error) {
+            console.error(`[cron] lote da missão ${mission.mission_id} falhou:`, error.message);
+            continue;
+          }
+          triggered++;
+        }
+
+        results.missions_processed = triggered;
+        if (triggered > 0) console.log(`[cron] ${triggered} missão(ões) avançaram um lote`);
+      } catch (e) {
+        console.error("[cron] erro ao tocar as missões:", e);
+      }
+    }
+
+    // Limpa o cache de busca vencido. Barato e evita a tabela crescer sem fim.
+    if (!task || task === "purge_cache") {
+      const hour = new Date().getUTCHours();
+      if (hour === 6) {
+        try {
+          const { data: purged } = await supabase.rpc("purge_search_cache", { p_hours: 72 });
+          results.purged_cache = purged ?? 0;
+        } catch (e) {
+          console.error("[cron] limpeza de cache falhou:", e);
+        }
+      }
+    }
+
     // Task 6: Auto first message (runs every 30min via cron)
     if (!task || task === "auto_first_message") {
       try {

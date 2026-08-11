@@ -3,9 +3,10 @@ import { DashboardLayout } from '@/components/DashboardLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAdminRole } from '@/hooks/use-admin';
 import { Navigate } from 'react-router-dom';
-import { Loader2, Crown, Users, Headphones } from 'lucide-react';
+import { Loader2, Crown, Users, Headphones, Database } from 'lucide-react';
 import { AdminUsersTab } from '@/components/admin/AdminUsersTab';
 import { AdminSupportTab } from '@/components/admin/AdminSupportTab';
+import { AdminDataSourcesTab } from '@/components/admin/AdminDataSourcesTab';
 
 export default function AdminPage() {
   const { isAdmin, isLoading: checkingAdmin } = useAdminRole();
@@ -43,7 +44,7 @@ export default function AdminPage() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsList className="grid w-full max-w-xl grid-cols-3">
             <TabsTrigger value="users" className="gap-2">
               <Users className="h-4 w-4" />
               Usuários
@@ -51,6 +52,10 @@ export default function AdminPage() {
             <TabsTrigger value="support" className="gap-2">
               <Headphones className="h-4 w-4" />
               Suporte
+            </TabsTrigger>
+            <TabsTrigger value="sources" className="gap-2">
+              <Database className="h-4 w-4" />
+              Fontes
             </TabsTrigger>
           </TabsList>
 
@@ -60,6 +65,12 @@ export default function AdminPage() {
 
           <TabsContent value="support" className="mt-6">
             <AdminSupportTab />
+          </TabsContent>
+
+          {/* Infraestrutura de busca. Só o admin da plataforma vê: para o
+              cliente existe apenas "a busca". */}
+          <TabsContent value="sources" className="mt-6">
+            <AdminDataSourcesTab />
           </TabsContent>
         </Tabs>
       </div>
