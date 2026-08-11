@@ -65,6 +65,10 @@ const GUARANTEE_CLAIMS = [
   /sem risco (nenhum|algum)/i,
   /\bcom certeza\b[^.!?]{0,30}\b(vender|faturar|crescer|aumentar|dobrar)/i,
   /\b(vai|v[ãa]o)\b[^.!?]{0,15}\b(dobrar|triplicar)\b[^.!?]{0,20}\b(vendas?|faturamento|clientes?)/i,
+  // Multiplicador com prazo: "triplica reviews em 60 dias", "dobra as vendas
+  // em 3 meses". A forma mais vendida de promessa que ninguém pode cumprir —
+  // e a que o sistema antigo mandava como texto de reserva.
+  /\b(dobr|triplic|multiplic|quadruplic)(a|am|ar|amos|ando)\b[^.!?]{0,40}\b(em|no|na)\s*\d+/i,
 ];
 
 /**
@@ -306,8 +310,18 @@ function scoreRelevance(
   }
 
   // Pedir reunião no primeiro contato derruba resposta.
+  //
+  // O que conta é PEDIR, e o padrão anterior casava a palavra solta:
+  // "agenda", "agendar", "horário", "marcar". Aí "como as clientes costumam
+  // agendar hoje?" — pergunta de descoberta, das melhores que existem para
+  // clínica e salão, que são os nichos principais do produto — era penalizada
+  // como se fosse um convite para reunião. O agente ficava sem poder
+  // perguntar como o negócio do lead funciona.
   const isFirstTouch = dossier.messageCount.fromAgent === 0;
-  if (isFirstTouch && /\b(reuni[ãa]o|call|ag(enda|endar)|hor[áa]rio|marcar)\b/i.test(message)) {
+  const pedeReuniao =
+    /\b(uma (reuni[ãa]o|call|conversa de \d+)|marcar (uma|um|contigo|com voc[êe])|agendar (uma|um)|podemos (marcar|conversar|falar)|te ligar|qual (o )?melhor hor[áa]rio)\b/i;
+
+  if (isFirstTouch && pedeReuniao.test(message)) {
     score -= 20;
     issues.push({
       code: "premature_meeting",
@@ -440,14 +454,27 @@ function scoreFactuality(
 
   // ---- Número sem fonte ----
   const allowed = new Set(evidence.allowedNumbers);
-  // Números que sempre podem aparecer sem virem do dossiê: contagem trivial
-  // de tempo em frases como "2 minutos", "1 minuto".
-  const trivial = /\b(1|2|3|5|10)\s*(min|minuto|minutos|segundo|segundos)\b/i;
+
+  // Duração não é estatística. "Me dá 2 minutos", "leva 5 min" — é a chamada
+  // de menor atrito que existe em venda, e não afirma nada sobre o negócio de
+  // ninguém.
+  //
+  // A dispensa era testada contra o trecho casado, e o trecho casado PARA
+  // antes da unidade: em "2 minutos", o que sobra é "2 ". A regra existia,
+  // parecia funcionar e nunca dispensava nada — toda mensagem com "2 minutos"
+  // perdia 20 pontos de factualidade e era barrada pelo limite de 90.
+  // Precisa olhar o que vem DEPOIS do número.
+  //
+  // Só minuto e segundo entram. Dia e semana ficam de fora de propósito: "em
+  // 60 dias" quase nunca é o tempo que o leitor vai gastar — é prazo de
+  // resultado prometido, que é justamente o que não pode passar.
+  const trivial = /^\d+\s*(min|minutos?|segundos?)\b/i;
 
   const numberMatches = [...message.matchAll(/(?:R\$\s*)?\d+(?:[.,]\d+)?\s*(?:%|mil|k|x|reais)?/gi)];
   for (const match of numberMatches) {
     const raw = match[0];
-    if (trivial.test(raw)) continue;
+    const comContexto = message.slice(match.index ?? 0, (match.index ?? 0) + raw.length + 10);
+    if (trivial.test(comContexto)) continue;
 
     const bare = raw.replace(/[^\d.,]/g, "").replace(",", ".");
     if (allowed.has(bare)) continue;

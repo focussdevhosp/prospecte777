@@ -443,3 +443,109 @@ describe('Quality Gate — factualidade', () => {
     expect(v.scores.offerAdherence).toBe(100);
   });
 });
+
+// ------------------------------------------------------------
+// O GATE PRECISA DEIXAR PASSAR
+// ------------------------------------------------------------
+// Todo aperto no gate carrega o mesmo risco: virar tão rígido que nada sai, e
+// aí o produto não manda mensagem ruim porque não manda mensagem nenhuma.
+// Falha silenciosa e difícil de perceber — ninguém abre um chamado dizendo
+// "minha campanha está educadamente calada".
+//
+// Estas mensagens são o que um vendedor bom escreveria. Todas precisam
+// passar. Se alguma parar de passar, o gate apertou demais, e o teste está
+// certo até que se prove o contrário.
+
+describe('Quality Gate — mensagem boa não pode ser barrada', () => {
+  const comSite = makePipeline(leadComSiteRuim);
+  const semSite = makePipeline(leadSemSite);
+
+  const boas: Array<{ nome: string; msg: string; pipe: ReturnType<typeof makePipeline> }> = [
+    {
+      nome: 'diagnóstico direto do achado de auditoria',
+      msg: 'Oi! Passei no site da Odonto Sorriso e ele não abre direito no celular — dá pra conferir aí no seu. Trabalho com site responsivo. Quer ver como ficaria?',
+      pipe: comSite,
+    },
+    {
+      nome: 'segundo achado, com pergunta no lugar de afirmação',
+      msg: 'Oi! Reparei que o site da Odonto Sorriso não tem botão de WhatsApp. Quem se interessa acaba tendo que copiar o número na mão. Isso chega a atrapalhar aí?',
+      pipe: comSite,
+    },
+    {
+      nome: 'empatia sobre a categoria, sem palpite sobre a empresa',
+      msg: 'Oi! Sei que a rotina de clínica é corrida. O site da Odonto Sorriso não é adaptado para celular. Posso te mandar como resolver?',
+      pipe: comSite,
+    },
+    {
+      nome: 'números que vieram do dossiê',
+      msg: 'Oi! Vi a Odonto Sorriso com 4.1★ e 12 avaliações no Google. O site não abre bem no celular. Quer que eu te mostre?',
+      pipe: comSite,
+    },
+    {
+      nome: 'ausência de site tratada como fato',
+      msg: 'Oi! Procurei a Clínica Estética Bella Itu e não achei site de vocês. Trabalho com site próprio para clínicas. Faz sentido eu te mostrar uma ideia?',
+      pipe: semSite,
+    },
+    {
+      nome: 'gancho seguido de pergunta consultiva',
+      msg: 'Oi! Procurei a Clínica Estética Bella Itu e não achei site de vocês. Como as clientes costumam agendar hoje — WhatsApp, Instagram?',
+      pipe: semSite,
+    },
+    {
+      nome: 'pede pouco tempo sem cravar valor',
+      msg: 'Oi! O site da Odonto Sorriso não é adaptado para celular. Me custa 2 minutos te mostrar como ficaria. Posso?',
+      pipe: comSite,
+    },
+  ];
+
+  it('perguntar como o lead agenda hoje NÃO é pedir reunião', () => {
+    // A pergunta de descoberta que mais serve em clínica e salão — os nichos
+    // principais do produto — usa a palavra "agendar". Penalizá-la deixava o
+    // agente sem poder perguntar como o negócio do outro funciona.
+    const descoberta = evaluate({
+      message: 'Oi! Procurei a Clínica Estética Bella Itu e não achei site de vocês. Como as clientes costumam agendar hoje?',
+      dossier: semSite.dossier,
+      strategy: semSite.strategy,
+    });
+    expect(descoberta.issues.some((i) => i.code === 'premature_meeting')).toBe(false);
+
+    const convite = evaluate({
+      message: 'Oi! Procurei a Clínica Estética Bella Itu e não achei site de vocês. Podemos marcar uma call amanhã?',
+      dossier: semSite.dossier,
+      strategy: semSite.strategy,
+    });
+    expect(convite.issues.some((i) => i.code === 'premature_meeting')).toBe(true);
+  });
+
+  it('"2 minutos" é o tempo do leitor; "em 60 dias" é promessa de resultado', () => {
+    const doisMinutos = evaluate({
+      message: 'Oi! O site da Odonto Sorriso não abre bem no celular. Me custa 2 minutos te mostrar. Posso?',
+      dossier: comSite.dossier,
+      strategy: comSite.strategy,
+    });
+    expect(doisMinutos.scores.factuality).toBe(100);
+
+    const prazo = evaluate({
+      message: 'Oi! O site da Odonto Sorriso não abre bem no celular. Isso triplica seus contatos em 60 dias. Posso?',
+      dossier: comSite.dossier,
+      strategy: comSite.strategy,
+    });
+    expect(prazo.approved).toBe(false);
+  });
+
+  for (const { nome, msg, pipe } of boas) {
+    it(`APROVA: ${nome}`, () => {
+      const v = evaluate({ message: msg, dossier: pipe.dossier, strategy: pipe.strategy });
+
+      if (!v.approved) {
+        const motivos = v.issues
+          .filter((i) => i.severity === 'block')
+          .map((i) => `${i.code}: ${i.message}${i.excerpt ? ` — "${i.excerpt}"` : ''}`)
+          .join('\n');
+        throw new Error(`O gate barrou uma mensagem boa:\n${motivos}\n\nNotas: ${JSON.stringify(v.scores)}\n\n${msg}`);
+      }
+
+      expect(v.approved).toBe(true);
+    });
+  }
+});
