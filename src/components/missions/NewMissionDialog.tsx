@@ -28,6 +28,17 @@ import { cn } from '@/lib/utils';
  * esteira — que é justamente o ponto: escolher a oferta lead a lead é
  * trabalho que a máquina faz melhor que um `<select>` aplicado a 300 leads.
  */
+
+/** "clínica, estética" -> ["clínica", "estética"]. Vírgula ou quebra de linha. */
+function listaDe(texto: string): string[] {
+  return texto.split(/[,\n]/).map((t) => t.trim()).filter(Boolean);
+}
+
+function numeroOuNulo(texto: string): number | null {
+  const n = Number(texto.replace(',', '.'));
+  return Number.isFinite(n) && texto.trim() !== '' ? n : null;
+}
+
 export function NewMissionDialog({
   open,
   onOpenChange,
@@ -53,12 +64,20 @@ export function NewMissionDialog({
   const [endHour, setEndHour] = useState(18);
   const [workDaysOnly, setWorkDaysOnly] = useState(true);
   const [exclusions, setExclusions] = useState('');
+  // ICP: os critérios que o `qualifier` usa para dar nota. Seis dos sete
+  // eram aceitos por `create_mission` e não tinham campo nenhum na tela — a
+  // nota que decide quem é abordado saía de um alvo que ninguém conseguia
+  // configurar.
+  const [icpSignals, setIcpSignals] = useState('');
+  const [minRating, setMinRating] = useState('');
+  const [minReviews, setMinReviews] = useState('');
 
   const reset = () => {
     setName(''); setNiche(''); setCity(''); setState('');
     setSelectedOffers([]); setGoal('agendar_demonstracao'); setAutonomy('assistido');
     setTargetCount(50); setDailyLimit(30); setStartHour(9); setEndHour(18);
     setWorkDaysOnly(true); setExclusions('');
+    setIcpSignals(''); setMinRating(''); setMinReviews('');
   };
 
   // O nome se preenche sozinho a partir do que já foi digitado, mas continua
@@ -179,6 +198,51 @@ export function NewMissionDialog({
                 />
                 <p className="mt-1 text-xs text-muted-foreground">
                   Separe por vírgula. Quem bater com um destes termos é descartado antes de gastar IA.
+                </p>
+              </div>
+
+              <div className="sm:col-span-2">
+                <Label htmlFor="mission-signals">
+                  O que torna um lead bom para você (opcional)
+                </Label>
+                <Input
+                  id="mission-signals"
+                  value={icpSignals}
+                  onChange={(e) => setIcpSignals(e.target.value)}
+                  placeholder="sem site, atende por WhatsApp, agenda cheia"
+                />
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Cada sinal encontrado soma pontos na qualificação. É o que
+                  separa "empresa do nicho certo" de "empresa que precisa do que
+                  você vende".
+                </p>
+              </div>
+
+              <div>
+                <Label htmlFor="mission-min-rating">Nota mínima no Google</Label>
+                <Input
+                  id="mission-min-rating"
+                  inputMode="decimal"
+                  value={minRating}
+                  onChange={(e) => setMinRating(e.target.value)}
+                  placeholder="ex.: 3.5"
+                />
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Abaixo disso perde pontos — não é corte.
+                </p>
+              </div>
+
+              <div>
+                <Label htmlFor="mission-min-reviews">Avaliações mínimas</Label>
+                <Input
+                  id="mission-min-reviews"
+                  inputMode="numeric"
+                  value={minReviews}
+                  onChange={(e) => setMinReviews(e.target.value)}
+                  placeholder="ex.: 10"
+                />
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Negócio sem histórico costuma ser mais difícil de fechar.
                 </p>
               </div>
             </div>

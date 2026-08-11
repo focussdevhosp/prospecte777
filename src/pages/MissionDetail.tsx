@@ -101,6 +101,7 @@ export default function MissionDetailPage() {
               <p className="mt-2 text-xs text-muted-foreground">
                 {AUTONOMY_LABELS[mission.autonomy_level].description}
               </p>
+              <IcpResumo icp={mission.icp} />
             </div>
 
             {queued.length > 0 && (
@@ -425,6 +426,42 @@ function SentCard({ item }: { item: MissionLead }) {
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+/**
+ * O ICP aplicado, em texto.
+ *
+ * Sem isto, o score de cada lead aparecia sem que se pudesse ver contra o quê
+ * ele foi calculado. Auditar uma nota exige conhecer a régua.
+ */
+function IcpResumo({ icp }: { icp: Record<string, unknown> }) {
+  const lista = (v: unknown) => (Array.isArray(v) ? (v as string[]).filter(Boolean) : []);
+
+  const sinais = lista(icp?.signals);
+  const exclusoes = lista(icp?.exclusions);
+  const minRating = icp?.minRating as number | null | undefined;
+  const minReviews = icp?.minReviews as number | null | undefined;
+
+  const partes: string[] = [];
+  if (sinais.length) partes.push(`soma por: ${sinais.join(', ')}`);
+  if (minRating != null) partes.push(`nota mínima ${minRating}★`);
+  if (minReviews != null) partes.push(`mínimo ${minReviews} avaliações`);
+  if (exclusoes.length) partes.push(`descarta: ${exclusoes.join(', ')}`);
+
+  if (partes.length === 0) {
+    return (
+      <p className="mt-1 text-xs text-muted-foreground">
+        Sem ICP definido — a nota sai só dos sinais de oportunidade encontrados
+        em cada empresa.
+      </p>
+    );
+  }
+
+  return (
+    <p className="mt-1 text-xs text-muted-foreground">
+      <span className="font-medium">Perfil ideal:</span> {partes.join(' · ')}
+    </p>
   );
 }
 
