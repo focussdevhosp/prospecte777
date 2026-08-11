@@ -321,6 +321,73 @@ primeiro.
 
 ---
 
+## Ciclo 7 — Follow-up que não lê o que o lead respondeu
+
+**Commit:** `1806d31`
+
+### Análise
+
+Uma busca por `message/sendText` mostrou que o ciclo 4 tinha fechado só um dos
+quatro caminhos de envio direto:
+
+```
+webhook/index.ts:1011
+hunter/index.ts:322
+follow-up/index.ts:299
+```
+
+O do **webhook** é o pior: é o caminho mais sensível do produto — responde
+sozinho a quem acabou de escrever. O lead responde "pare", o gatilho grava a
+blacklist no mesmo instante, e vinte linhas abaixo o webhook mandava a
+resposta automática assim mesmo.
+
+E a cadência do follow-up era só calendário: 1, 3, 5, 7, 14 dias. Nada olhava
+o que o lead tinha dito. Na prática, a pessoa escreve *"esse mês não dá, me
+chama em setembro"* e leva três mensagens em agosto. O custo não é a mensagem
+ignorada — é o lead que estava quente virar bloqueio.
+
+### Implementação
+
+Os três caminhos passam a ir pelo `whatsapp-send`. **Não sobrou nenhuma
+chamada direta à Evolution fora dele.**
+
+A cadência virou decisão, e a ordem das regras é a ordem da prioridade — o
+que o lead **pediu** vem antes do que o calendário sugere:
+
+| Situação | Decisão |
+|---|---|
+| Respondeu e não foi respondido | esperar (a bola está com a gente) |
+| Recusou de forma direta | encerrar |
+| Marcou data | esperar até a data que **ele** disse |
+| Adiou sem data | esperar 30 dias, não encerrar |
+| Quente e sumiu | transferir para uma pessoa |
+| Esgotou a cadência | encerrar |
+
+"Esse mês não dá" não é "não quero". E lead quente que parou de responder é o
+melhor da carteira — merece uma pessoa, não mais um automático.
+
+### Os nove textos fixos
+
+Removidos, não substituídos. Um deles:
+
+> "Lembrei de você porque vi um case parecido com o seu. Empresas do segmento
+> de {nicho} têm conseguido resultados incríveis."
+
+Um caso de sucesso e um resultado, os dois inventados, no código-fonte. Outro
+afirmava a dor do lead a partir de uma tabela por nicho. E disparavam
+exatamente quando a IA falhava — quando ninguém está olhando.
+
+Também: a mensagem só entra no histórico depois de sair de verdade. Antes era
+gravada como `pending` e ficava lá mesmo com o envio falhando — o agente
+conversacional lia aquilo como se o lead tivesse recebido, e a mensagem
+seguinte fazia referência a uma conversa que não houve.
+
+### Validação
+
+173 testes (17 novos).
+
+---
+
 ## Notas de método
 
 **Sobre o lint.** `npm run lint` acusa 367 problemas no repositório inteiro —
