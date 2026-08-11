@@ -305,49 +305,35 @@ Responda APENAS com a mensagem, sem explicações.`,
 
       createdLeads.push(lead);
 
-      // Send WhatsApp message via Evolution API
+      // ---- PRIMEIRA ABORDAGEM ----
+      // Vai pelo `whatsapp-send` como todo o resto. Falando direto com a
+      // Evolution, esta função não consultava a lista de bloqueio: um número
+      // que já tinha pedido para sair de outra campanha voltava a receber
+      // abordagem só por ter sido capturado de novo. Também não respeitava a
+      // parada de emergência nem a rotação de chip.
       if (settings.whatsapp_connected && settings.whatsapp_instance_id) {
         try {
-          const EVOLUTION_API_URL = Deno.env.get("EVOLUTION_API_URL");
-          const EVOLUTION_API_KEY = Deno.env.get("EVOLUTION_API_KEY");
+          const { error: sendError } = await supabase.functions.invoke("whatsapp-send", {
+            body: {
+              phone: leadData.phone,
+              message: firstMessage,
+              instance_id: settings.whatsapp_instance_id,
+              user_id: userId,
+              initiated_by: "automation",
+            },
+          });
 
-          if (EVOLUTION_API_URL && EVOLUTION_API_KEY) {
-            // Format phone number
-            let formattedPhone = leadData.phone.replace(/\D/g, "");
-            if (!formattedPhone.startsWith("55") && formattedPhone.length <= 11) {
-              formattedPhone = "55" + formattedPhone;
-            }
-
-            const sendResponse = await fetch(
-              `${EVOLUTION_API_URL}/message/sendText/${settings.whatsapp_instance_id}`,
-              {
-                method: "POST",
-                headers: {
-                  "apikey": EVOLUTION_API_KEY,
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                  number: formattedPhone,
-                  text: firstMessage,
-                }),
-              }
-            );
-
-            if (sendResponse.ok) {
-              console.log(`WhatsApp message sent to ${leadData.phone}`);
-              
-              // Update message status
-              await supabase
-                .from("chat_messages")
-                .update({ status: "delivered" })
-                .eq("lead_id", lead.id)
-                .eq("sender_type", "agent");
-            } else {
-              console.error(`Failed to send WhatsApp to ${leadData.phone}`);
-            }
+          if (sendError) {
+            console.error(`[hunter] envio recusado para ${leadData.phone}: ${sendError.message}`);
+          } else {
+            await supabase
+              .from("chat_messages")
+              .update({ status: "delivered" })
+              .eq("lead_id", lead.id)
+              .eq("sender_type", "agent");
           }
         } catch (whatsappError) {
-          console.error("WhatsApp send error:", whatsappError);
+          console.error("[hunter] falha no envio:", whatsappError);
         }
       } else {
         console.log(`WhatsApp not connected - would send to ${leadData.phone}: ${firstMessage.substring(0, 50)}...`);

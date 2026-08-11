@@ -991,53 +991,48 @@ Deno.serve(async (req) => {
     // Update temperature based on conversation
     await updateLeadTemperature(lead.id, conversationContext, supabase);
 
-    // Send response via WhatsApp
+    // ---- RESPOSTA AUTOMÁTICA ----
+    // Este é o caminho mais sensível do produto inteiro: responde sozinho a
+    // quem acabou de escrever. E era o que menos conferia.
+    //
+    // Falava direto com a Evolution, então não passava pela lista de
+    // bloqueio. O lead que responde "pare" é colocado na blacklist pelo
+    // gatilho `auto_blacklist_on_response` no mesmo instante em que a
+    // mensagem dele entra — e este trecho, logo depois, mandava a resposta
+    // automática assim mesmo. A pessoa pedia para parar e recebia mais uma.
+    //
+    // O `whatsapp-send` carrega blacklist, parada de emergência, rotação de
+    // chip, contagem por chip e checagem de conexão. Nada disso vale a pena
+    // reimplementar aqui: uma segunda verdade sobre quando é permitido enviar
+    // foi exatamente o que produziu este defeito.
     if (settings.whatsapp_connected && settings.whatsapp_instance_id) {
       try {
-        const EVOLUTION_API_URL = Deno.env.get("EVOLUTION_API_URL");
-        const EVOLUTION_API_KEY = Deno.env.get("EVOLUTION_API_KEY");
+        // Pausa curta: responder instantaneamente entrega que é robô.
+        const delay = Math.floor(Math.random() * 2000) + 1000;
+        await new Promise(resolve => setTimeout(resolve, delay));
 
-        if (EVOLUTION_API_URL && EVOLUTION_API_KEY) {
-          let formattedPhone = phone;
-          if (!formattedPhone.startsWith("55") && formattedPhone.length <= 11) {
-            formattedPhone = "55" + formattedPhone;
-          }
+        const { error: sendError } = await supabase.functions.invoke("whatsapp-send", {
+          body: {
+            phone,
+            message: responseMessage,
+            instance_id: settings.whatsapp_instance_id,
+            user_id: userId,
+            initiated_by: "automation",
+          },
+        });
 
-          // Add slight delay to seem more human (1-3 seconds)
-          const delay = Math.floor(Math.random() * 2000) + 1000;
-          await new Promise(resolve => setTimeout(resolve, delay));
-
-          const sendResponse = await fetch(
-            `${EVOLUTION_API_URL}/message/sendText/${settings.whatsapp_instance_id}`,
-            {
-              method: "POST",
-              headers: {
-                "apikey": EVOLUTION_API_KEY,
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                number: formattedPhone,
-                text: responseMessage,
-              }),
-            }
-          );
-
-          if (sendResponse.ok) {
-            console.log(`Response sent to ${phone}`);
-            
-            await supabase
-              .from("chat_messages")
-              .update({ status: "sent" })
-              .eq("lead_id", lead.id)
-              .eq("content", responseMessage)
-              .eq("sender_type", "agent");
-          } else {
-            const errorText = await sendResponse.text();
-            console.error(`Failed to send to ${phone}:`, errorText);
-          }
+        if (sendError) {
+          console.error(`[webhook] resposta recusada para ${phone}: ${sendError.message}`);
+        } else {
+          await supabase
+            .from("chat_messages")
+            .update({ status: "sent" })
+            .eq("lead_id", lead.id)
+            .eq("content", responseMessage)
+            .eq("sender_type", "agent");
         }
       } catch (e) {
-        console.error("WhatsApp send error:", e);
+        console.error("[webhook] falha no envio:", e);
       }
     }
 
