@@ -451,6 +451,21 @@ Deno.serve(async (req) => {
       });
 
       if (!statusResponse.ok) {
+        // A instância não existe mais no servidor da Evolution. Acontece
+        // quando o chip é removido de lá — ou quando o servidor inteiro é
+        // trocado, e as instâncias antigas ficaram no anterior.
+        //
+        // Devolver `connected: false` para a tela não bastava: o banco
+        // continuava com `whatsapp_connected = true`, e é ELE que o
+        // orquestrador consulta antes de disparar. O resultado é o pior
+        // possível — a esteira acha que tem chip, tenta enviar, e queima as
+        // cinco tentativas de cada lead contra uma instância que não existe.
+        // A tela dizia "desconectado" enquanto o robô mandava assim mesmo.
+        await supabaseService
+          .from("user_settings")
+          .update({ whatsapp_connected: false })
+          .eq("user_id", user.id);
+
         return new Response(
           JSON.stringify({ connected: false, state: "disconnected" }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -460,9 +475,13 @@ Deno.serve(async (req) => {
       const statusData = await statusResponse.json();
       const isConnected = statusData.instance?.state === "open";
 
-      // Recadastra o webhook com o segredo na URL. Instâncias criadas antes
-      // desta mudança apontam para a URL sem segredo; esta checagem roda a
-      // cada visita à tela de conexão, então elas se corrigem sozinhas.
+      // Recadastra o webhook com o segredo na URL, a cada visita à tela de
+      // conexão. Instâncias antigas apontam para a URL sem segredo — ou,
+      // depois de uma troca de servidor, para o projeto anterior.
+      //
+      // O comentário aqui dizia que elas "se corrigem sozinhas". Nunca se
+      // corrigiram: a chamada ia no formato da v1 e levava 400 calado desde
+      // sempre. Agora vai no formato certo e a resposta é conferida.
       if (isConnected) {
         const webhookUrl = await buildWebhookUrl(supabaseUrl, supabaseService);
         await definirWebhook(EVOLUTION_API_URL, EVOLUTION_API_KEY, instanceName, webhookUrl);
