@@ -8,6 +8,7 @@ import { useUserSettings } from '@/hooks/use-user-settings';
 import { MessageSquare, Loader2, Wifi, WifiOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { PageHeader } from '@/components/PageHeader';
 
 export default function SettingsConnections() {
   const { settings, isLoading } = useUserSettings();
@@ -25,19 +26,15 @@ export default function SettingsConnections() {
   const isWhatsAppConnected = settings?.whatsapp_connected;
 
   return (
-    <div className="p-8 space-y-8 max-w-4xl mx-auto">
+    <div className="p-6 sm:p-8 space-y-8 max-w-4xl mx-auto page-enter">
       {/* Page Header */}
-      <div className="space-y-1">
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
-            <MessageSquare className="h-5 w-5 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Conexões</h1>
-            <p className="text-sm text-muted-foreground">Gerencie suas conexões WhatsApp e multi-chip</p>
-          </div>
-        </div>
-      </div>
+      <PageHeader
+        eyebrow="Ajustes"
+        title="Conexões"
+        description="Gerencie suas conexões WhatsApp e multi-chip"
+        icon={<MessageSquare className="h-5 w-5" />}
+        className="mb-0"
+      />
 
       {/* Status Banner */}
       <div className={cn(

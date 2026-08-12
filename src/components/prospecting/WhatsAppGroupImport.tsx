@@ -682,7 +682,7 @@ export function WhatsAppGroupImport({ onLeadsImported, disabled }: WhatsAppGroup
                         <span className="font-medium flex-1 truncate text-sm">{groupName}</span>
                         <div className="flex items-center gap-1.5">
                           {contacts.some(c => c.isDuplicate) && (
-                            <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5 bg-warning text-warning dark:bg-warning/30 dark:text-warning">
+                            <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5 bg-warning/15 text-warning dark:bg-warning/25">
                               {contacts.filter(c => c.isDuplicate).length} dup
                             </Badge>
                           )}
@@ -715,7 +715,7 @@ export function WhatsAppGroupImport({ onLeadsImported, disabled }: WhatsAppGroup
                                 </p>
                               </div>
                               {contact.isDuplicate && (
-                                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5 bg-warning text-warning dark:bg-warning/30 dark:text-warning">
+                                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5 bg-warning/15 text-warning dark:bg-warning/25">
                                   Existente
                                 </Badge>
                               )}

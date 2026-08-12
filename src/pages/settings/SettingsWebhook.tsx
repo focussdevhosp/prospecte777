@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { useUserSettings } from '@/hooks/use-user-settings';
 import { useToast } from '@/hooks/use-toast';
 import { Webhook, Save, Code2, Send, Loader2, CheckCircle2, XCircle } from 'lucide-react';
+import { PageHeader } from '@/components/PageHeader';
 
 export default function SettingsWebhook() {
   const { settings, updateSettings, isUpdating } = useUserSettings();
@@ -80,18 +81,14 @@ export default function SettingsWebhook() {
   ];
 
   return (
-    <div className="p-8 space-y-8 max-w-4xl mx-auto">
-      <div className="space-y-1">
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
-            <Webhook className="h-5 w-5 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Webhook</h1>
-            <p className="text-sm text-muted-foreground">Receba eventos em tempo real no seu sistema externo</p>
-          </div>
-        </div>
-      </div>
+    <div className="p-6 sm:p-8 space-y-8 max-w-4xl mx-auto page-enter">
+      <PageHeader
+        eyebrow="Ajustes"
+        title="Webhook"
+        description="Receba eventos em tempo real no seu sistema externo"
+        icon={<Webhook className="h-5 w-5" />}
+        className="mb-0"
+      />
 
       <Card className="shadow-sm">
         <CardHeader>

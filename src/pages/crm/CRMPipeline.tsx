@@ -22,6 +22,7 @@ import {
   MapPin, DollarSign, MessageCircle, Search,
   TrendingUp, Users,
 } from 'lucide-react';
+import { PageHeader } from '@/components/PageHeader';
 
 const stageConfig: Record<LeadStage, { color: string; gradient: string; bg: string; emoji: string }> = {
   'Contato': { color: 'text-info', gradient: 'from-info to-info', bg: 'bg-info/10', emoji: '📞' },
@@ -257,10 +258,12 @@ export default function CRMPipelinePage() {
     >
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-3 shrink-0">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Pipeline</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Gerencie seus deals e acompanhe o funil de vendas</p>
-        </div>
+        <PageHeader
+          eyebrow="CRM"
+          title="Pipeline"
+          description="Gerencie seus deals e acompanhe o funil de vendas"
+          className="mb-0"
+        />
         <div className="flex items-center gap-2 flex-wrap">
           <div className="flex items-center gap-1.5 bg-success/10 text-success px-3 py-1.5 rounded-lg text-sm">
             <DollarSign className="h-3.5 w-3.5" />

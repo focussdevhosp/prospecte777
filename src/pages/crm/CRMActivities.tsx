@@ -14,6 +14,7 @@ import {
   Calendar as CalendarIcon, Video, CheckCircle, XCircle, Clock,
   MessageCircle, Loader2, AlertCircle, TrendingUp, Users, Flame,
 } from 'lucide-react';
+import { PageHeader } from '@/components/PageHeader';
 
 const statusConfig: Record<string, { label: string; className: string; icon: React.ReactNode }> = {
   scheduled: { label: 'Agendada', className: 'bg-info/10 text-info border-info/20', icon: <CalendarIcon className="h-3 w-3" /> },
@@ -65,11 +66,12 @@ export default function CRMActivitiesPage() {
     : format(selectedDate, "EEEE, dd 'de' MMMM", { locale: ptBR });
 
   return (
-    <div className="p-4 sm:p-6">
-      <div className="mb-6">
-        <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Atividades</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">Reuniões, follow-ups e tarefas do dia</p>
-      </div>
+    <div className="p-4 sm:p-6 page-enter">
+      <PageHeader
+        eyebrow="CRM"
+        title="Atividades"
+        description="Reuniões, follow-ups e tarefas do dia"
+      />
 
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">

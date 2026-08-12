@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { format, subDays } from 'date-fns';
 import { DashboardLayout } from '@/components/DashboardLayout';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDashboardMetrics } from '@/hooks/use-dashboard-metrics';
@@ -24,17 +23,11 @@ import {
   MessageSquare,
   Send,
   Flame,
-  ThermometerSun,
-  Snowflake,
   Target,
   Wifi,
   ArrowRight,
   X,
-  DollarSign,
-  Activity,
-  type LucideIcon,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
 export default function DashboardPage() {
   const { data: metrics, isLoading: metricsLoading } = useDashboardMetrics();
@@ -82,13 +75,13 @@ export default function DashboardPage() {
     return (
       <DashboardLayout title="Dashboard">
         <div className="space-y-6">
-          <Skeleton className="h-40 rounded-2xl" />
+          <Skeleton className="h-40 rounded-2xl skeleton-wave" />
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             {[...Array(4)].map((_, i) => (
-              <Skeleton key={i} className="h-32 rounded-2xl" />
+              <Skeleton key={i} className="h-32 rounded-2xl skeleton-wave" />
             ))}
           </div>
-          <Skeleton className="h-72 rounded-2xl" />
+          <Skeleton className="h-72 rounded-2xl skeleton-wave" />
         </div>
       </DashboardLayout>
     );
@@ -99,7 +92,10 @@ export default function DashboardPage() {
   const contactedLeads = metrics?.leadsByStage?.['Contato'] || 0;
 
   return (
-    <DashboardLayout title="Dashboard">
+    <DashboardLayout
+      title="Dashboard"
+      description="Onde a operação está agora, e o que fazer em seguida."
+    >
       <OnboardingWizard />
 
       <WelcomeCard
@@ -135,7 +131,7 @@ export default function DashboardPage() {
         <PeriodFilter value={period} onChange={setPeriod} />
       </div>
 
-      <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="stagger mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
         {/* `change` só aparece quando existe medição real. Dois destes
             cartões mostravam +125% e +12% escritos no código — número
             inventado apresentado como crescimento medido. */}
@@ -186,80 +182,12 @@ export default function DashboardPage() {
       </div>
 
       {/* 4-column grid: chart, funnel, activity, leads */}
-      <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-4">
+      <div className="stagger grid gap-4 lg:grid-cols-2 xl:grid-cols-4">
         <ProspectionChart data={chartData} />
         <ConversionFunnelChart stages={funnelStages} totalLeads={totalFunnelLeads} />
         <RecentActivity activities={activities} isLoading={activitiesLoading} />
         <RecentLeadsTable leads={leads} />
       </div>
     </DashboardLayout>
-  );
-}
-
-/* ── Sub-components ── */
-
-function SectionHeader({ title, subtitle, right }: { title: string; subtitle?: string; right?: React.ReactNode }) {
-  return (
-    <div className="mb-4 flex items-end justify-between gap-4">
-      <div>
-        <h2 className="text-base sm:text-lg font-bold tracking-tight">{title}</h2>
-        {subtitle && <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>}
-      </div>
-      {right}
-    </div>
-  );
-}
-
-const toneMap = {
-  success: { color: 'text-success', bg: 'bg-success/10', ring: 'group-hover:ring-success/20' },
-  primary: { color: 'text-primary', bg: 'bg-primary/10', ring: 'group-hover:ring-primary/20' },
-  warning: { color: 'text-warning', bg: 'bg-warning/10', ring: 'group-hover:ring-warning/20' },
-  info: { color: 'text-info', bg: 'bg-info/10', ring: 'group-hover:ring-info/20' },
-} as const;
-
-function ROIMetricCard({ icon: Icon, tone, label, value, sub }: {
-  icon: LucideIcon; tone: keyof typeof toneMap; label: string; value: string; sub: string;
-}) {
-  const t = toneMap[tone];
-  return (
-    <Card className="group border-border/50 hover:border-primary/30 transition-all duration-300 overflow-hidden hover:shadow-lg hover:shadow-primary/[0.06]">
-      <CardContent className="p-4 sm:p-5">
-        <div className="flex items-center gap-2.5 mb-3">
-          <div className={cn('p-2 rounded-xl transition-transform duration-300 group-hover:scale-110', t.bg)}>
-            <Icon className={cn('h-3.5 w-3.5', t.color)} />
-          </div>
-          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.12em]">{label}</span>
-        </div>
-        <p className="text-xl sm:text-2xl font-extrabold tabular-nums">{value}</p>
-        <p className="text-[10px] text-muted-foreground mt-1 font-medium">{sub}</p>
-      </CardContent>
-    </Card>
-  );
-}
-
-function TempBar({ icon: Icon, label, count, total, color, textColor }: {
-  icon: LucideIcon; label: string; count: number; total: number; color: string; textColor: string;
-}) {
-  const pct = total > 0 ? (count / total) * 100 : 0;
-  return (
-    <div>
-      <div className="flex items-center justify-between mb-2">
-        <span className={cn('flex items-center gap-2 text-xs font-semibold', textColor)}>
-          <div className={cn('p-1.5 rounded-lg', color + '/10')}>
-            <Icon className="h-3 w-3" />
-          </div>
-          {label}
-        </span>
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-bold tabular-nums">{count}</span>
-          <span className="text-[10px] text-muted-foreground tabular-nums font-semibold bg-muted/50 px-1.5 py-0.5 rounded-md">
-            {pct.toFixed(0)}%
-          </span>
-        </div>
-      </div>
-      <div className="h-2 rounded-full bg-muted/50 overflow-hidden">
-        <div className={cn('h-full rounded-full transition-all duration-500', color)} style={{ width: `${pct}%` }} />
-      </div>
-    </div>
   );
 }

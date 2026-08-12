@@ -95,23 +95,19 @@ export default function Objections() {
   };
 
   return (
-    <DashboardLayout title="Biblioteca" description="Templates, quebra de objeções e proteções anti-ban">
+    // A tela é "Quebra de Objeções"; "Biblioteca" é o grupo onde ela mora.
+    // Antes o cabeçalho anunciava o grupo e a página repetia um segundo
+    // título logo abaixo — dois `h1` na mesma tela, e o usuário lendo o nome
+    // errado primeiro.
+    <DashboardLayout
+      eyebrow="Biblioteca"
+      title="Quebra de Objeções"
+      description="Respostas prontas para as objeções mais comuns. A IA detecta e sugere na hora certa."
+      icon={<Shield className="h-5 w-5" />}
+    >
       <GroupNav items={libraryGroup} />
       <div className="space-y-6">
-      <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div className="space-y-1">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
-              <Shield className="h-5 w-5 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight">Quebra de Objeções</h1>
-              <p className="text-sm text-muted-foreground">
-                Respostas prontas para as objeções mais comuns. IA detecta e sugere na hora certa.
-              </p>
-            </div>
-          </div>
-        </div>
+      <div className="flex items-start justify-end gap-4 flex-wrap">
         <Dialog open={openCreate} onOpenChange={setOpenCreate}>
           <DialogTrigger asChild>
             <Button>

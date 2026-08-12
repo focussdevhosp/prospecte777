@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ServiceIntelligenceManager } from '@/components/settings/ServiceIntelligenceManager';
 import { Bot, Zap, Loader2, Check, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { PageHeader } from '@/components/PageHeader';
 
 const AGENT_PRESETS = [
   {
@@ -98,24 +99,16 @@ export default function SettingsAgent() {
       variants={stagger}
       initial="hidden"
       animate="show"
-      className="p-8 space-y-8 max-w-4xl mx-auto"
+      className="p-6 sm:p-8 space-y-8 max-w-4xl mx-auto"
     >
-      {/* Page Header */}
-      <motion.div variants={fadeUp} className="space-y-1">
-        <div className="flex items-center gap-3">
-          <motion.div
-            initial={{ scale: 0.5, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-            className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center"
-          >
-            <Bot className="h-5 w-5 text-primary" />
-          </motion.div>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Agente IA</h1>
-            <p className="text-sm text-muted-foreground">Personalidade, comportamento e base de conhecimento</p>
-          </div>
-        </div>
+      <motion.div variants={fadeUp}>
+        <PageHeader
+          eyebrow="Ajustes"
+          title="Agente IA"
+          description="Personalidade, comportamento e base de conhecimento"
+          icon={<Bot className="h-5 w-5" />}
+          className="mb-0"
+        />
       </motion.div>
 
       {/* Auto Reply Toggle */}

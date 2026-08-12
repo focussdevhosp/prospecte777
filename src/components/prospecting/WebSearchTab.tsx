@@ -541,7 +541,7 @@ export function WebSearchTab() {
                               <ExternalLink className="h-3 w-3" />
                             </a>
                             {result.analyzed && (
-                              <Badge variant="secondary" className="text-xs bg-success text-success">
+                              <Badge variant="secondary" className="text-xs bg-success/10 text-success border-success/30">
                                 <Sparkles className="h-3 w-3 mr-1" />
                                 Analisado
                               </Badge>
@@ -596,7 +596,7 @@ export function WebSearchTab() {
                                   </p>
                                   <div className="flex flex-wrap gap-1 mt-1">
                                     {result.opportunities.map((opp, i) => (
-                                      <Badge key={i} variant="outline" className="text-xs bg-success text-success border-success">
+                                      <Badge key={i} variant="outline" className="text-xs bg-success/10 text-success border-success/30">
                                         {opp}
                                       </Badge>
                                     ))}

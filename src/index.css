@@ -451,6 +451,214 @@
   }
   .animate-count-up { animation: countUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
 
+  /* ============================================================
+     MOVIMENTO
+     ============================================================
+     Duas regras que decidem tudo aqui:
+
+     1. O MOVIMENTO ORIENTA, NÃO ENFEITA. Cada animação responde a uma
+        pergunta: o que é novo? o que mudou? o que veio de onde? Animação
+        que não responde a nada vira ruído, e ruído cansa em três dias de
+        uso — que é exatamente o tempo em que este produto precisa ficar
+        agradável.
+
+     2. QUEM PEDE MENOS MOVIMENTO NÃO PODE PERDER CONTEÚDO. Esta é a
+        armadilha: as animações de entrada começam em `opacity: 0`, então
+        um `animation: none` global deixaria a tela PERMANENTEMENTE VAZIA
+        para quem ativou "reduzir movimento" no sistema. É o jeito mais
+        fácil de tornar um app inteiro inutilizável para quem tem
+        sensibilidade vestibular, e não aparece em nenhum teste porque
+        ninguém desenvolve com a preferência ligada.
+
+        Por isso todo bloco de reduced-motion aqui devolve `opacity: 1`
+        junto com `animation: none`. Sempre os dois.
+     ============================================================ */
+
+  /* Entrada em cascata. O índice vira atraso, então a lista se monta na
+     ordem em que se lê — e o olho acompanha em vez de receber tudo de uma
+     vez. Acima de 8 o atraso trava: esperar 1,2s pelo décimo cartão é
+     lentidão disfarçada de refinamento. */
+  .stagger > * {
+    animation: staggerIn 0.5s var(--ease-out) both;
+  }
+  .stagger > *:nth-child(1)  { animation-delay: 0ms; }
+  .stagger > *:nth-child(2)  { animation-delay: 45ms; }
+  .stagger > *:nth-child(3)  { animation-delay: 90ms; }
+  .stagger > *:nth-child(4)  { animation-delay: 135ms; }
+  .stagger > *:nth-child(5)  { animation-delay: 180ms; }
+  .stagger > *:nth-child(6)  { animation-delay: 225ms; }
+  .stagger > *:nth-child(7)  { animation-delay: 270ms; }
+  .stagger > *:nth-child(n+8) { animation-delay: 315ms; }
+
+  @keyframes staggerIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  /* Troca de página. Sutil de propósito: o usuário já sabe que clicou, a
+     animação só confirma que a tela é outra. */
+  .page-enter {
+    animation: pageEnter 0.34s var(--ease-out) both;
+  }
+
+  @keyframes pageEnter {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  /* Levantar no hover. Um comportamento só, para nunca haver dois jeitos
+     diferentes de um cartão reagir ao mouse na mesma tela. */
+  .hover-lift {
+    transition:
+      transform var(--duration-base) var(--ease-out),
+      box-shadow var(--duration-base) var(--ease-out),
+      border-color var(--duration-base) var(--ease-out);
+  }
+  .hover-lift:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+  }
+  .hover-lift:active {
+    transform: translateY(-1px);
+    transition-duration: var(--duration-fast);
+  }
+
+  /* Brilho que atravessa a superfície. Reservado para o que acabou de
+     acontecer — número que subiu, item que chegou. Em elemento parado
+     vira piscar de vitrine. */
+  .shine {
+    position: relative;
+    overflow: hidden;
+  }
+  .shine::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      100deg,
+      transparent 30%,
+      hsl(0 0% 100% / 0.14) 50%,
+      transparent 70%
+    );
+    transform: translateX(-100%);
+    pointer-events: none;
+  }
+  .shine:hover::after {
+    animation: shineSweep 0.9s var(--ease-out);
+  }
+
+  @keyframes shineSweep {
+    to { transform: translateX(100%); }
+  }
+
+  /* Esqueleto de carregamento com onda em vez de pulso. A onda sugere
+     "vem chegando"; o pulso sugere "parado piscando". */
+  .skeleton-wave {
+    position: relative;
+    overflow: hidden;
+    background-color: hsl(var(--muted));
+  }
+  .skeleton-wave::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      hsl(var(--foreground) / 0.06),
+      transparent
+    );
+    transform: translateX(-100%);
+    animation: skeletonWave 1.5s ease-in-out infinite;
+  }
+
+  @keyframes skeletonWave {
+    to { transform: translateX(100%); }
+  }
+
+  /* Ponto pulsante para "isto está vivo agora". O anel expande e some,
+     que é a forma que o olho lê como batimento — o pulso de opacidade
+     sozinho passa despercebido no canto da tela. */
+  .live-dot {
+    position: relative;
+  }
+  .live-dot::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: currentColor;
+    animation: liveRing 1.8s var(--ease-out) infinite;
+  }
+
+  @keyframes liveRing {
+    0%   { opacity: 0.55; transform: scale(1); }
+    70%  { opacity: 0; transform: scale(2.4); }
+    100% { opacity: 0; transform: scale(2.4); }
+  }
+
+  /* Número que muda. Chama o olho para o valor novo sem mexer no lugar
+     dele — deslocar um número que a pessoa está lendo é pior que não
+     animar nada. */
+  .value-changed {
+    animation: valueChanged 0.7s var(--ease-out);
+  }
+
+  @keyframes valueChanged {
+    0%   { color: hsl(var(--primary)); }
+    100% { color: inherit; }
+  }
+
+  /* ---- O contrato do reduced-motion ----
+     Note que TODA regra devolve `opacity: 1`. Sem isso, o app inteiro
+     ficaria em branco para quem ativou a preferência. */
+  @media (prefers-reduced-motion: reduce) {
+    .stagger > *,
+    .page-enter,
+    .animate-fade-in,
+    .animate-slide-up,
+    .animate-slide-in-right,
+    .animate-scale-in,
+    .animate-bounce-in,
+    .animate-count-up,
+    .value-changed {
+      animation: none !important;
+      opacity: 1 !important;
+      transform: none !important;
+    }
+
+    .hover-lift,
+    .hover-lift:hover,
+    .hover-lift:active {
+      transition: none;
+      transform: none;
+    }
+
+    /* Estes três sinalizam ESTADO, não decoração: "está vivo",
+       "está carregando". Tirar o movimento aqui apagaria a informação,
+       então eles ficam — sem deslocamento, só variando a opacidade. */
+    .live-dot::before {
+      animation: liveDotFade 2.4s ease-in-out infinite;
+      transform: none;
+    }
+    .skeleton-wave::after {
+      animation: liveDotFade 2.4s ease-in-out infinite;
+      transform: none;
+    }
+    .shine::after,
+    .shine:hover::after {
+      animation: none;
+      opacity: 0;
+    }
+    .animate-pulse-soft {
+      animation: liveDotFade 2.4s ease-in-out infinite;
+    }
+  }
+
+  @keyframes liveDotFade {
+    0%, 100% { opacity: 0.35; }
+    50%      { opacity: 0.7; }
+  }
 
   /* Glassmorphism premium */
   .glass {

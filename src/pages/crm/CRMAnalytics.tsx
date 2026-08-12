@@ -9,6 +9,7 @@ import {
   PieChart, Pie, Cell, Legend, RadialBarChart, RadialBar,
 } from 'recharts';
 import { DollarSign, TrendingUp, Target, Users, Loader2, ArrowUpRight, ArrowDownRight, Flame } from 'lucide-react';
+import { PageHeader } from '@/components/PageHeader';
 
 const COLORS = ['hsl(var(--chart-4))', 'hsl(var(--chart-6))', 'hsl(var(--destructive))', 'hsl(var(--chart-3))', 'hsl(var(--chart-1))', 'hsl(var(--chart-5))', '#06b6d4', 'hsl(var(--chart-2))'];
 
@@ -133,11 +134,12 @@ export default function CRMAnalyticsPage() {
   ];
 
   return (
-    <div className="p-4 sm:p-6">
-      <div className="mb-6">
-        <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Analytics</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">Métricas e insights do seu funil de vendas</p>
-      </div>
+    <div className="p-4 sm:p-6 page-enter">
+      <PageHeader
+        eyebrow="CRM"
+        title="Analytics"
+        description="Métricas e insights do seu funil de vendas"
+      />
 
       {/* KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">

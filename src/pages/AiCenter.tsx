@@ -1,3 +1,4 @@
+import { FlaskConical } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { AiCostPanel } from '@/components/ai/AiCostPanel';
@@ -7,16 +8,13 @@ import { LearningPanel } from '@/components/ai/LearningPanel';
 
 export default function AiCenterPage() {
   return (
-    <DashboardLayout title="Central de IA">
+    <DashboardLayout
+      eyebrow="Analisar"
+      title="Central de IA"
+      description="Quanto a IA está gastando, e o que exatamente ela diria para cada lead — antes de dizer."
+      icon={<FlaskConical className="h-5 w-5" />}
+    >
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-semibold">Central de IA</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Quanto a IA está gastando, e o que exatamente ela diria para cada
-            lead — antes de dizer.
-          </p>
-        </div>
-
         <Tabs defaultValue="laboratorio">
           <TabsList>
             <TabsTrigger value="laboratorio">Laboratório</TabsTrigger>

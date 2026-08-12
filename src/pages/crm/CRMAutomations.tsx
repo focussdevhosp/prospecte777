@@ -12,6 +12,7 @@ import {
   Bot, Calendar, Bell, CheckCircle, Plus, Trash2, Settings2,
   TrendingUp, Users, AlertTriangle,
 } from 'lucide-react';
+import { PageHeader } from '@/components/PageHeader';
 
 interface AutomationRule {
   id: string;
@@ -121,13 +122,13 @@ export default function CRMAutomationsPage() {
   return (
     <div className="p-4 sm:p-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-3">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight flex items-center gap-2">
-            <Zap className="h-6 w-6 text-primary" />
-            Automações
-          </h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Configure regras automáticas para o seu CRM</p>
-        </div>
+        <PageHeader
+          eyebrow="CRM"
+          title="Automações"
+          description="Configure regras automáticas para o seu CRM"
+          icon={<Zap className="h-5 w-5" />}
+          className="mb-0"
+        />
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="text-xs">
             {enabledCount}/{rules.length} ativas
