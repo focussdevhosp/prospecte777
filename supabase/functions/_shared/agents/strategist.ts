@@ -16,6 +16,7 @@
 // qualquer empresa do planeta e por isso não serve para nenhuma.
 
 import type {
+  OutreachChannel,
   ApproachAngle,
   CampaignGoal,
   Dossier,
@@ -33,6 +34,8 @@ export interface StrategyInput {
   goal: CampaignGoal;
   /** Estilo configurado pelo dono da conta. */
   formality?: "informal" | "neutro" | "formal";
+  /** Por onde sai. Padrão WhatsApp, que era o único canal até existir e-mail. */
+  channel?: OutreachChannel;
 }
 
 /**
@@ -59,6 +62,7 @@ const FOLLOW_UP_CTA: Record<CampaignGoal, string> = {
 
 export function buildStrategy(input: StrategyInput): Strategy {
   const { dossier, qualification, match, goal } = input;
+  const channel: OutreachChannel = input.channel ?? "whatsapp";
   const rationale: string[] = [];
 
   const isFollowUp = dossier.messageCount.fromAgent > 0;
@@ -86,7 +90,13 @@ export function buildStrategy(input: StrategyInput): Strategy {
   // ---- Tamanho ----
   // Primeira mensagem curta é regra do produto, não preferência estética:
   // texto longo de desconhecido no WhatsApp é ignorado ou denunciado.
-  const maxWords = isFollowUp ? 40 : angle === "curta" ? 30 : 55;
+  // O limite muda com o canal, e a diferença não é estética. No WhatsApp a
+  // mensagem aparece inteira na notificação: passar de meia dúzia de linhas
+  // é pedir para ser fechada antes de ser lida. No e-mail, a mesma
+  // brevidade parece recado sem contexto — e recado sem contexto de
+  // remetente desconhecido vira spam na cabeça de quem recebe.
+  const limiteBase = isFollowUp ? 40 : angle === "curta" ? 30 : 55;
+  const maxWords = channel === "email" ? Math.round(limiteBase * 2.2) : limiteBase;
   rationale.push(`Limite: ${maxWords} palavras (${isFollowUp ? "follow-up" : "primeiro contato"})`);
 
   const cta = isFollowUp || hasReplied ? FOLLOW_UP_CTA[goal] : FIRST_TOUCH_CTA[goal];
@@ -101,7 +111,7 @@ export function buildStrategy(input: StrategyInput): Strategy {
     offer: match.offer,
     formality: input.formality ?? "informal",
     cta,
-    channel: "whatsapp",
+    channel,
     expectedObjections: expectedObjections(match.offer, qualification),
     rationale,
     maxWords,

@@ -82,12 +82,30 @@ export function buildCopyPrompt(ctx: CopyContext): { system: string; user: strin
     : "Nenhuma oferta definida. NÃO proponha serviço específico — apenas abra conversa.";
 
   const system = `# QUEM VOCÊ É
-Você é ${sender.agentName}${sender.companyName ? `, da ${sender.companyName}` : ""}, escrevendo pessoalmente no WhatsApp do dono de um negócio.
+Você é ${sender.agentName}${sender.companyName ? `, da ${sender.companyName}` : ""}, escrevendo pessoalmente ${strategy.channel === "email" ? "um e-mail para" : "no WhatsApp d"}o dono de um negócio.
 ${sender.persona ?? ""}
 
 Estilo: ${style}
 Emojis: ${emoji}
 
+${strategy.channel === "email" ? `
+# ESTE É UM E-MAIL, NÃO UMA MENSAGEM DE APLICATIVO
+Devolva o assunto na primeira linha, exatamente assim:
+ASSUNTO: <o assunto>
+Depois uma linha em branco e o corpo.
+
+O assunto decide se alguém abre, e as regras dele são diferentes das do
+corpo:
+- no máximo 6 palavras;
+- diga o assunto de verdade, não uma isca. "Site do <empresa> fora do ar"
+  abre; "Uma oportunidade para você" vira lixeira;
+- sem CAIXA ALTA, sem emoji, sem ponto de exclamação;
+- não escreva o nome da sua empresa nele — quem recebe não conhece.
+
+No corpo: pode usar duas ou três frases a mais que num WhatsApp, mas
+continua sendo mensagem de gente, não circular. Sem assinatura formal,
+sem "atenciosamente", sem bloco de rodapé.
+` : ""}
 # A REGRA QUE VALE MAIS QUE TODAS AS OUTRAS
 Você só pode AFIRMAR o que está na lista de FATOS OBSERVADOS que vem na próxima mensagem.
 
@@ -169,4 +187,34 @@ export function cleanMessage(raw: string): string {
     .replace(/^\*\*|\*\*$/g, "")
     .replace(/^(mensagem|resposta|saída)\s*:\s*/i, "")
     .trim();
+}
+
+/**
+ * Separa assunto e corpo do que o modelo devolveu para e-mail.
+ *
+ * O modelo recebe instrução de começar com `ASSUNTO:`. Ele quase sempre
+ * obedece — quase. Quando não obedece, a alternativa a um fallback é não
+ * enviar, e aqui não enviar seria exagero: o corpo está correto, falta só o
+ * rótulo. Então o assunto sai da primeira frase do próprio corpo, que é o que
+ * um humano escreveria de qualquer forma.
+ *
+ * O que esta função NÃO faz é inventar assunto genérico. "Oportunidade para
+ * sua empresa" seria pior que nenhum: é a linha que treina o destinatário a
+ * arquivar sem abrir.
+ */
+export function splitEmail(texto: string): { subject: string; body: string } {
+  const limpo = texto.trim();
+
+  const m = limpo.match(/^\s*ASSUNTO:\s*(.+?)\s*\n([\s\S]*)$/i);
+  if (m) {
+    return { subject: m[1].trim().slice(0, 120), body: m[2].trim() };
+  }
+
+  // Sem rótulo: a primeira frase vira assunto e permanece no corpo. Removê-la
+  // deixaria o corpo começando no meio de um raciocínio.
+  const primeiraFrase = limpo.split(/(?<=[.!?])\s/)[0] ?? limpo;
+  return {
+    subject: primeiraFrase.replace(/\s+/g, " ").trim().slice(0, 80),
+    body: limpo,
+  };
 }

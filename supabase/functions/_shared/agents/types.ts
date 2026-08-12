@@ -148,6 +148,9 @@ export type ApproachAngle =
   | "reativacao"       // já houve contato antes
   | "follow_up";       // já houve mensagem sem resposta
 
+/** Canais por onde uma abordagem pode sair. */
+export type OutreachChannel = "whatsapp" | "email";
+
 export type CampaignGoal =
   | "agendar_demonstracao"
   | "solicitar_orcamento"
@@ -166,7 +169,14 @@ export interface Strategy {
   formality: "informal" | "neutro" | "formal";
   /** Pedido mínimo. Nunca reunião na primeira mensagem. */
   cta: string;
-  channel: "whatsapp";
+  /**
+   * Por onde esta mensagem sai.
+   *
+   * Era o literal `"whatsapp"` — não uma escolha, uma constante com cara de
+   * campo. Muda o texto de verdade: e-mail tem assunto, aceita mais palavras
+   * e não pode soar como mensagem de aplicativo; WhatsApp é o contrário.
+   */
+  channel: OutreachChannel;
   /** Objeções esperadas, para o Conversation Agent já chegar preparado. */
   expectedObjections: string[];
   /** Justificativa da escolha, para o feed. */

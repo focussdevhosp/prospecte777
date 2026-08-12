@@ -1,7 +1,7 @@
 -- ============================================================
 -- MIGRAÇÕES NOVAS — PARA O BANCO QUE JÁ EXISTE
 -- ============================================================
--- São 15 migrações, todas ADITIVAS: criam tabela, função, gatilho e
+-- São 17 migrações, todas ADITIVAS: criam tabela, função, gatilho e
 -- coluna. Nenhuma apaga dado, nenhuma remove coluna, nenhuma altera tipo de
 -- coluna existente.
 --
@@ -31,7 +31,7 @@
 
 
 -- ############################################################
--- [01/15] 20260811120000_b7c8d9e0-0005-4a55-9c05-000000000005.sql
+-- [01/17] 20260811120000_b7c8d9e0-0005-4a55-9c05-000000000005.sql
 -- ############################################################
 
 -- ============================================================
@@ -552,7 +552,7 @@ CREATE TRIGGER trg_mission_leads_touch
 
 
 -- ############################################################
--- [02/15] 20260811140000_c8d9e0f1-0006-4a66-9c06-000000000006.sql
+-- [02/17] 20260811140000_c8d9e0f1-0006-4a66-9c06-000000000006.sql
 -- ############################################################
 
 -- ============================================================
@@ -886,7 +886,7 @@ CREATE TRIGGER trg_provider_states_touch
 
 
 -- ############################################################
--- [03/15] 20260811160000_d9e0f1a2-0007-4a77-9c07-000000000007.sql
+-- [03/17] 20260811160000_d9e0f1a2-0007-4a77-9c07-000000000007.sql
 -- ############################################################
 
 -- ============================================================
@@ -1060,7 +1060,7 @@ $$;
 
 
 -- ############################################################
--- [04/15] 20260811180000_e0f1a2b3-0008-4a88-9c08-000000000008.sql
+-- [04/17] 20260811180000_e0f1a2b3-0008-4a88-9c08-000000000008.sql
 -- ############################################################
 
 -- ============================================================
@@ -1406,7 +1406,7 @@ COMMENT ON FUNCTION public.mission_refresh_counters(UUID) IS
 
 
 -- ############################################################
--- [05/15] 20260811200000_f1a2b3c4-0009-4a99-9c09-000000000009.sql
+-- [05/17] 20260811200000_f1a2b3c4-0009-4a99-9c09-000000000009.sql
 -- ############################################################
 
 -- ============================================================
@@ -1629,7 +1629,7 @@ $$;
 
 
 -- ############################################################
--- [06/15] 20260811220000_a2b3c4d5-0010-4aaa-9c10-000000000010.sql
+-- [06/17] 20260811220000_a2b3c4d5-0010-4aaa-9c10-000000000010.sql
 -- ############################################################
 
 -- ============================================================
@@ -1781,7 +1781,7 @@ $$;
 
 
 -- ############################################################
--- [07/15] 20260812000000_b3c4d5e6-0011-4abb-9c11-000000000011.sql
+-- [07/17] 20260812000000_b3c4d5e6-0011-4abb-9c11-000000000011.sql
 -- ############################################################
 
 -- ============================================================
@@ -1849,7 +1849,7 @@ $$;
 
 
 -- ############################################################
--- [08/15] 20260812020000_c4d5e6f7-0012-4acc-9c12-000000000012.sql
+-- [08/17] 20260812020000_c4d5e6f7-0012-4acc-9c12-000000000012.sql
 -- ############################################################
 
 -- ============================================================
@@ -2148,7 +2148,7 @@ $$;
 
 
 -- ############################################################
--- [09/15] 20260812040000_d5e6f7a8-0013-4add-9c13-000000000013.sql
+-- [09/17] 20260812040000_d5e6f7a8-0013-4add-9c13-000000000013.sql
 -- ############################################################
 
 -- ============================================================
@@ -2277,7 +2277,7 @@ $$;
 
 
 -- ############################################################
--- [10/15] 20260812060000_e6f7a8b9-0014-4aee-9c14-000000000014.sql
+-- [10/17] 20260812060000_e6f7a8b9-0014-4aee-9c14-000000000014.sql
 -- ############################################################
 
 -- ============================================================
@@ -2406,7 +2406,7 @@ $$;
 
 
 -- ############################################################
--- [11/15] 20260812080000_f7a8b9c0-0015-4aff-9c15-000000000015.sql
+-- [11/17] 20260812080000_f7a8b9c0-0015-4aff-9c15-000000000015.sql
 -- ############################################################
 
 -- ============================================================
@@ -2579,7 +2579,7 @@ $$;
 
 
 -- ############################################################
--- [12/15] 20260812100000_a8b9c0d1-0016-4b00-9c16-000000000016.sql
+-- [12/17] 20260812100000_a8b9c0d1-0016-4b00-9c16-000000000016.sql
 -- ############################################################
 
 -- ============================================================
@@ -2692,7 +2692,7 @@ $$;
 
 
 -- ############################################################
--- [13/15] 20260812120000_b9c0d1e2-0017-4b11-9c17-000000000017.sql
+-- [13/17] 20260812120000_b9c0d1e2-0017-4b11-9c17-000000000017.sql
 -- ############################################################
 
 -- ============================================================
@@ -2888,7 +2888,7 @@ $$;
 
 
 -- ############################################################
--- [14/15] 20260812140000_c0d1e2f3-0018-4b22-9c18-000000000018.sql
+-- [14/17] 20260812140000_c0d1e2f3-0018-4b22-9c18-000000000018.sql
 -- ############################################################
 
 -- ============================================================
@@ -2931,7 +2931,7 @@ $$;
 
 
 -- ############################################################
--- [15/15] 20260812160000_d1e2f3a4-0019-4b33-9c19-000000000019.sql
+-- [15/17] 20260812160000_d1e2f3a4-0019-4b33-9c19-000000000019.sql
 -- ############################################################
 
 -- ============================================================
@@ -3069,6 +3069,310 @@ BEGIN
     WHERE n.nspname = 'public' AND p.proname = 'chip_allowance'
   ) THEN
     RAISE EXCEPTION 'chip_allowance não foi criada — o aquecimento de chip novo não teria como ser calculado.';
+  END IF;
+END;
+$$;
+
+
+-- ############################################################
+-- [16/17] 20260812180000_e2f3a4b5-0020-4b44-9c20-000000000020.sql
+-- ############################################################
+
+-- ============================================================
+-- QUEM PEDIU PARA PARAR, PAROU — EM TODOS OS CANAIS
+-- ============================================================
+-- O opt-out é por TELEFONE: `whatsapp_blacklist` guarda o número e o
+-- `whatsapp-send` consulta antes de cada envio. Funcionou enquanto WhatsApp
+-- era o único canal.
+--
+-- No momento em que o e-mail entra, isso vira uma brecha com aparência de
+-- funcionalidade: quem escreveu "pare" no WhatsApp continua recebendo
+-- e-mail, porque o identificador é outro. Do lado de quem recebe, não há
+-- diferença nenhuma — é a mesma empresa insistindo depois de ter sido
+-- mandada parar.
+--
+-- Então o opt-out passa a ser da PESSOA. Pedir para parar em qualquer canal
+-- para todos os canais, a menos que a pessoa diga o contrário.
+--
+-- `whatsapp_blacklist` continua existindo e continua sendo consultada: ela
+-- tem o histórico, e desligá-la abriria justamente o buraco que este arquivo
+-- veio fechar.
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS public.outbound_suppression (
+  id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id    UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+
+  -- O lead, quando se sabe quem é. É por ele que o bloqueio atravessa canais:
+  -- telefone e e-mail são endereços, a pessoa é uma só.
+  lead_id    UUID REFERENCES public.leads(id) ON DELETE CASCADE,
+
+  -- Endereço específico, para o caso de não haver lead — importação, opt-out
+  -- por link público, pedido que chega solto.
+  identifier TEXT,
+  channel    TEXT NOT NULL DEFAULT 'all',
+
+  reason     TEXT NOT NULL DEFAULT 'opt_out',
+  -- Onde a pessoa pediu. Serve para responder "quando e como isso foi pedido",
+  -- que é o que uma autoridade pergunta.
+  source     TEXT,
+  note       TEXT,
+
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+  CONSTRAINT outbound_suppression_channel_valid
+    CHECK (channel IN ('all', 'whatsapp', 'email')),
+  -- Sem lead e sem endereço, a linha não bloqueia ninguém — só ocupa espaço
+  -- e dá a impressão de que alguém foi protegido.
+  CONSTRAINT outbound_suppression_alvo
+    CHECK (lead_id IS NOT NULL OR identifier IS NOT NULL)
+);
+
+CREATE INDEX IF NOT EXISTS idx_suppression_lead
+  ON public.outbound_suppression (user_id, lead_id);
+
+CREATE INDEX IF NOT EXISTS idx_suppression_identifier
+  ON public.outbound_suppression (user_id, identifier);
+
+ALTER TABLE public.outbound_suppression ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "own suppression" ON public.outbound_suppression;
+-- O usuário lê e ACRESCENTA (pode bloquear alguém na mão), mas não apaga:
+-- desfazer um opt-out não é operação de tela, é decisão que precisa passar
+-- por quem entende a consequência.
+CREATE POLICY "own suppression read" ON public.outbound_suppression
+  FOR SELECT USING (user_id = auth.uid());
+
+CREATE POLICY "own suppression insert" ON public.outbound_suppression
+  FOR INSERT WITH CHECK (user_id = auth.uid());
+
+/**
+ * Diz se este envio está bloqueado, olhando a PESSOA e não só o endereço.
+ *
+ * Consulta, nesta ordem:
+ *   1. supressão global ou do canal, pelo lead
+ *   2. supressão pelo endereço informado
+ *   3. `whatsapp_blacklist` — o histórico que já existia
+ *
+ * Devolve o motivo em texto, ou NULL quando pode enviar. Motivo em vez de
+ * booleano porque a tela precisa poder dizer O QUE aconteceu: "pediu para
+ * sair pelo WhatsApp em 12/08" é informação; "bloqueado" não é.
+ */
+CREATE OR REPLACE FUNCTION public.outbound_suppressed(
+  p_user_id    UUID,
+  p_channel    TEXT,
+  p_lead_id    UUID DEFAULT NULL,
+  p_identifier TEXT DEFAULT NULL
+)
+RETURNS TEXT
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_row RECORD;
+BEGIN
+  IF p_lead_id IS NOT NULL THEN
+    SELECT channel, source, created_at INTO v_row
+    FROM public.outbound_suppression
+    WHERE user_id = p_user_id
+      AND lead_id = p_lead_id
+      AND channel IN ('all', p_channel)
+    ORDER BY created_at
+    LIMIT 1;
+
+    IF FOUND THEN
+      RETURN format(
+        'Este contato pediu para não receber mais mensagens%s, em %s.',
+        CASE WHEN v_row.source IS NOT NULL THEN ' (' || v_row.source || ')' ELSE '' END,
+        to_char(v_row.created_at AT TIME ZONE 'America/Sao_Paulo', 'DD/MM/YYYY')
+      );
+    END IF;
+  END IF;
+
+  IF p_identifier IS NOT NULL THEN
+    SELECT channel, source, created_at INTO v_row
+    FROM public.outbound_suppression
+    WHERE user_id = p_user_id
+      AND identifier = p_identifier
+      AND channel IN ('all', p_channel)
+    ORDER BY created_at
+    LIMIT 1;
+
+    IF FOUND THEN
+      RETURN format(
+        'Este endereço pediu para não receber mais mensagens, em %s.',
+        to_char(v_row.created_at AT TIME ZONE 'America/Sao_Paulo', 'DD/MM/YYYY')
+      );
+    END IF;
+  END IF;
+
+  -- A lista antiga continua valendo. Ignorá-la aqui reabriria o buraco no
+  -- canal que já funcionava.
+  IF p_channel = 'whatsapp' AND p_identifier IS NOT NULL THEN
+    IF EXISTS (
+      SELECT 1 FROM public.whatsapp_blacklist
+      WHERE user_id = p_user_id AND phone = p_identifier
+    ) THEN
+      RETURN 'Este número está na lista de bloqueio.';
+    END IF;
+  END IF;
+
+  RETURN NULL;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.outbound_suppressed(UUID, TEXT, UUID, TEXT)
+  TO authenticated, service_role;
+
+/**
+ * Registra o opt-out atravessando canais.
+ *
+ * Um gatilho já coloca o número na `whatsapp_blacklist` quando o lead escreve
+ * "pare". Este espelha aquilo em `outbound_suppression` com `channel = 'all'`,
+ * que é o que impede o e-mail de sair para quem pediu silêncio no WhatsApp.
+ */
+CREATE OR REPLACE FUNCTION public.suppression_from_blacklist()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  INSERT INTO public.outbound_suppression (user_id, lead_id, identifier, channel, reason, source)
+  VALUES (
+    NEW.user_id,
+    NEW.lead_id,
+    NEW.phone,
+    'all',
+    'opt_out',
+    'pedido no WhatsApp'
+  );
+
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_suppression_from_blacklist ON public.whatsapp_blacklist;
+CREATE TRIGGER trg_suppression_from_blacklist
+  AFTER INSERT ON public.whatsapp_blacklist
+  FOR EACH ROW
+  EXECUTE FUNCTION public.suppression_from_blacklist();
+
+-- Quem já estava bloqueado no WhatsApp precisa entrar aqui também. Sem esta
+-- recuperação, todo mundo que pediu para parar antes de hoje receberia o
+-- primeiro e-mail — e seria justamente quem já demonstrou não querer.
+INSERT INTO public.outbound_suppression (user_id, lead_id, identifier, channel, reason, source)
+SELECT b.user_id, b.lead_id, b.phone, 'all', 'opt_out', 'lista de bloqueio anterior'
+FROM public.whatsapp_blacklist b
+WHERE NOT EXISTS (
+  SELECT 1 FROM public.outbound_suppression s
+  WHERE s.user_id = b.user_id AND s.identifier = b.phone
+);
+
+-- ------------------------------------------------------------
+-- CONFERÊNCIA
+-- ------------------------------------------------------------
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger WHERE tgname = 'trg_suppression_from_blacklist' AND NOT tgisinternal
+  ) THEN
+    RAISE EXCEPTION
+      'trg_suppression_from_blacklist não foi criado — quem pedisse para parar no '
+      'WhatsApp continuaria recebendo e-mail.';
+  END IF;
+END;
+$$;
+
+
+-- ############################################################
+-- [17/17] 20260812200000_f3a4b5c6-0021-4b55-9c21-000000000021.sql
+-- ############################################################
+
+-- ============================================================
+-- REMETENTE DO E-MAIL, E O CANAL DA MISSÃO
+-- ============================================================
+-- O canal já existia em `missions.channel`, com padrão 'whatsapp' — e nunca
+-- foi outra coisa, porque a tela não oferecia escolha e nada além do WhatsApp
+-- sabia enviar.
+--
+-- Com o e-mail entrando, a coluna passa a significar algo. E ganha uma opção
+-- que não é "um ou outro": `email_depois_whatsapp` é a sequência que protege
+-- o ativo mais frágil da operação — o primeiro toque sai por e-mail, que não
+-- queima número, e o WhatsApp entra só depois que a pessoa respondeu.
+
+ALTER TABLE public.user_settings
+  ADD COLUMN IF NOT EXISTS email_from     TEXT,
+  ADD COLUMN IF NOT EXISTS email_reply_to TEXT;
+
+COMMENT ON COLUMN public.user_settings.email_from IS
+  'Remetente, no formato "Nome <endereco@dominio>". O domínio precisa estar '
+  'verificado no provedor — sem isso o e-mail sai como spam ou nem sai.';
+
+ALTER TABLE public.missions
+  DROP CONSTRAINT IF EXISTS missions_channel_valid;
+
+ALTER TABLE public.missions
+  ADD CONSTRAINT missions_channel_valid
+  CHECK (channel IN ('whatsapp', 'email', 'email_depois_whatsapp'));
+
+COMMENT ON COLUMN public.missions.channel IS
+  'whatsapp | email | email_depois_whatsapp. A terceira é a sequência que '
+  'protege o chip: primeiro toque por e-mail, WhatsApp só depois da resposta.';
+
+-- Por qual canal cada lead foi abordado. Sem isso, medir "e-mail converte
+-- mais que WhatsApp?" seria impossível — e essa é a primeira pergunta que
+-- alguém faz depois de ligar o segundo canal.
+ALTER TABLE public.mission_leads
+  ADD COLUMN IF NOT EXISTS sent_channel TEXT;
+
+COMMENT ON COLUMN public.mission_leads.sent_channel IS
+  'Canal por onde a abordagem saiu de fato. Alimenta a comparação entre '
+  'canais em `outreach_by_channel`.';
+
+/**
+ * Desempenho por canal.
+ *
+ * Mesma forma de `outreach_by_angle`, e pela mesma razão: o número precisa
+ * sair derivado do que aconteceu, não de um contador que alguém pode
+ * esquecer de incrementar.
+ */
+CREATE OR REPLACE FUNCTION public.outreach_by_channel(
+  p_user_id UUID,
+  p_days    INTEGER DEFAULT 180
+)
+RETURNS TABLE (channel TEXT, sent BIGINT, replied BIGINT, meetings BIGINT)
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT
+    COALESCE(ml.sent_channel, 'whatsapp') AS channel,
+    COUNT(*)::BIGINT,
+    COUNT(*) FILTER (WHERE ml.replied_at IS NOT NULL)::BIGINT,
+    COUNT(*) FILTER (WHERE ml.status = 'meeting_booked')::BIGINT
+  FROM public.mission_leads ml
+  WHERE ml.user_id = p_user_id
+    AND ml.sent_at IS NOT NULL
+    AND ml.sent_at >= NOW() - (GREATEST(p_days, 1) || ' days')::INTERVAL
+  GROUP BY 1
+  ORDER BY 2 DESC;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.outreach_by_channel(UUID, INTEGER)
+  TO authenticated, service_role;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema='public' AND table_name='mission_leads' AND column_name='sent_channel'
+  ) THEN
+    RAISE EXCEPTION 'mission_leads.sent_channel não foi criada — a comparação entre canais ficaria sem base.';
   END IF;
 END;
 $$;
