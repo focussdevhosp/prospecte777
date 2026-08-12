@@ -1,7 +1,7 @@
 -- ============================================================
 -- SCHEMA COMPLETO — PROJETO NOVO E VAZIO
 -- ============================================================
--- Contém as 77 migrações do projeto, na ordem cronológica em que foram
+-- Contém as 80 migrações do projeto, na ordem cronológica em que foram
 -- criadas. É o schema inteiro: nenhum dado de nenhum projeto anterior.
 --
 -- Gerado por `node scripts/build-schema.mjs`. Não edite à mão: edite a
@@ -31,7 +31,7 @@
 
 
 -- ############################################################
--- [01/77] 20260205182010_95dad26d-4d67-46dc-85fc-fa36d32d2c98.sql
+-- [01/80] 20260205182010_95dad26d-4d67-46dc-85fc-fa36d32d2c98.sql
 -- ############################################################
 
 -- ===========================================
@@ -282,7 +282,7 @@ CREATE TRIGGER on_auth_user_created
 
 
 -- ############################################################
--- [02/77] 20260205183050_1edecf76-2e28-4262-bb1d-96cee3c59fe6.sql
+-- [02/80] 20260205183050_1edecf76-2e28-4262-bb1d-96cee3c59fe6.sql
 -- ############################################################
 
 -- Add advanced agent configuration columns to user_settings
@@ -309,7 +309,7 @@ ADD COLUMN IF NOT EXISTS value_proposition_focus TEXT DEFAULT 'beneficios'
 
 
 -- ############################################################
--- [03/77] 20260205232207_11dbefe6-cb8b-4d08-8877-d7e15ec72b81.sql
+-- [03/80] 20260205232207_11dbefe6-cb8b-4d08-8877-d7e15ec72b81.sql
 -- ############################################################
 
 -- Create campaigns table for scheduled prospecting
@@ -364,7 +364,7 @@ CREATE INDEX idx_campaigns_status ON public.campaigns(status);
 
 
 -- ############################################################
--- [04/77] 20260205233003_d7e90fd5-d57d-43a2-b6c2-75a59cad978e.sql
+-- [04/80] 20260205233003_d7e90fd5-d57d-43a2-b6c2-75a59cad978e.sql
 -- ############################################################
 
 -- Add new columns to leads table for advanced management
@@ -465,7 +465,7 @@ CREATE INDEX IF NOT EXISTS idx_leads_quality ON public.leads(user_id, quality_sc
 
 
 -- ############################################################
--- [05/77] 20260206013150_326004c7-83f9-4d47-baf3-b254a1eabaf8.sql
+-- [05/80] 20260206013150_326004c7-83f9-4d47-baf3-b254a1eabaf8.sql
 -- ############################################################
 
 -- Add columns for user's own API keys
@@ -479,7 +479,7 @@ COMMENT ON COLUMN public.user_settings.serpapi_api_key IS 'User personal SerpAPI
 
 
 -- ############################################################
--- [06/77] 20260206025213_b7aba049-3f33-48cb-a5ad-2b78bce18a79.sql
+-- [06/80] 20260206025213_b7aba049-3f33-48cb-a5ad-2b78bce18a79.sql
 -- ############################################################
 
 -- Create follow_up_sequences table for automated follow-up flows
@@ -558,7 +558,7 @@ EXECUTE FUNCTION public.update_updated_at_column();
 
 
 -- ############################################################
--- [07/77] 20260206030514_4679ed9c-38e4-4a7f-9fea-911d4e73a679.sql
+-- [07/80] 20260206030514_4679ed9c-38e4-4a7f-9fea-911d4e73a679.sql
 -- ############################################################
 
 -- Enable required extensions for cron jobs
@@ -571,7 +571,7 @@ GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA cron TO postgres;
 
 
 -- ############################################################
--- [08/77] 20260206030544_aace4901-3975-4864-b0fa-2fd040667be5.sql
+-- [08/80] 20260206030544_aace4901-3975-4864-b0fa-2fd040667be5.sql
 -- ############################################################
 
 -- Schedule prospecting check every hour at minute 0
@@ -602,7 +602,7 @@ SELECT cron.schedule(
 
 
 -- ############################################################
--- [09/77] 20260206032342_54e9428d-72ee-4ad7-8067-a161bd42881c.sql
+-- [09/80] 20260206032342_54e9428d-72ee-4ad7-8067-a161bd42881c.sql
 -- ############################################################
 
 -- Create teams table
@@ -737,7 +737,7 @@ CREATE TRIGGER update_teams_updated_at
 
 
 -- ############################################################
--- [10/77] 20260206032756_618904bf-0d9d-4f71-b626-a996d477d968.sql
+-- [10/80] 20260206032756_618904bf-0d9d-4f71-b626-a996d477d968.sql
 -- ############################################################
 
 -- Create background jobs table for persistent task processing
@@ -836,7 +836,7 @@ GRANT EXECUTE ON FUNCTION public.recover_stale_jobs() TO service_role;
 
 
 -- ############################################################
--- [11/77] 20260206032811_dc4a3f58-87ef-4409-85ed-04872494ad39.sql
+-- [11/80] 20260206032811_dc4a3f58-87ef-4409-85ed-04872494ad39.sql
 -- ############################################################
 
 -- Fix search_path for recover_stale_jobs function
@@ -868,7 +868,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 
 -- ############################################################
--- [12/77] 20260206033315_a5b3a612-f86f-4b86-a0bc-c85e51f3dc2b.sql
+-- [12/80] 20260206033315_a5b3a612-f86f-4b86-a0bc-c85e51f3dc2b.sql
 -- ############################################################
 
 -- Add lead_score columns
@@ -983,7 +983,7 @@ GRANT EXECUTE ON FUNCTION public.calculate_lead_score(UUID) TO service_role;
 
 
 -- ############################################################
--- [13/77] 20260206200655_77b5d629-91cf-44ac-bcec-133c992ce14b.sql
+-- [13/80] 20260206200655_77b5d629-91cf-44ac-bcec-133c992ce14b.sql
 -- ############################################################
 
 -- Create prospecting_history table to track all prospecting sessions
@@ -1045,7 +1045,7 @@ EXECUTE FUNCTION public.update_updated_at_column();
 
 
 -- ############################################################
--- [14/77] 20260207011238_f3316bde-b3fb-4cd8-95ff-96f57096b1e1.sql
+-- [14/80] 20260207011238_f3316bde-b3fb-4cd8-95ff-96f57096b1e1.sql
 -- ############################################################
 
 -- Add anti-block configuration columns to user_settings
@@ -1065,7 +1065,7 @@ ADD COLUMN IF NOT EXISTS cooldown_minutes integer DEFAULT 15;
 
 
 -- ############################################################
--- [15/77] 20260207011903_ae6663ad-d073-45e7-905d-c8372aa0dea7.sql
+-- [15/80] 20260207011903_ae6663ad-d073-45e7-905d-c8372aa0dea7.sql
 -- ############################################################
 
 -- Add remaining anti-block configuration columns to user_settings
@@ -1081,7 +1081,7 @@ ADD COLUMN IF NOT EXISTS slowdown_threshold integer DEFAULT 5;
 
 
 -- ############################################################
--- [16/77] 20260207013757_2a426a67-937e-4efa-8032-b61e1ba388ad.sql
+-- [16/80] 20260207013757_2a426a67-937e-4efa-8032-b61e1ba388ad.sql
 -- ############################################################
 
 -- Create a table to store job logs for persistence
@@ -1117,7 +1117,7 @@ CREATE INDEX idx_job_logs_created_at ON public.job_logs(created_at DESC);
 
 
 -- ############################################################
--- [17/77] 20260207013812_6b0dd7ce-fa90-4e59-9576-b6965df18b78.sql
+-- [17/80] 20260207013812_6b0dd7ce-fa90-4e59-9576-b6965df18b78.sql
 -- ############################################################
 
 -- Drop the permissive INSERT policy
@@ -1128,7 +1128,7 @@ DROP POLICY IF EXISTS "Service role can insert job logs" ON public.job_logs;
 
 
 -- ############################################################
--- [18/77] 20260207020000_2e40c0df-7429-4f05-8598-00a037a871d8.sql
+-- [18/80] 20260207020000_2e40c0df-7429-4f05-8598-00a037a871d8.sql
 -- ############################################################
 
 -- Add message_sent field to track if a lead received a message or not
@@ -1149,7 +1149,7 @@ WHERE EXISTS (
 
 
 -- ############################################################
--- [19/77] 20260207190348_008f6d76-52cd-4fa7-a2c2-ffe883337c03.sql
+-- [19/80] 20260207190348_008f6d76-52cd-4fa7-a2c2-ffe883337c03.sql
 -- ############################################################
 
 -- Add Serper.dev API key and preferred search API fields to user_settings
@@ -1159,7 +1159,7 @@ ADD COLUMN IF NOT EXISTS preferred_search_api text DEFAULT 'serper';
 
 
 -- ############################################################
--- [20/77] 20260208181338_9f789e7f-1480-4a0c-8773-34bef8d7a82b.sql
+-- [20/80] 20260208181338_9f789e7f-1480-4a0c-8773-34bef8d7a82b.sql
 -- ############################################################
 
 -- Tabela de estados brasileiros
@@ -1310,7 +1310,7 @@ INSERT INTO public.brazil_cep_ranges (state_code, cep_start, cep_end, region_nam
 
 
 -- ############################################################
--- [21/77] 20260208181733_3a06c0bd-d400-42e8-8cf6-47de6e9a325a.sql
+-- [21/80] 20260208181733_3a06c0bd-d400-42e8-8cf6-47de6e9a325a.sql
 -- ############################################################
 
 -- Inserir as principais cidades de cada estado brasileiro
@@ -1602,7 +1602,7 @@ ON CONFLICT (state_code, name) DO NOTHING;
 
 
 -- ############################################################
--- [22/77] 20260208181913_67e4009f-8e27-4bab-a6ef-e5db40438894.sql
+-- [22/80] 20260208181913_67e4009f-8e27-4bab-a6ef-e5db40438894.sql
 -- ############################################################
 
 -- Add photo_url column to leads for storing Google Maps photos
@@ -1624,7 +1624,7 @@ COMMENT ON COLUMN public.leads.service_opportunities IS 'Oportunidades de servi�
 
 
 -- ############################################################
--- [23/77] 20260208191417_7ebee322-8a33-43ae-9602-9c38aad61370.sql
+-- [23/80] 20260208191417_7ebee322-8a33-43ae-9602-9c38aad61370.sql
 -- ############################################################
 
 -- Create service_intelligence table for storing AI knowledge per service
@@ -1700,7 +1700,7 @@ COMMENT ON TABLE public.service_intelligence IS 'AI knowledge base per service w
 
 
 -- ############################################################
--- [24/77] 20260208192047_0d894ef8-33c4-4d98-9509-12ce48d017c6.sql
+-- [24/80] 20260208192047_0d894ef8-33c4-4d98-9509-12ce48d017c6.sql
 -- ############################################################
 
 -- Tabela para armazenar padrões de aprendizado por nicho
@@ -1931,7 +1931,7 @@ CREATE INDEX idx_intelligent_followups_lead ON public.intelligent_followups(lead
 
 
 -- ############################################################
--- [25/77] 20260208195031_bf2c8644-1704-4ecf-a45a-9ca0a5f8c758.sql
+-- [25/80] 20260208195031_bf2c8644-1704-4ecf-a45a-9ca0a5f8c758.sql
 -- ############################################################
 
 -- Enable realtime for meetings table
@@ -1939,7 +1939,7 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.meetings;
 
 
 -- ############################################################
--- [26/77] 20260208195200_88e7efb1-fb27-4ff8-aa12-9c0fa9f3690f.sql
+-- [26/80] 20260208195200_88e7efb1-fb27-4ff8-aa12-9c0fa9f3690f.sql
 -- ############################################################
 
 -- Fix infinite recursion in team_members policies
@@ -2009,7 +2009,7 @@ USING (user_id = auth.uid() OR team_id IN (SELECT public.get_user_team_ids(auth.
 
 
 -- ############################################################
--- [27/77] 20260208195526_433de59b-e7b9-4d0c-9cf0-58464dd974d8.sql
+-- [27/80] 20260208195526_433de59b-e7b9-4d0c-9cf0-58464dd974d8.sql
 -- ############################################################
 
 -- Add Google Meet link field to user_settings
@@ -2018,7 +2018,7 @@ ADD COLUMN IF NOT EXISTS google_meet_link text;
 
 
 -- ############################################################
--- [28/77] 20260208202514_2db69d76-7698-4c32-af96-89c766fabc87.sql
+-- [28/80] 20260208202514_2db69d76-7698-4c32-af96-89c766fabc87.sql
 -- ############################################################
 
 -- =====================================================
@@ -2292,7 +2292,7 @@ CREATE TRIGGER auto_blacklist_on_response
 
 
 -- ############################################################
--- [29/77] 20260208203508_962a4715-6ff9-43a3-b3bb-8364db4c3a9d.sql
+-- [29/80] 20260208203508_962a4715-6ff9-43a3-b3bb-8364db4c3a9d.sql
 -- ############################################################
 
 -- Update default values for antiban_config to be more comprehensive
@@ -2427,7 +2427,7 @@ WHERE NOT EXISTS (SELECT 1 FROM public.message_variations mv WHERE mv.user_id = 
 
 
 -- ############################################################
--- [30/77] 20260208203846_41eabf8e-be44-4a47-bf48-9dc7477d56ce.sql
+-- [30/80] 20260208203846_41eabf8e-be44-4a47-bf48-9dc7477d56ce.sql
 -- ############################################################
 
 -- Delete existing variations for the user
@@ -2674,7 +2674,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 
 -- ############################################################
--- [31/77] 20260208204347_d389c481-8bae-44c0-b691-4330f935bb53.sql
+-- [31/80] 20260208204347_d389c481-8bae-44c0-b691-4330f935bb53.sql
 -- ############################################################
 
 -- Add missing UPDATE and DELETE policies for activity_log for security completeness
@@ -2711,7 +2711,7 @@ USING (false);
 
 
 -- ############################################################
--- [32/77] 20260208204430_450f473b-c41b-4ece-8aba-b9020ff72f5f.sql
+-- [32/80] 20260208204430_450f473b-c41b-4ece-8aba-b9020ff72f5f.sql
 -- ############################################################
 
 -- Update handle_new_user to also create antiban_config (which triggers message variations)
@@ -2740,7 +2740,7 @@ $function$;
 
 
 -- ############################################################
--- [33/77] 20260208210947_6e7aa69a-8dd1-4d1b-9ef0-d5918a404679.sql
+-- [33/80] 20260208210947_6e7aa69a-8dd1-4d1b-9ef0-d5918a404679.sql
 -- ############################################################
 
 -- Create table for long-term memory of conversations
@@ -2828,14 +2828,14 @@ $$;
 
 
 -- ############################################################
--- [34/77] 20260328202602_78e85876-d6c6-4a03-a3cd-6e4aa2202088.sql
+-- [34/80] 20260328202602_78e85876-d6c6-4a03-a3cd-6e4aa2202088.sql
 -- ############################################################
 
 ALTER TABLE public.user_settings RENAME COLUMN gemini_api_key TO deepseek_api_key;
 
 
 -- ############################################################
--- [35/77] 20260328204246_c329713f-3cf9-4d76-9ca6-11e412aeedb3.sql
+-- [35/80] 20260328204246_c329713f-3cf9-4d76-9ca6-11e412aeedb3.sql
 -- ############################################################
 
 ALTER TABLE public.leads ADD COLUMN IF NOT EXISTS deal_value numeric DEFAULT NULL;
@@ -2843,14 +2843,14 @@ ALTER TABLE public.leads ADD COLUMN IF NOT EXISTS tasks jsonb DEFAULT '[]'::json
 
 
 -- ############################################################
--- [36/77] 20260328210134_bf4793c2-e64e-40aa-bc06-f1ef05813138.sql
+-- [36/80] 20260328210134_bf4793c2-e64e-40aa-bc06-f1ef05813138.sql
 -- ############################################################
 
 ALTER TABLE public.user_settings ADD COLUMN IF NOT EXISTS apify_token text DEFAULT NULL;
 
 
 -- ############################################################
--- [37/77] 20260328231723_d8ed585b-aff0-4bc6-b27c-a67205f70b3b.sql
+-- [37/80] 20260328231723_d8ed585b-aff0-4bc6-b27c-a67205f70b3b.sql
 -- ############################################################
 
 
@@ -2902,7 +2902,7 @@ WITH CHECK (public.has_role(auth.uid(), 'admin'));
 
 
 -- ############################################################
--- [38/77] 20260328231751_2eec8b54-2651-48bc-9182-20bbb7ae3f2e.sql
+-- [38/80] 20260328231751_2eec8b54-2651-48bc-9182-20bbb7ae3f2e.sql
 -- ############################################################
 
 -- ============================================================
@@ -2931,7 +2931,7 @@ ON CONFLICT (user_id, role) DO NOTHING;
 
 
 -- ############################################################
--- [39/77] 20260328232818_81bfd73f-bdee-4c64-bcfe-9ba76c491aa6.sql
+-- [39/80] 20260328232818_81bfd73f-bdee-4c64-bcfe-9ba76c491aa6.sql
 -- ############################################################
 
 
@@ -2948,7 +2948,7 @@ ALTER TABLE public.user_settings
 
 
 -- ############################################################
--- [40/77] 20260329003158_6d4bd183-7fdd-451a-b49f-9c9064bead99.sql
+-- [40/80] 20260329003158_6d4bd183-7fdd-451a-b49f-9c9064bead99.sql
 -- ############################################################
 
 
@@ -3038,7 +3038,7 @@ CREATE TRIGGER update_subscriptions_updated_at
 
 
 -- ############################################################
--- [41/77] 20260329021300_505bb8c1-042a-4ef9-9d1d-5812ceb566fe.sql
+-- [41/80] 20260329021300_505bb8c1-042a-4ef9-9d1d-5812ceb566fe.sql
 -- ############################################################
 
 SELECT cron.schedule(
@@ -3055,7 +3055,7 @@ SELECT cron.schedule(
 
 
 -- ############################################################
--- [42/77] 20260401152401_c80f3733-7b19-479b-8325-1a526c9997fc.sql
+-- [42/80] 20260401152401_c80f3733-7b19-479b-8325-1a526c9997fc.sql
 -- ############################################################
 
 -- Fix: Add INSERT policy for job_logs
@@ -3076,7 +3076,7 @@ ALTER PUBLICATION supabase_realtime ADD TABLE meetings;
 
 
 -- ############################################################
--- [43/77] 20260402001353_c4b56a47-7609-46d3-bd08-3f6127f6025f.sql
+-- [43/80] 20260402001353_c4b56a47-7609-46d3-bd08-3f6127f6025f.sql
 -- ############################################################
 
 
@@ -3120,7 +3120,7 @@ CREATE INDEX IF NOT EXISTS idx_leads_lat_lng ON public.leads (lat, lng) WHERE la
 
 
 -- ############################################################
--- [44/77] 20260402013057_546d18d8-3a9c-495a-a6a7-7279233ad85b.sql
+-- [44/80] 20260402013057_546d18d8-3a9c-495a-a6a7-7279233ad85b.sql
 -- ############################################################
 
 ALTER TABLE public.user_settings
@@ -3131,7 +3131,7 @@ ALTER TABLE public.user_settings
 
 
 -- ############################################################
--- [45/77] 20260402013636_fcf655ab-d593-4ee0-b149-d6591196a030.sql
+-- [45/80] 20260402013636_fcf655ab-d593-4ee0-b149-d6591196a030.sql
 -- ############################################################
 
 
@@ -3173,7 +3173,7 @@ CREATE POLICY "Anyone authenticated can insert community leads"
 
 
 -- ############################################################
--- [46/77] 20260405054816_83c5706b-d6c1-4d23-951e-c37435792c52.sql
+-- [46/80] 20260405054816_83c5706b-d6c1-4d23-951e-c37435792c52.sql
 -- ############################################################
 
 
@@ -3609,7 +3609,7 @@ USING (auth.uid() = user_id);
 
 
 -- ############################################################
--- [47/77] 20260405055222_4d29b25e-c8a3-4c70-87a0-a53cff46692f.sql
+-- [47/80] 20260405055222_4d29b25e-c8a3-4c70-87a0-a53cff46692f.sql
 -- ############################################################
 
 -- Fix user_settings RLS policy to use authenticated role instead of public
@@ -3624,7 +3624,7 @@ WITH CHECK (auth.uid() = user_id);
 
 
 -- ############################################################
--- [48/77] 20260406145742_a790410a-815e-4fd7-aa69-26d07b7618db.sql
+-- [48/80] 20260406145742_a790410a-815e-4fd7-aa69-26d07b7618db.sql
 -- ############################################################
 
 
@@ -3725,7 +3725,7 @@ CREATE TRIGGER update_support_tickets_updated_at BEFORE UPDATE ON public.support
 
 
 -- ############################################################
--- [49/77] 20260406174649_42c7ffce-cdac-4b27-a99b-1269c4103f0d.sql
+-- [49/80] 20260406174649_42c7ffce-cdac-4b27-a99b-1269c4103f0d.sql
 -- ############################################################
 
 SELECT cron.schedule(
@@ -3742,7 +3742,7 @@ SELECT cron.schedule(
 
 
 -- ############################################################
--- [50/77] 20260406174934_0c16818d-cfa6-4d24-aae9-fe2c173260ca.sql
+-- [50/80] 20260406174934_0c16818d-cfa6-4d24-aae9-fe2c173260ca.sql
 -- ############################################################
 
 
@@ -3782,14 +3782,14 @@ CREATE POLICY "Users manage own AB tests" ON public.ab_tests
 
 
 -- ############################################################
--- [51/77] 20260406175538_34e59281-80c0-4ccc-a870-876f6d285ee4.sql
+-- [51/80] 20260406175538_34e59281-80c0-4ccc-a870-876f6d285ee4.sql
 -- ############################################################
 
 ALTER TABLE public.user_settings ADD COLUMN IF NOT EXISTS meta_access_token text;
 
 
 -- ############################################################
--- [52/77] 20260423021202_b85849e1-27e8-4902-8e36-061b8c04a873.sql
+-- [52/80] 20260423021202_b85849e1-27e8-4902-8e36-061b8c04a873.sql
 -- ############################################################
 
 DO $$
@@ -3855,7 +3855,7 @@ END $$;
 
 
 -- ############################################################
--- [53/77] 20260724192641_cf1ef2c1-ea12-4683-853e-6f88396ac174.sql
+-- [53/80] 20260724192641_cf1ef2c1-ea12-4683-853e-6f88396ac174.sql
 -- ############################################################
 
 
@@ -3937,7 +3937,7 @@ CREATE TRIGGER meta_ads_tokens_updated_at
 
 
 -- ############################################################
--- [54/77] 20260724224950_289cdd27-aabd-45d6-9750-793cc1db5dad.sql
+-- [54/80] 20260724224950_289cdd27-aabd-45d6-9750-793cc1db5dad.sql
 -- ############################################################
 
 
@@ -3997,7 +3997,7 @@ INSERT INTO public.objection_responses (user_id, is_template, category, objectio
 
 
 -- ############################################################
--- [55/77] 20260724225410_1166ed0e-5ccc-4fe9-97ee-d027644c91ee.sql
+-- [55/80] 20260724225410_1166ed0e-5ccc-4fe9-97ee-d027644c91ee.sql
 -- ############################################################
 
 
@@ -4047,7 +4047,7 @@ INSERT INTO public.portfolio_sites (user_id, is_template, title, url, category, 
 
 
 -- ############################################################
--- [56/77] 20260726013856_bff0b923-c11a-4d26-aff9-dc6a702bd9ca.sql
+-- [56/80] 20260726013856_bff0b923-c11a-4d26-aff9-dc6a702bd9ca.sql
 -- ############################################################
 
 -- ============================================================
@@ -4078,7 +4078,7 @@ WHERE EXISTS (
 
 
 -- ############################################################
--- [57/77] 20260805210000_a1b2c3d4-0001-4a11-9c01-000000000001.sql
+-- [57/80] 20260805210000_a1b2c3d4-0001-4a11-9c01-000000000001.sql
 -- ############################################################
 
 -- ============================================================
@@ -4328,7 +4328,7 @@ END $$;
 
 
 -- ############################################################
--- [58/77] 20260805220000_a1b2c3d4-0002-4a22-9c02-000000000002.sql
+-- [58/80] 20260805220000_a1b2c3d4-0002-4a22-9c02-000000000002.sql
 -- ############################################################
 
 -- ============================================================
@@ -4612,7 +4612,7 @@ GRANT EXECUTE ON FUNCTION public.prune_lead_memory() TO service_role;
 
 
 -- ############################################################
--- [59/77] 20260805230000_a1b2c3d4-0003-4a33-9c03-000000000003.sql
+-- [59/80] 20260805230000_a1b2c3d4-0003-4a33-9c03-000000000003.sql
 -- ############################################################
 
 -- ============================================================
@@ -4694,7 +4694,7 @@ GRANT EXECUTE ON FUNCTION public.get_chip_usage_today(UUID) TO authenticated, se
 
 
 -- ############################################################
--- [60/77] 20260806000000_a1b2c3d4-0004-4a44-9c04-000000000004.sql
+-- [60/80] 20260806000000_a1b2c3d4-0004-4a44-9c04-000000000004.sql
 -- ############################################################
 
 -- ============================================================
@@ -4815,7 +4815,7 @@ GRANT EXECUTE ON FUNCTION public.opportunity_radar(UUID, INTEGER) TO authenticat
 
 
 -- ############################################################
--- [61/77] 20260811120000_b7c8d9e0-0005-4a55-9c05-000000000005.sql
+-- [61/80] 20260811120000_b7c8d9e0-0005-4a55-9c05-000000000005.sql
 -- ############################################################
 
 -- ============================================================
@@ -5336,7 +5336,7 @@ CREATE TRIGGER trg_mission_leads_touch
 
 
 -- ############################################################
--- [62/77] 20260811140000_c8d9e0f1-0006-4a66-9c06-000000000006.sql
+-- [62/80] 20260811140000_c8d9e0f1-0006-4a66-9c06-000000000006.sql
 -- ############################################################
 
 -- ============================================================
@@ -5670,7 +5670,7 @@ CREATE TRIGGER trg_provider_states_touch
 
 
 -- ############################################################
--- [63/77] 20260811160000_d9e0f1a2-0007-4a77-9c07-000000000007.sql
+-- [63/80] 20260811160000_d9e0f1a2-0007-4a77-9c07-000000000007.sql
 -- ############################################################
 
 -- ============================================================
@@ -5844,7 +5844,7 @@ $$;
 
 
 -- ############################################################
--- [64/77] 20260811180000_e0f1a2b3-0008-4a88-9c08-000000000008.sql
+-- [64/80] 20260811180000_e0f1a2b3-0008-4a88-9c08-000000000008.sql
 -- ############################################################
 
 -- ============================================================
@@ -6190,7 +6190,7 @@ COMMENT ON FUNCTION public.mission_refresh_counters(UUID) IS
 
 
 -- ############################################################
--- [65/77] 20260811200000_f1a2b3c4-0009-4a99-9c09-000000000009.sql
+-- [65/80] 20260811200000_f1a2b3c4-0009-4a99-9c09-000000000009.sql
 -- ############################################################
 
 -- ============================================================
@@ -6413,7 +6413,7 @@ $$;
 
 
 -- ############################################################
--- [66/77] 20260811220000_a2b3c4d5-0010-4aaa-9c10-000000000010.sql
+-- [66/80] 20260811220000_a2b3c4d5-0010-4aaa-9c10-000000000010.sql
 -- ############################################################
 
 -- ============================================================
@@ -6565,7 +6565,7 @@ $$;
 
 
 -- ############################################################
--- [67/77] 20260812000000_b3c4d5e6-0011-4abb-9c11-000000000011.sql
+-- [67/80] 20260812000000_b3c4d5e6-0011-4abb-9c11-000000000011.sql
 -- ############################################################
 
 -- ============================================================
@@ -6633,7 +6633,7 @@ $$;
 
 
 -- ############################################################
--- [68/77] 20260812020000_c4d5e6f7-0012-4acc-9c12-000000000012.sql
+-- [68/80] 20260812020000_c4d5e6f7-0012-4acc-9c12-000000000012.sql
 -- ############################################################
 
 -- ============================================================
@@ -6932,7 +6932,7 @@ $$;
 
 
 -- ############################################################
--- [69/77] 20260812040000_d5e6f7a8-0013-4add-9c13-000000000013.sql
+-- [69/80] 20260812040000_d5e6f7a8-0013-4add-9c13-000000000013.sql
 -- ############################################################
 
 -- ============================================================
@@ -7061,7 +7061,7 @@ $$;
 
 
 -- ############################################################
--- [70/77] 20260812060000_e6f7a8b9-0014-4aee-9c14-000000000014.sql
+-- [70/80] 20260812060000_e6f7a8b9-0014-4aee-9c14-000000000014.sql
 -- ############################################################
 
 -- ============================================================
@@ -7190,7 +7190,7 @@ $$;
 
 
 -- ############################################################
--- [71/77] 20260812080000_f7a8b9c0-0015-4aff-9c15-000000000015.sql
+-- [71/80] 20260812080000_f7a8b9c0-0015-4aff-9c15-000000000015.sql
 -- ############################################################
 
 -- ============================================================
@@ -7363,7 +7363,7 @@ $$;
 
 
 -- ############################################################
--- [72/77] 20260812100000_a8b9c0d1-0016-4b00-9c16-000000000016.sql
+-- [72/80] 20260812100000_a8b9c0d1-0016-4b00-9c16-000000000016.sql
 -- ############################################################
 
 -- ============================================================
@@ -7476,7 +7476,7 @@ $$;
 
 
 -- ############################################################
--- [73/77] 20260812120000_b9c0d1e2-0017-4b11-9c17-000000000017.sql
+-- [73/80] 20260812120000_b9c0d1e2-0017-4b11-9c17-000000000017.sql
 -- ############################################################
 
 -- ============================================================
@@ -7672,7 +7672,7 @@ $$;
 
 
 -- ############################################################
--- [74/77] 20260812140000_c0d1e2f3-0018-4b22-9c18-000000000018.sql
+-- [74/80] 20260812140000_c0d1e2f3-0018-4b22-9c18-000000000018.sql
 -- ############################################################
 
 -- ============================================================
@@ -7715,7 +7715,7 @@ $$;
 
 
 -- ############################################################
--- [75/77] 20260812160000_d1e2f3a4-0019-4b33-9c19-000000000019.sql
+-- [75/80] 20260812160000_d1e2f3a4-0019-4b33-9c19-000000000019.sql
 -- ############################################################
 
 -- ============================================================
@@ -7859,7 +7859,7 @@ $$;
 
 
 -- ############################################################
--- [76/77] 20260812180000_e2f3a4b5-0020-4b44-9c20-000000000020.sql
+-- [76/80] 20260812180000_e2f3a4b5-0020-4b44-9c20-000000000020.sql
 -- ############################################################
 
 -- ============================================================
@@ -8073,7 +8073,7 @@ $$;
 
 
 -- ############################################################
--- [77/77] 20260812200000_f3a4b5c6-0021-4b55-9c21-000000000021.sql
+-- [77/80] 20260812200000_f3a4b5c6-0021-4b55-9c21-000000000021.sql
 -- ############################################################
 
 -- ============================================================
@@ -8157,6 +8157,530 @@ BEGIN
     WHERE table_schema='public' AND table_name='mission_leads' AND column_name='sent_channel'
   ) THEN
     RAISE EXCEPTION 'mission_leads.sent_channel não foi criada — a comparação entre canais ficaria sem base.';
+  END IF;
+END;
+$$;
+
+
+-- ############################################################
+-- [78/80] 20260812220000_a4b5c6d7-0022-4b66-9c22-000000000022.sql
+-- ############################################################
+
+-- ============================================================
+-- DONO DO LEAD, E COMO A EQUIPE RECEBE
+-- ============================================================
+-- `leads.assigned_to` existe desde o começo e nada nunca escreveu nele. Sem
+-- dono, o produto é software de um operador só: uma agência com três SDRs não
+-- consegue usar, porque todos veem a mesma fila e ou dois abordam a mesma
+-- empresa, ou ninguém aborda.
+--
+-- A decisão de quem recebe mora em `_shared/agents/assignment.ts`, com teste.
+-- Aqui ficam os dados que ela precisa: quem está disponível, com que carga e
+-- atendendo qual nicho.
+
+ALTER TABLE public.team_members
+  ADD COLUMN IF NOT EXISTS active     BOOLEAN NOT NULL DEFAULT TRUE,
+  ADD COLUMN IF NOT EXISTS niches     TEXT[] NOT NULL DEFAULT '{}',
+  -- 0 = sem teto. Existe porque distribuir para quem já está cheio cria uma
+  -- fila que não vai ser atendida, e fila não atendida parece atendimento.
+  ADD COLUMN IF NOT EXISTS capacity   INTEGER NOT NULL DEFAULT 0;
+
+COMMENT ON COLUMN public.team_members.active IS
+  'Fora do rodízio quando FALSE: férias, saiu, ainda não configurou WhatsApp.';
+
+ALTER TABLE public.teams
+  ADD COLUMN IF NOT EXISTS assignment_strategy TEXT NOT NULL DEFAULT 'carga';
+
+ALTER TABLE public.teams
+  DROP CONSTRAINT IF EXISTS teams_assignment_strategy_valid;
+ALTER TABLE public.teams
+  ADD CONSTRAINT teams_assignment_strategy_valid
+  CHECK (assignment_strategy IN ('carga', 'rodizio', 'nicho'));
+
+COMMENT ON COLUMN public.teams.assignment_strategy IS
+  'carga (padrão) distribui TRABALHO igual; rodizio distribui QUANTIDADE '
+  'igual. São coisas diferentes, e a segunda acumula fila em quem já está '
+  'cheio.';
+
+CREATE INDEX IF NOT EXISTS idx_leads_assigned
+  ON public.leads (assigned_to, stage)
+  WHERE assigned_to IS NOT NULL;
+
+/**
+ * Quem está disponível para receber lead, com a carga de cada um.
+ *
+ * "Carga" é lead ABERTO: em Ganho ou Perdido não consome atenção de ninguém,
+ * e contá-los faria um vendedor produtivo parecer sobrecarregado justamente
+ * por ter fechado negócio.
+ */
+CREATE OR REPLACE FUNCTION public.team_availability(p_owner_id UUID)
+RETURNS TABLE (
+  user_id   UUID,
+  active    BOOLEAN,
+  open_load BIGINT,
+  niches    TEXT[],
+  capacity  INTEGER
+)
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT
+    tm.user_id,
+    tm.active,
+    (
+      SELECT COUNT(*) FROM public.leads l
+      WHERE l.assigned_to = tm.user_id
+        AND l.stage NOT IN ('Ganho', 'Perdido')
+    ),
+    tm.niches,
+    tm.capacity
+  FROM public.team_members tm
+  JOIN public.teams t ON t.id = tm.team_id
+  WHERE t.owner_id = p_owner_id
+  ORDER BY 3 ASC;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.team_availability(UUID) TO authenticated, service_role;
+
+-- Histórico de quem recebeu o quê e por quê. Sem isso, "por que este lead é
+-- meu?" não tem resposta — e é a primeira pergunta de todo vendedor que
+-- recebe uma carteira que não montou.
+CREATE TABLE IF NOT EXISTS public.lead_assignments (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  lead_id     UUID NOT NULL REFERENCES public.leads(id) ON DELETE CASCADE,
+  user_id     UUID NOT NULL,
+  assigned_by UUID,
+  reason      TEXT NOT NULL,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_lead_assignments_lead
+  ON public.lead_assignments (lead_id, created_at DESC);
+
+ALTER TABLE public.lead_assignments ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "own lead assignments" ON public.lead_assignments;
+CREATE POLICY "own lead assignments" ON public.lead_assignments
+  FOR SELECT USING (
+    EXISTS (SELECT 1 FROM public.leads l WHERE l.id = lead_id AND l.user_id = auth.uid())
+  );
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+    WHERE n.nspname='public' AND p.proname='team_availability'
+  ) THEN
+    RAISE EXCEPTION 'team_availability não foi criada — a distribuição ficaria sem dados.';
+  END IF;
+END;
+$$;
+
+
+-- ############################################################
+-- [79/80] 20260813000000_b5c6d7e8-0023-4b77-9c23-000000000023.sql
+-- ############################################################
+
+-- ============================================================
+-- LGPD: O QUE FALTAVA ERA A PARTE FORMAL
+-- ============================================================
+-- A parte operacional já estava sólida: lista de bloqueio, descadastro por
+-- palavra-chave, supressão atravessando canais, parada de emergência. Quem
+-- pede para parar, para de receber.
+--
+-- O que não existia é o que uma autoridade pergunta quando aparece:
+--
+--   "com que base legal vocês contataram esta pessoa?"
+--   "como ela pede para sair sem depender de vocês responderem?"
+--   "o que vocês fizeram quando ela pediu os dados dela?"
+--
+-- Nenhuma das três tinha resposta no sistema. E a primeira é a que mais pesa
+-- em outbound B2B: legítimo interesse é base legal válida, mas exige registro
+-- do porquê — sem ele, a defesa vira "achamos que podia".
+-- ============================================================
+
+-- ------------------------------------------------------------
+-- 1. DE ONDE VEIO E POR QUE PODE
+-- ------------------------------------------------------------
+
+ALTER TABLE public.leads
+  ADD COLUMN IF NOT EXISTS legal_basis       TEXT NOT NULL DEFAULT 'legitimo_interesse',
+  ADD COLUMN IF NOT EXISTS data_origin       TEXT,
+  ADD COLUMN IF NOT EXISTS data_collected_at TIMESTAMPTZ DEFAULT NOW();
+
+ALTER TABLE public.leads
+  DROP CONSTRAINT IF EXISTS leads_legal_basis_valid;
+
+ALTER TABLE public.leads
+  ADD CONSTRAINT leads_legal_basis_valid
+  CHECK (legal_basis IN ('legitimo_interesse', 'consentimento', 'contrato', 'obrigacao_legal'));
+
+COMMENT ON COLUMN public.leads.legal_basis IS
+  'Base legal do tratamento (LGPD art. 7). Padrão legítimo interesse, que é o '
+  'caso do outbound B2B sobre dado publicamente disponível.';
+
+COMMENT ON COLUMN public.leads.data_origin IS
+  'Onde este contato foi obtido, em texto legível: "Google Maps em 12/08/2026", '
+  '"importação de planilha", "formulário do site". É a resposta a "de onde vocês '
+  'tiraram meu telefone" — a pergunta que abre toda reclamação.';
+
+-- Preenche a origem do que já existe, a partir do que o sistema já sabia.
+-- Sem isso, todo lead anterior ficaria sem procedência — e "não sabemos" é a
+-- pior resposta possível para essa pergunta.
+UPDATE public.leads
+SET data_origin = 'captura automática (' || COALESCE(source, 'origem não registrada') || ')'
+WHERE data_origin IS NULL;
+
+-- ------------------------------------------------------------
+-- 2. PEDIDO DO TITULAR
+-- ------------------------------------------------------------
+-- Acesso, correção, exclusão e portabilidade têm prazo legal. Sem registro,
+-- não há como provar que foi atendido nem perceber que está vencendo.
+
+CREATE TABLE IF NOT EXISTS public.data_requests (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id     UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  lead_id     UUID REFERENCES public.leads(id) ON DELETE SET NULL,
+
+  requester   TEXT NOT NULL,
+  kind        TEXT NOT NULL,
+  status      TEXT NOT NULL DEFAULT 'pendente',
+  note        TEXT,
+
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  -- 15 dias é o prazo da LGPD para acesso. Gravado na linha para o prazo não
+  -- depender de alguém lembrar da regra.
+  due_at      TIMESTAMPTZ NOT NULL DEFAULT NOW() + INTERVAL '15 days',
+  resolved_at TIMESTAMPTZ,
+
+  CONSTRAINT data_requests_kind_valid
+    CHECK (kind IN ('acesso', 'correcao', 'exclusao', 'portabilidade', 'oposicao')),
+  CONSTRAINT data_requests_status_valid
+    CHECK (status IN ('pendente', 'em_andamento', 'atendido', 'recusado'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_data_requests_pendentes
+  ON public.data_requests (user_id, due_at)
+  WHERE status IN ('pendente', 'em_andamento');
+
+ALTER TABLE public.data_requests ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "own data requests" ON public.data_requests;
+CREATE POLICY "own data requests" ON public.data_requests
+  FOR ALL USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
+
+-- ------------------------------------------------------------
+-- 3. RESPONDER A UM PEDIDO DE ACESSO
+-- ------------------------------------------------------------
+
+CREATE OR REPLACE FUNCTION public.lead_data_export(p_lead_id UUID)
+RETURNS JSONB
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $fn$
+DECLARE
+  v_lead RECORD;
+BEGIN
+  SELECT * INTO v_lead FROM public.leads WHERE id = p_lead_id;
+
+  IF NOT FOUND THEN
+    RETURN jsonb_build_object('error', 'lead_nao_encontrado');
+  END IF;
+
+  -- SECURITY DEFINER passa por cima do RLS: a checagem de dono é explícita.
+  IF v_lead.user_id <> auth.uid() THEN
+    RETURN jsonb_build_object('error', 'acesso_negado');
+  END IF;
+
+  RETURN jsonb_build_object(
+    'cadastro',       to_jsonb(v_lead) - 'user_id',
+    'base_legal',     v_lead.legal_basis,
+    'origem_do_dado', v_lead.data_origin,
+    'coletado_em',    v_lead.data_collected_at,
+    'mensagens', COALESCE((
+      SELECT jsonb_agg(
+        jsonb_build_object('quem', sender_type, 'texto', content, 'quando', sent_at)
+        ORDER BY sent_at
+      )
+      FROM public.chat_messages WHERE lead_id = p_lead_id
+    ), '[]'::jsonb),
+    'memoria', COALESCE((
+      SELECT jsonb_agg(jsonb_build_object('tipo', memory_type, 'chave', key, 'valor', value))
+      FROM public.lead_memory WHERE lead_id = p_lead_id
+    ), '[]'::jsonb),
+    'bloqueios', COALESCE((
+      SELECT jsonb_agg(jsonb_build_object('canal', channel, 'motivo', reason, 'quando', created_at))
+      FROM public.outbound_suppression WHERE lead_id = p_lead_id
+    ), '[]'::jsonb)
+  );
+END;
+$fn$;
+
+GRANT EXECUTE ON FUNCTION public.lead_data_export(UUID) TO authenticated, service_role;
+
+COMMENT ON FUNCTION public.lead_data_export(UUID) IS
+  'Tudo que o sistema guarda sobre um contato, num lugar só. Caçar isso à mão '
+  'em seis tabelas é como o prazo legal estoura: não por má vontade, por '
+  'trabalho.';
+
+-- ------------------------------------------------------------
+-- 4. DESCADASTRO QUE NÃO DEPENDE DE NINGUÉM RESPONDER
+-- ------------------------------------------------------------
+-- É o ponto da exigência: se sair da lista exigir que a empresa atenda um
+-- pedido, quem quer sair fica preso ao interesse de quem não quer perdê-lo.
+
+CREATE OR REPLACE FUNCTION public.public_unsubscribe(
+  p_identifier TEXT,
+  p_source     TEXT DEFAULT 'link público'
+)
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $fn$
+DECLARE
+  v_total INTEGER := 0;
+  v_lead  RECORD;
+BEGIN
+  IF p_identifier IS NULL OR length(trim(p_identifier)) < 5 THEN
+    RETURN jsonb_build_object('ok', false, 'erro', 'identificador_invalido');
+  END IF;
+
+  -- Cada carteira que tenha este contato recebe seu próprio bloqueio: a
+  -- supressão é por conta, e uma linha só protegeria apenas uma delas.
+  FOR v_lead IN
+    SELECT id, user_id FROM public.leads
+    WHERE phone = trim(p_identifier)
+       OR lower(email) = lower(trim(p_identifier))
+  LOOP
+    INSERT INTO public.outbound_suppression
+      (user_id, lead_id, identifier, channel, reason, source)
+    VALUES
+      (v_lead.user_id, v_lead.id, trim(p_identifier), 'all', 'opt_out', p_source);
+
+    v_total := v_total + 1;
+  END LOOP;
+
+  -- Devolve sucesso mesmo sem encontrar ninguém, de propósito: responder
+  -- "esse contato não está na nossa base" a quem não fez login transforma o
+  -- descadastro numa forma de descobrir quem está cadastrado.
+  RETURN jsonb_build_object('ok', true, 'bloqueios_criados', v_total);
+END;
+$fn$;
+
+-- `anon` de propósito: quem quer sair não tem conta aqui, e exigir login
+-- seria transformar o descadastro em obstáculo.
+GRANT EXECUTE ON FUNCTION public.public_unsubscribe(TEXT, TEXT)
+  TO anon, authenticated, service_role;
+
+-- ------------------------------------------------------------
+-- CONFERÊNCIA
+-- ------------------------------------------------------------
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'leads' AND column_name = 'legal_basis'
+  ) THEN
+    RAISE EXCEPTION 'leads.legal_basis não foi criada — a base legal continuaria sem registro.';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+    WHERE n.nspname = 'public' AND p.proname = 'public_unsubscribe'
+  ) THEN
+    RAISE EXCEPTION 'public_unsubscribe não foi criada — o descadastro dependeria de alguém responder.';
+  END IF;
+END;
+$$;
+
+
+-- ############################################################
+-- [80/80] 20260813020000_c6d7e8f9-0024-4c88-9d24-000000000024.sql
+-- ############################################################
+
+-- ============================================================
+-- O LEAD PRECISA CHEGAR NO CRM QUE A EMPRESA JÁ USA
+-- ============================================================
+-- Quem compra prospecção JÁ TEM CRM. Se o lead qualificado não flui para lá, o
+-- vendedor trabalha em duas telas — e em duas semanas volta para a que já
+-- usava. É a causa mais comum de abandono deste tipo de ferramenta, e não é
+-- problema de qualidade: é de encaixe.
+--
+-- A CREDENCIAL É DE CADA CLIENTE, NÃO DA PLATAFORMA
+-- Cada empresa tem o token do RD Station DELA. Isso descarta guardar em secret
+-- de edge function, que é único para todo mundo. Fica na tabela, com RLS por
+-- dono — e o token NUNCA volta para o navegador: a coluna tem o SELECT
+-- revogado de `authenticated`, então nem um bug de tela consegue exibi-lo.
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS public.crm_integrations (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id     UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+
+  provider    TEXT NOT NULL,
+  -- Token, chave ou (no caso do webhook) a própria URL de destino.
+  credential  TEXT NOT NULL,
+  config      JSONB NOT NULL DEFAULT '{}'::jsonb,
+
+  active      BOOLEAN NOT NULL DEFAULT TRUE,
+
+  -- Resultado do último envio. Integração que falha calada é integração que
+  -- todo mundo acha que está funcionando.
+  last_ok_at    TIMESTAMPTZ,
+  last_error    TEXT,
+  last_error_at TIMESTAMPTZ,
+  pushed_count  INTEGER NOT NULL DEFAULT 0,
+
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+  CONSTRAINT crm_integrations_provider_valid
+    CHECK (provider IN ('rd_station', 'pipedrive', 'hubspot', 'webhook')),
+  -- Um destino por provedor por conta. Dois iguais mandariam o mesmo lead
+  -- duas vezes, e lead duplicado no CRM do cliente é o tipo de estrago que
+  -- ele leva meses para limpar à mão.
+  CONSTRAINT crm_integrations_um_por_provedor UNIQUE (user_id, provider)
+);
+
+ALTER TABLE public.crm_integrations ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "own crm integrations" ON public.crm_integrations;
+CREATE POLICY "own crm integrations" ON public.crm_integrations
+  FOR ALL USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
+
+-- O token entra, mas não sai. `authenticated` pode escrever a linha inteira e
+-- ler tudo MENOS a credencial; quem precisa dela para enviar é a edge
+-- function, que roda como service_role.
+REVOKE SELECT ON public.crm_integrations FROM authenticated;
+GRANT SELECT (
+  id, user_id, provider, config, active,
+  last_ok_at, last_error, last_error_at, pushed_count, created_at
+) ON public.crm_integrations TO authenticated;
+GRANT INSERT, UPDATE, DELETE ON public.crm_integrations TO authenticated;
+
+-- ------------------------------------------------------------
+-- O QUE JÁ FOI, E O QUE DEU ERRADO
+-- ------------------------------------------------------------
+-- Sem isto não há como responder "esse lead foi para o meu CRM?" — que é a
+-- primeira pergunta de quem desconfia da integração, e a desconfiança começa
+-- exatamente quando ela funciona.
+
+CREATE TABLE IF NOT EXISTS public.crm_push_log (
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id      UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  lead_id      UUID NOT NULL REFERENCES public.leads(id) ON DELETE CASCADE,
+
+  provider     TEXT NOT NULL,
+  ok           BOOLEAN NOT NULL,
+  external_id  TEXT,
+  message      TEXT NOT NULL,
+  -- `true` quando o contato já existia lá e nada foi sobrescrito. Não é erro:
+  -- é a regra da integração aparecendo no registro.
+  already_existed BOOLEAN NOT NULL DEFAULT FALSE,
+
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Impede o mesmo lead de ser empurrado de novo para o mesmo destino a cada
+-- rodada da esteira. O índice é parcial: só o que deu certo bloqueia. Falha
+-- tem que poder ser tentada de novo.
+CREATE UNIQUE INDEX IF NOT EXISTS idx_crm_push_uma_vez
+  ON public.crm_push_log (lead_id, provider)
+  WHERE ok;
+
+CREATE INDEX IF NOT EXISTS idx_crm_push_recentes
+  ON public.crm_push_log (user_id, created_at DESC);
+
+ALTER TABLE public.crm_push_log ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "own crm push log" ON public.crm_push_log;
+CREATE POLICY "own crm push log" ON public.crm_push_log
+  FOR SELECT USING (user_id = auth.uid());
+
+-- ------------------------------------------------------------
+-- COMO ESTÁ A INTEGRAÇÃO
+-- ------------------------------------------------------------
+-- Derivado do log, e não de contador que alguém precisa lembrar de somar.
+-- Contador que ninguém incrementa vira zero permanente — já aconteceu quatro
+-- vezes neste projeto.
+
+CREATE OR REPLACE FUNCTION public.crm_overview()
+RETURNS TABLE (
+  provider       TEXT,
+  active         BOOLEAN,
+  enviados       BIGINT,
+  ja_existiam    BIGINT,
+  falhas         BIGINT,
+  ultimo_ok      TIMESTAMPTZ,
+  ultimo_erro    TEXT,
+  ultimo_erro_em TIMESTAMPTZ
+)
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $fn$
+  SELECT
+    i.provider,
+    i.active,
+    COALESCE(l.enviados, 0),
+    COALESCE(l.ja_existiam, 0),
+    COALESCE(l.falhas, 0),
+    i.last_ok_at,
+    i.last_error,
+    i.last_error_at
+  FROM public.crm_integrations i
+  LEFT JOIN (
+    SELECT
+      provider,
+      user_id,
+      COUNT(*) FILTER (WHERE ok AND NOT already_existed) AS enviados,
+      COUNT(*) FILTER (WHERE ok AND already_existed)     AS ja_existiam,
+      COUNT(*) FILTER (WHERE NOT ok)                     AS falhas
+    FROM public.crm_push_log
+    WHERE user_id = auth.uid()
+    GROUP BY provider, user_id
+  ) l ON l.provider = i.provider AND l.user_id = i.user_id
+  WHERE i.user_id = auth.uid()
+  ORDER BY i.provider;
+$fn$;
+
+GRANT EXECUTE ON FUNCTION public.crm_overview() TO authenticated, service_role;
+
+COMMENT ON FUNCTION public.crm_overview() IS
+  'Estado de cada destino de CRM, contado a partir do log real de envio. '
+  'Contador mantido à mão vira zero permanente no dia em que alguém esquece '
+  'de somar — e ninguém percebe, porque zero parece resposta.';
+
+-- ------------------------------------------------------------
+-- CONFERÊNCIA
+-- ------------------------------------------------------------
+
+DO $$
+DECLARE
+  v_pode_ler BOOLEAN;
+BEGIN
+  -- A garantia que importa: o token não pode voltar para o navegador.
+  SELECT has_column_privilege('authenticated', 'public.crm_integrations', 'credential', 'SELECT')
+  INTO v_pode_ler;
+
+  IF v_pode_ler THEN
+    RAISE EXCEPTION
+      'authenticated ainda consegue ler crm_integrations.credential — o token do '
+      'CRM do cliente voltaria para o navegador.';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_indexes
+    WHERE schemaname = 'public' AND indexname = 'idx_crm_push_uma_vez'
+  ) THEN
+    RAISE EXCEPTION 'idx_crm_push_uma_vez não foi criado — o mesmo lead entraria '
+      'repetido no CRM do cliente a cada rodada.';
   END IF;
 END;
 $$;

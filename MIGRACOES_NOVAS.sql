@@ -1,7 +1,7 @@
 -- ============================================================
 -- MIGRAÇÕES NOVAS — PARA O BANCO QUE JÁ EXISTE
 -- ============================================================
--- São 17 migrações, todas ADITIVAS: criam tabela, função, gatilho e
+-- São 20 migrações, todas ADITIVAS: criam tabela, função, gatilho e
 -- coluna. Nenhuma apaga dado, nenhuma remove coluna, nenhuma altera tipo de
 -- coluna existente.
 --
@@ -31,7 +31,7 @@
 
 
 -- ############################################################
--- [01/17] 20260811120000_b7c8d9e0-0005-4a55-9c05-000000000005.sql
+-- [01/20] 20260811120000_b7c8d9e0-0005-4a55-9c05-000000000005.sql
 -- ############################################################
 
 -- ============================================================
@@ -552,7 +552,7 @@ CREATE TRIGGER trg_mission_leads_touch
 
 
 -- ############################################################
--- [02/17] 20260811140000_c8d9e0f1-0006-4a66-9c06-000000000006.sql
+-- [02/20] 20260811140000_c8d9e0f1-0006-4a66-9c06-000000000006.sql
 -- ############################################################
 
 -- ============================================================
@@ -886,7 +886,7 @@ CREATE TRIGGER trg_provider_states_touch
 
 
 -- ############################################################
--- [03/17] 20260811160000_d9e0f1a2-0007-4a77-9c07-000000000007.sql
+-- [03/20] 20260811160000_d9e0f1a2-0007-4a77-9c07-000000000007.sql
 -- ############################################################
 
 -- ============================================================
@@ -1060,7 +1060,7 @@ $$;
 
 
 -- ############################################################
--- [04/17] 20260811180000_e0f1a2b3-0008-4a88-9c08-000000000008.sql
+-- [04/20] 20260811180000_e0f1a2b3-0008-4a88-9c08-000000000008.sql
 -- ############################################################
 
 -- ============================================================
@@ -1406,7 +1406,7 @@ COMMENT ON FUNCTION public.mission_refresh_counters(UUID) IS
 
 
 -- ############################################################
--- [05/17] 20260811200000_f1a2b3c4-0009-4a99-9c09-000000000009.sql
+-- [05/20] 20260811200000_f1a2b3c4-0009-4a99-9c09-000000000009.sql
 -- ############################################################
 
 -- ============================================================
@@ -1629,7 +1629,7 @@ $$;
 
 
 -- ############################################################
--- [06/17] 20260811220000_a2b3c4d5-0010-4aaa-9c10-000000000010.sql
+-- [06/20] 20260811220000_a2b3c4d5-0010-4aaa-9c10-000000000010.sql
 -- ############################################################
 
 -- ============================================================
@@ -1781,7 +1781,7 @@ $$;
 
 
 -- ############################################################
--- [07/17] 20260812000000_b3c4d5e6-0011-4abb-9c11-000000000011.sql
+-- [07/20] 20260812000000_b3c4d5e6-0011-4abb-9c11-000000000011.sql
 -- ############################################################
 
 -- ============================================================
@@ -1849,7 +1849,7 @@ $$;
 
 
 -- ############################################################
--- [08/17] 20260812020000_c4d5e6f7-0012-4acc-9c12-000000000012.sql
+-- [08/20] 20260812020000_c4d5e6f7-0012-4acc-9c12-000000000012.sql
 -- ############################################################
 
 -- ============================================================
@@ -2148,7 +2148,7 @@ $$;
 
 
 -- ############################################################
--- [09/17] 20260812040000_d5e6f7a8-0013-4add-9c13-000000000013.sql
+-- [09/20] 20260812040000_d5e6f7a8-0013-4add-9c13-000000000013.sql
 -- ############################################################
 
 -- ============================================================
@@ -2277,7 +2277,7 @@ $$;
 
 
 -- ############################################################
--- [10/17] 20260812060000_e6f7a8b9-0014-4aee-9c14-000000000014.sql
+-- [10/20] 20260812060000_e6f7a8b9-0014-4aee-9c14-000000000014.sql
 -- ############################################################
 
 -- ============================================================
@@ -2406,7 +2406,7 @@ $$;
 
 
 -- ############################################################
--- [11/17] 20260812080000_f7a8b9c0-0015-4aff-9c15-000000000015.sql
+-- [11/20] 20260812080000_f7a8b9c0-0015-4aff-9c15-000000000015.sql
 -- ############################################################
 
 -- ============================================================
@@ -2579,7 +2579,7 @@ $$;
 
 
 -- ############################################################
--- [12/17] 20260812100000_a8b9c0d1-0016-4b00-9c16-000000000016.sql
+-- [12/20] 20260812100000_a8b9c0d1-0016-4b00-9c16-000000000016.sql
 -- ############################################################
 
 -- ============================================================
@@ -2692,7 +2692,7 @@ $$;
 
 
 -- ############################################################
--- [13/17] 20260812120000_b9c0d1e2-0017-4b11-9c17-000000000017.sql
+-- [13/20] 20260812120000_b9c0d1e2-0017-4b11-9c17-000000000017.sql
 -- ############################################################
 
 -- ============================================================
@@ -2888,7 +2888,7 @@ $$;
 
 
 -- ############################################################
--- [14/17] 20260812140000_c0d1e2f3-0018-4b22-9c18-000000000018.sql
+-- [14/20] 20260812140000_c0d1e2f3-0018-4b22-9c18-000000000018.sql
 -- ############################################################
 
 -- ============================================================
@@ -2931,7 +2931,7 @@ $$;
 
 
 -- ############################################################
--- [15/17] 20260812160000_d1e2f3a4-0019-4b33-9c19-000000000019.sql
+-- [15/20] 20260812160000_d1e2f3a4-0019-4b33-9c19-000000000019.sql
 -- ############################################################
 
 -- ============================================================
@@ -3075,7 +3075,7 @@ $$;
 
 
 -- ############################################################
--- [16/17] 20260812180000_e2f3a4b5-0020-4b44-9c20-000000000020.sql
+-- [16/20] 20260812180000_e2f3a4b5-0020-4b44-9c20-000000000020.sql
 -- ############################################################
 
 -- ============================================================
@@ -3289,7 +3289,7 @@ $$;
 
 
 -- ############################################################
--- [17/17] 20260812200000_f3a4b5c6-0021-4b55-9c21-000000000021.sql
+-- [17/20] 20260812200000_f3a4b5c6-0021-4b55-9c21-000000000021.sql
 -- ############################################################
 
 -- ============================================================
@@ -3373,6 +3373,530 @@ BEGIN
     WHERE table_schema='public' AND table_name='mission_leads' AND column_name='sent_channel'
   ) THEN
     RAISE EXCEPTION 'mission_leads.sent_channel não foi criada — a comparação entre canais ficaria sem base.';
+  END IF;
+END;
+$$;
+
+
+-- ############################################################
+-- [18/20] 20260812220000_a4b5c6d7-0022-4b66-9c22-000000000022.sql
+-- ############################################################
+
+-- ============================================================
+-- DONO DO LEAD, E COMO A EQUIPE RECEBE
+-- ============================================================
+-- `leads.assigned_to` existe desde o começo e nada nunca escreveu nele. Sem
+-- dono, o produto é software de um operador só: uma agência com três SDRs não
+-- consegue usar, porque todos veem a mesma fila e ou dois abordam a mesma
+-- empresa, ou ninguém aborda.
+--
+-- A decisão de quem recebe mora em `_shared/agents/assignment.ts`, com teste.
+-- Aqui ficam os dados que ela precisa: quem está disponível, com que carga e
+-- atendendo qual nicho.
+
+ALTER TABLE public.team_members
+  ADD COLUMN IF NOT EXISTS active     BOOLEAN NOT NULL DEFAULT TRUE,
+  ADD COLUMN IF NOT EXISTS niches     TEXT[] NOT NULL DEFAULT '{}',
+  -- 0 = sem teto. Existe porque distribuir para quem já está cheio cria uma
+  -- fila que não vai ser atendida, e fila não atendida parece atendimento.
+  ADD COLUMN IF NOT EXISTS capacity   INTEGER NOT NULL DEFAULT 0;
+
+COMMENT ON COLUMN public.team_members.active IS
+  'Fora do rodízio quando FALSE: férias, saiu, ainda não configurou WhatsApp.';
+
+ALTER TABLE public.teams
+  ADD COLUMN IF NOT EXISTS assignment_strategy TEXT NOT NULL DEFAULT 'carga';
+
+ALTER TABLE public.teams
+  DROP CONSTRAINT IF EXISTS teams_assignment_strategy_valid;
+ALTER TABLE public.teams
+  ADD CONSTRAINT teams_assignment_strategy_valid
+  CHECK (assignment_strategy IN ('carga', 'rodizio', 'nicho'));
+
+COMMENT ON COLUMN public.teams.assignment_strategy IS
+  'carga (padrão) distribui TRABALHO igual; rodizio distribui QUANTIDADE '
+  'igual. São coisas diferentes, e a segunda acumula fila em quem já está '
+  'cheio.';
+
+CREATE INDEX IF NOT EXISTS idx_leads_assigned
+  ON public.leads (assigned_to, stage)
+  WHERE assigned_to IS NOT NULL;
+
+/**
+ * Quem está disponível para receber lead, com a carga de cada um.
+ *
+ * "Carga" é lead ABERTO: em Ganho ou Perdido não consome atenção de ninguém,
+ * e contá-los faria um vendedor produtivo parecer sobrecarregado justamente
+ * por ter fechado negócio.
+ */
+CREATE OR REPLACE FUNCTION public.team_availability(p_owner_id UUID)
+RETURNS TABLE (
+  user_id   UUID,
+  active    BOOLEAN,
+  open_load BIGINT,
+  niches    TEXT[],
+  capacity  INTEGER
+)
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT
+    tm.user_id,
+    tm.active,
+    (
+      SELECT COUNT(*) FROM public.leads l
+      WHERE l.assigned_to = tm.user_id
+        AND l.stage NOT IN ('Ganho', 'Perdido')
+    ),
+    tm.niches,
+    tm.capacity
+  FROM public.team_members tm
+  JOIN public.teams t ON t.id = tm.team_id
+  WHERE t.owner_id = p_owner_id
+  ORDER BY 3 ASC;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.team_availability(UUID) TO authenticated, service_role;
+
+-- Histórico de quem recebeu o quê e por quê. Sem isso, "por que este lead é
+-- meu?" não tem resposta — e é a primeira pergunta de todo vendedor que
+-- recebe uma carteira que não montou.
+CREATE TABLE IF NOT EXISTS public.lead_assignments (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  lead_id     UUID NOT NULL REFERENCES public.leads(id) ON DELETE CASCADE,
+  user_id     UUID NOT NULL,
+  assigned_by UUID,
+  reason      TEXT NOT NULL,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_lead_assignments_lead
+  ON public.lead_assignments (lead_id, created_at DESC);
+
+ALTER TABLE public.lead_assignments ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "own lead assignments" ON public.lead_assignments;
+CREATE POLICY "own lead assignments" ON public.lead_assignments
+  FOR SELECT USING (
+    EXISTS (SELECT 1 FROM public.leads l WHERE l.id = lead_id AND l.user_id = auth.uid())
+  );
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+    WHERE n.nspname='public' AND p.proname='team_availability'
+  ) THEN
+    RAISE EXCEPTION 'team_availability não foi criada — a distribuição ficaria sem dados.';
+  END IF;
+END;
+$$;
+
+
+-- ############################################################
+-- [19/20] 20260813000000_b5c6d7e8-0023-4b77-9c23-000000000023.sql
+-- ############################################################
+
+-- ============================================================
+-- LGPD: O QUE FALTAVA ERA A PARTE FORMAL
+-- ============================================================
+-- A parte operacional já estava sólida: lista de bloqueio, descadastro por
+-- palavra-chave, supressão atravessando canais, parada de emergência. Quem
+-- pede para parar, para de receber.
+--
+-- O que não existia é o que uma autoridade pergunta quando aparece:
+--
+--   "com que base legal vocês contataram esta pessoa?"
+--   "como ela pede para sair sem depender de vocês responderem?"
+--   "o que vocês fizeram quando ela pediu os dados dela?"
+--
+-- Nenhuma das três tinha resposta no sistema. E a primeira é a que mais pesa
+-- em outbound B2B: legítimo interesse é base legal válida, mas exige registro
+-- do porquê — sem ele, a defesa vira "achamos que podia".
+-- ============================================================
+
+-- ------------------------------------------------------------
+-- 1. DE ONDE VEIO E POR QUE PODE
+-- ------------------------------------------------------------
+
+ALTER TABLE public.leads
+  ADD COLUMN IF NOT EXISTS legal_basis       TEXT NOT NULL DEFAULT 'legitimo_interesse',
+  ADD COLUMN IF NOT EXISTS data_origin       TEXT,
+  ADD COLUMN IF NOT EXISTS data_collected_at TIMESTAMPTZ DEFAULT NOW();
+
+ALTER TABLE public.leads
+  DROP CONSTRAINT IF EXISTS leads_legal_basis_valid;
+
+ALTER TABLE public.leads
+  ADD CONSTRAINT leads_legal_basis_valid
+  CHECK (legal_basis IN ('legitimo_interesse', 'consentimento', 'contrato', 'obrigacao_legal'));
+
+COMMENT ON COLUMN public.leads.legal_basis IS
+  'Base legal do tratamento (LGPD art. 7). Padrão legítimo interesse, que é o '
+  'caso do outbound B2B sobre dado publicamente disponível.';
+
+COMMENT ON COLUMN public.leads.data_origin IS
+  'Onde este contato foi obtido, em texto legível: "Google Maps em 12/08/2026", '
+  '"importação de planilha", "formulário do site". É a resposta a "de onde vocês '
+  'tiraram meu telefone" — a pergunta que abre toda reclamação.';
+
+-- Preenche a origem do que já existe, a partir do que o sistema já sabia.
+-- Sem isso, todo lead anterior ficaria sem procedência — e "não sabemos" é a
+-- pior resposta possível para essa pergunta.
+UPDATE public.leads
+SET data_origin = 'captura automática (' || COALESCE(source, 'origem não registrada') || ')'
+WHERE data_origin IS NULL;
+
+-- ------------------------------------------------------------
+-- 2. PEDIDO DO TITULAR
+-- ------------------------------------------------------------
+-- Acesso, correção, exclusão e portabilidade têm prazo legal. Sem registro,
+-- não há como provar que foi atendido nem perceber que está vencendo.
+
+CREATE TABLE IF NOT EXISTS public.data_requests (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id     UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  lead_id     UUID REFERENCES public.leads(id) ON DELETE SET NULL,
+
+  requester   TEXT NOT NULL,
+  kind        TEXT NOT NULL,
+  status      TEXT NOT NULL DEFAULT 'pendente',
+  note        TEXT,
+
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  -- 15 dias é o prazo da LGPD para acesso. Gravado na linha para o prazo não
+  -- depender de alguém lembrar da regra.
+  due_at      TIMESTAMPTZ NOT NULL DEFAULT NOW() + INTERVAL '15 days',
+  resolved_at TIMESTAMPTZ,
+
+  CONSTRAINT data_requests_kind_valid
+    CHECK (kind IN ('acesso', 'correcao', 'exclusao', 'portabilidade', 'oposicao')),
+  CONSTRAINT data_requests_status_valid
+    CHECK (status IN ('pendente', 'em_andamento', 'atendido', 'recusado'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_data_requests_pendentes
+  ON public.data_requests (user_id, due_at)
+  WHERE status IN ('pendente', 'em_andamento');
+
+ALTER TABLE public.data_requests ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "own data requests" ON public.data_requests;
+CREATE POLICY "own data requests" ON public.data_requests
+  FOR ALL USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
+
+-- ------------------------------------------------------------
+-- 3. RESPONDER A UM PEDIDO DE ACESSO
+-- ------------------------------------------------------------
+
+CREATE OR REPLACE FUNCTION public.lead_data_export(p_lead_id UUID)
+RETURNS JSONB
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $fn$
+DECLARE
+  v_lead RECORD;
+BEGIN
+  SELECT * INTO v_lead FROM public.leads WHERE id = p_lead_id;
+
+  IF NOT FOUND THEN
+    RETURN jsonb_build_object('error', 'lead_nao_encontrado');
+  END IF;
+
+  -- SECURITY DEFINER passa por cima do RLS: a checagem de dono é explícita.
+  IF v_lead.user_id <> auth.uid() THEN
+    RETURN jsonb_build_object('error', 'acesso_negado');
+  END IF;
+
+  RETURN jsonb_build_object(
+    'cadastro',       to_jsonb(v_lead) - 'user_id',
+    'base_legal',     v_lead.legal_basis,
+    'origem_do_dado', v_lead.data_origin,
+    'coletado_em',    v_lead.data_collected_at,
+    'mensagens', COALESCE((
+      SELECT jsonb_agg(
+        jsonb_build_object('quem', sender_type, 'texto', content, 'quando', sent_at)
+        ORDER BY sent_at
+      )
+      FROM public.chat_messages WHERE lead_id = p_lead_id
+    ), '[]'::jsonb),
+    'memoria', COALESCE((
+      SELECT jsonb_agg(jsonb_build_object('tipo', memory_type, 'chave', key, 'valor', value))
+      FROM public.lead_memory WHERE lead_id = p_lead_id
+    ), '[]'::jsonb),
+    'bloqueios', COALESCE((
+      SELECT jsonb_agg(jsonb_build_object('canal', channel, 'motivo', reason, 'quando', created_at))
+      FROM public.outbound_suppression WHERE lead_id = p_lead_id
+    ), '[]'::jsonb)
+  );
+END;
+$fn$;
+
+GRANT EXECUTE ON FUNCTION public.lead_data_export(UUID) TO authenticated, service_role;
+
+COMMENT ON FUNCTION public.lead_data_export(UUID) IS
+  'Tudo que o sistema guarda sobre um contato, num lugar só. Caçar isso à mão '
+  'em seis tabelas é como o prazo legal estoura: não por má vontade, por '
+  'trabalho.';
+
+-- ------------------------------------------------------------
+-- 4. DESCADASTRO QUE NÃO DEPENDE DE NINGUÉM RESPONDER
+-- ------------------------------------------------------------
+-- É o ponto da exigência: se sair da lista exigir que a empresa atenda um
+-- pedido, quem quer sair fica preso ao interesse de quem não quer perdê-lo.
+
+CREATE OR REPLACE FUNCTION public.public_unsubscribe(
+  p_identifier TEXT,
+  p_source     TEXT DEFAULT 'link público'
+)
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $fn$
+DECLARE
+  v_total INTEGER := 0;
+  v_lead  RECORD;
+BEGIN
+  IF p_identifier IS NULL OR length(trim(p_identifier)) < 5 THEN
+    RETURN jsonb_build_object('ok', false, 'erro', 'identificador_invalido');
+  END IF;
+
+  -- Cada carteira que tenha este contato recebe seu próprio bloqueio: a
+  -- supressão é por conta, e uma linha só protegeria apenas uma delas.
+  FOR v_lead IN
+    SELECT id, user_id FROM public.leads
+    WHERE phone = trim(p_identifier)
+       OR lower(email) = lower(trim(p_identifier))
+  LOOP
+    INSERT INTO public.outbound_suppression
+      (user_id, lead_id, identifier, channel, reason, source)
+    VALUES
+      (v_lead.user_id, v_lead.id, trim(p_identifier), 'all', 'opt_out', p_source);
+
+    v_total := v_total + 1;
+  END LOOP;
+
+  -- Devolve sucesso mesmo sem encontrar ninguém, de propósito: responder
+  -- "esse contato não está na nossa base" a quem não fez login transforma o
+  -- descadastro numa forma de descobrir quem está cadastrado.
+  RETURN jsonb_build_object('ok', true, 'bloqueios_criados', v_total);
+END;
+$fn$;
+
+-- `anon` de propósito: quem quer sair não tem conta aqui, e exigir login
+-- seria transformar o descadastro em obstáculo.
+GRANT EXECUTE ON FUNCTION public.public_unsubscribe(TEXT, TEXT)
+  TO anon, authenticated, service_role;
+
+-- ------------------------------------------------------------
+-- CONFERÊNCIA
+-- ------------------------------------------------------------
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'leads' AND column_name = 'legal_basis'
+  ) THEN
+    RAISE EXCEPTION 'leads.legal_basis não foi criada — a base legal continuaria sem registro.';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+    WHERE n.nspname = 'public' AND p.proname = 'public_unsubscribe'
+  ) THEN
+    RAISE EXCEPTION 'public_unsubscribe não foi criada — o descadastro dependeria de alguém responder.';
+  END IF;
+END;
+$$;
+
+
+-- ############################################################
+-- [20/20] 20260813020000_c6d7e8f9-0024-4c88-9d24-000000000024.sql
+-- ############################################################
+
+-- ============================================================
+-- O LEAD PRECISA CHEGAR NO CRM QUE A EMPRESA JÁ USA
+-- ============================================================
+-- Quem compra prospecção JÁ TEM CRM. Se o lead qualificado não flui para lá, o
+-- vendedor trabalha em duas telas — e em duas semanas volta para a que já
+-- usava. É a causa mais comum de abandono deste tipo de ferramenta, e não é
+-- problema de qualidade: é de encaixe.
+--
+-- A CREDENCIAL É DE CADA CLIENTE, NÃO DA PLATAFORMA
+-- Cada empresa tem o token do RD Station DELA. Isso descarta guardar em secret
+-- de edge function, que é único para todo mundo. Fica na tabela, com RLS por
+-- dono — e o token NUNCA volta para o navegador: a coluna tem o SELECT
+-- revogado de `authenticated`, então nem um bug de tela consegue exibi-lo.
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS public.crm_integrations (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id     UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+
+  provider    TEXT NOT NULL,
+  -- Token, chave ou (no caso do webhook) a própria URL de destino.
+  credential  TEXT NOT NULL,
+  config      JSONB NOT NULL DEFAULT '{}'::jsonb,
+
+  active      BOOLEAN NOT NULL DEFAULT TRUE,
+
+  -- Resultado do último envio. Integração que falha calada é integração que
+  -- todo mundo acha que está funcionando.
+  last_ok_at    TIMESTAMPTZ,
+  last_error    TEXT,
+  last_error_at TIMESTAMPTZ,
+  pushed_count  INTEGER NOT NULL DEFAULT 0,
+
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+  CONSTRAINT crm_integrations_provider_valid
+    CHECK (provider IN ('rd_station', 'pipedrive', 'hubspot', 'webhook')),
+  -- Um destino por provedor por conta. Dois iguais mandariam o mesmo lead
+  -- duas vezes, e lead duplicado no CRM do cliente é o tipo de estrago que
+  -- ele leva meses para limpar à mão.
+  CONSTRAINT crm_integrations_um_por_provedor UNIQUE (user_id, provider)
+);
+
+ALTER TABLE public.crm_integrations ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "own crm integrations" ON public.crm_integrations;
+CREATE POLICY "own crm integrations" ON public.crm_integrations
+  FOR ALL USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
+
+-- O token entra, mas não sai. `authenticated` pode escrever a linha inteira e
+-- ler tudo MENOS a credencial; quem precisa dela para enviar é a edge
+-- function, que roda como service_role.
+REVOKE SELECT ON public.crm_integrations FROM authenticated;
+GRANT SELECT (
+  id, user_id, provider, config, active,
+  last_ok_at, last_error, last_error_at, pushed_count, created_at
+) ON public.crm_integrations TO authenticated;
+GRANT INSERT, UPDATE, DELETE ON public.crm_integrations TO authenticated;
+
+-- ------------------------------------------------------------
+-- O QUE JÁ FOI, E O QUE DEU ERRADO
+-- ------------------------------------------------------------
+-- Sem isto não há como responder "esse lead foi para o meu CRM?" — que é a
+-- primeira pergunta de quem desconfia da integração, e a desconfiança começa
+-- exatamente quando ela funciona.
+
+CREATE TABLE IF NOT EXISTS public.crm_push_log (
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id      UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  lead_id      UUID NOT NULL REFERENCES public.leads(id) ON DELETE CASCADE,
+
+  provider     TEXT NOT NULL,
+  ok           BOOLEAN NOT NULL,
+  external_id  TEXT,
+  message      TEXT NOT NULL,
+  -- `true` quando o contato já existia lá e nada foi sobrescrito. Não é erro:
+  -- é a regra da integração aparecendo no registro.
+  already_existed BOOLEAN NOT NULL DEFAULT FALSE,
+
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Impede o mesmo lead de ser empurrado de novo para o mesmo destino a cada
+-- rodada da esteira. O índice é parcial: só o que deu certo bloqueia. Falha
+-- tem que poder ser tentada de novo.
+CREATE UNIQUE INDEX IF NOT EXISTS idx_crm_push_uma_vez
+  ON public.crm_push_log (lead_id, provider)
+  WHERE ok;
+
+CREATE INDEX IF NOT EXISTS idx_crm_push_recentes
+  ON public.crm_push_log (user_id, created_at DESC);
+
+ALTER TABLE public.crm_push_log ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "own crm push log" ON public.crm_push_log;
+CREATE POLICY "own crm push log" ON public.crm_push_log
+  FOR SELECT USING (user_id = auth.uid());
+
+-- ------------------------------------------------------------
+-- COMO ESTÁ A INTEGRAÇÃO
+-- ------------------------------------------------------------
+-- Derivado do log, e não de contador que alguém precisa lembrar de somar.
+-- Contador que ninguém incrementa vira zero permanente — já aconteceu quatro
+-- vezes neste projeto.
+
+CREATE OR REPLACE FUNCTION public.crm_overview()
+RETURNS TABLE (
+  provider       TEXT,
+  active         BOOLEAN,
+  enviados       BIGINT,
+  ja_existiam    BIGINT,
+  falhas         BIGINT,
+  ultimo_ok      TIMESTAMPTZ,
+  ultimo_erro    TEXT,
+  ultimo_erro_em TIMESTAMPTZ
+)
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $fn$
+  SELECT
+    i.provider,
+    i.active,
+    COALESCE(l.enviados, 0),
+    COALESCE(l.ja_existiam, 0),
+    COALESCE(l.falhas, 0),
+    i.last_ok_at,
+    i.last_error,
+    i.last_error_at
+  FROM public.crm_integrations i
+  LEFT JOIN (
+    SELECT
+      provider,
+      user_id,
+      COUNT(*) FILTER (WHERE ok AND NOT already_existed) AS enviados,
+      COUNT(*) FILTER (WHERE ok AND already_existed)     AS ja_existiam,
+      COUNT(*) FILTER (WHERE NOT ok)                     AS falhas
+    FROM public.crm_push_log
+    WHERE user_id = auth.uid()
+    GROUP BY provider, user_id
+  ) l ON l.provider = i.provider AND l.user_id = i.user_id
+  WHERE i.user_id = auth.uid()
+  ORDER BY i.provider;
+$fn$;
+
+GRANT EXECUTE ON FUNCTION public.crm_overview() TO authenticated, service_role;
+
+COMMENT ON FUNCTION public.crm_overview() IS
+  'Estado de cada destino de CRM, contado a partir do log real de envio. '
+  'Contador mantido à mão vira zero permanente no dia em que alguém esquece '
+  'de somar — e ninguém percebe, porque zero parece resposta.';
+
+-- ------------------------------------------------------------
+-- CONFERÊNCIA
+-- ------------------------------------------------------------
+
+DO $$
+DECLARE
+  v_pode_ler BOOLEAN;
+BEGIN
+  -- A garantia que importa: o token não pode voltar para o navegador.
+  SELECT has_column_privilege('authenticated', 'public.crm_integrations', 'credential', 'SELECT')
+  INTO v_pode_ler;
+
+  IF v_pode_ler THEN
+    RAISE EXCEPTION
+      'authenticated ainda consegue ler crm_integrations.credential — o token do '
+      'CRM do cliente voltaria para o navegador.';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_indexes
+    WHERE schemaname = 'public' AND indexname = 'idx_crm_push_uma_vez'
+  ) THEN
+    RAISE EXCEPTION 'idx_crm_push_uma_vez não foi criado — o mesmo lead entraria '
+      'repetido no CRM do cliente a cada rodada.';
   END IF;
 END;
 $$;

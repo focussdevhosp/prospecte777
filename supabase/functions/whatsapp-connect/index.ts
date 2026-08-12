@@ -13,6 +13,55 @@ async function buildWebhookUrl(supabaseUrl: string, supabase: any): Promise<stri
 
 const WEBHOOK_EVENTS = ["MESSAGES_UPSERT", "CONNECTION_UPDATE", "QRCODE_UPDATED"];
 
+/**
+ * Recadastra o webhook de uma instância que já existe.
+ *
+ * O corpo vai ANINHADO em `webhook`, que é o formato da Evolution v2. As duas
+ * chamadas que existiam aqui mandavam os campos soltos, no formato da v1, e a
+ * v2 responde 400 "instance requires property webhook". Como nenhuma das duas
+ * conferia a resposta, a falha era silenciosa — e o efeito não aparecia na
+ * hora: a instância continuava com o webhook ANTIGO, apontando para o projeto
+ * anterior. O QR aparecia, o chip conectava, o envio saía, e só a RESPOSTA do
+ * lead sumia. É o pior tipo de defeito: tudo parece funcionar menos a única
+ * coisa que importa.
+ *
+ * Confere a resposta e devolve o erro para quem chamou decidir o que fazer.
+ */
+async function definirWebhook(
+  apiUrl: string,
+  apiKey: string,
+  instanceName: string,
+  webhookUrl: string,
+): Promise<{ ok: boolean; detalhe: string }> {
+  try {
+    const res = await fetch(`${apiUrl}/webhook/set/${instanceName}`, {
+      method: "POST",
+      headers: { "apikey": apiKey, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        webhook: {
+          enabled: true,
+          url: webhookUrl,
+          byEvents: false,
+          base64: false,
+          events: WEBHOOK_EVENTS,
+        },
+      }),
+    });
+
+    if (!res.ok) {
+      const detalhe = (await res.text()).slice(0, 300);
+      console.error(`[whatsapp-connect] webhook/set falhou (${res.status}):`, detalhe);
+      return { ok: false, detalhe };
+    }
+
+    return { ok: true, detalhe: "" };
+  } catch (e) {
+    const detalhe = e instanceof Error ? e.message : String(e);
+    console.error("[whatsapp-connect] webhook/set não completou:", detalhe);
+    return { ok: false, detalhe };
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -136,21 +185,22 @@ Deno.serve(async (req) => {
             const connectData = await connectResponse.json();
             
             // Update webhook for existing instance
-            await fetch(`${EVOLUTION_API_URL}/webhook/set/${instanceName}`, {
-              method: "POST",
-              headers: {
-                "apikey": EVOLUTION_API_KEY,
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                url: webhookUrl,
-                byEvents: false,
-                base64: false,
-                events: ["MESSAGES_UPSERT", "CONNECTION_UPDATE", "QRCODE_UPDATED"],
+            const recad = await definirWebhook(
+              EVOLUTION_API_URL, EVOLUTION_API_KEY, instanceName, webhookUrl,
+            );
+
+            return new Response(JSON.stringify({
+              ...connectData,
+              // Sem isto a tela mostraria o QR e diria que está tudo certo
+              // enquanto as respostas dos leads iriam para o lugar errado.
+              webhook_ok: recad.ok,
+              ...(recad.ok ? {} : {
+                aviso:
+                  "O QR foi gerado, mas não foi possível registrar o webhook desta " +
+                  "instância. As mensagens que o lead responder podem não chegar. " +
+                  `Detalhe: ${recad.detalhe}`,
               }),
-            });
-            
-            return new Response(JSON.stringify(connectData), {
+            }), {
               headers: { ...corsHeaders, "Content-Type": "application/json" },
             });
           }
@@ -414,21 +464,8 @@ Deno.serve(async (req) => {
       // desta mudança apontam para a URL sem segredo; esta checagem roda a
       // cada visita à tela de conexão, então elas se corrigem sozinhas.
       if (isConnected) {
-        try {
-          const webhookUrl = await buildWebhookUrl(supabaseUrl, supabaseService);
-          await fetch(`${EVOLUTION_API_URL}/webhook/set/${instanceName}`, {
-            method: "POST",
-            headers: { "apikey": EVOLUTION_API_KEY, "Content-Type": "application/json" },
-            body: JSON.stringify({
-              url: webhookUrl,
-              byEvents: false,
-              base64: false,
-              events: WEBHOOK_EVENTS,
-            }),
-          });
-        } catch (e) {
-          console.error("Falha ao recadastrar webhook:", e);
-        }
+        const webhookUrl = await buildWebhookUrl(supabaseUrl, supabaseService);
+        await definirWebhook(EVOLUTION_API_URL, EVOLUTION_API_KEY, instanceName, webhookUrl);
       }
 
       await supabaseService
