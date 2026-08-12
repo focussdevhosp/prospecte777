@@ -169,7 +169,7 @@ export default function DiagnosticsPage() {
 
   const testAIAPI = async (): Promise<boolean> => {
     const start = Date.now();
-    updateTestResult('AI/DeepSeek', { status: 'running' });
+    updateTestResult('Inteligência artificial', { status: 'running' });
     
     try {
       const response = await supabase.functions.invoke('ai-prospecting', {
@@ -194,14 +194,14 @@ export default function DiagnosticsPage() {
       
       const hasMessage = !!response.data?.message;
       
-      updateTestResult('AI/DeepSeek', {
+      updateTestResult('Inteligência artificial', {
         status: hasMessage ? 'success' : 'error',
         message: hasMessage ? 'IA respondendo normalmente' : 'IA não retornou mensagem',
         duration: Date.now() - start,
       });
       return hasMessage;
     } catch (error: any) {
-      updateTestResult('AI/DeepSeek', {
+      updateTestResult('Inteligência artificial', {
         status: 'error',
         message: error.message,
         duration: Date.now() - start,

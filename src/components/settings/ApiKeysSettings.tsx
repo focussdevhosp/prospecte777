@@ -175,16 +175,19 @@ export function ApiKeysSettings() {
 
   return (
     <div className="space-y-6">
-      {/* DeepSeek - Global Info */}
+      {/* O texto dizia "DeepSeek IA — já configurada globalmente". Virou o
+          nome de um provedor específico numa tela que o usuário lê para saber
+          o que precisa fazer, e o provedor mudou. O que ele precisa saber é
+          que a IA está incluída, não qual empresa está por trás. */}
       <Alert className="border-primary/20 bg-primary/5">
         <Sparkles className="h-4 w-4" />
         <AlertTitle className="flex items-center gap-2">
-          DeepSeek IA
-          <Badge className="bg-success text-white">Incluída no Plano</Badge>
+          Inteligência artificial
+          <Badge className="bg-success text-success-foreground">Incluída no plano</Badge>
         </AlertTitle>
         <AlertDescription>
-          A IA DeepSeek é compartilhada e já está configurada globalmente. 
-          Você não precisa configurar nenhuma chave — ela funciona automaticamente para todos os usuários.
+          A IA que escreve as abordagens e responde os leads já vem configurada.
+          Você não precisa cadastrar chave nenhuma para ela funcionar.
         </AlertDescription>
       </Alert>
 
@@ -384,7 +387,7 @@ export function ApiKeysSettings() {
         <Info className="h-4 w-4" />
         <AlertTitle>Resumo das APIs</AlertTitle>
         <AlertDescription className="mt-2 space-y-2">
-          <p><strong>🤖 DeepSeek IA:</strong> Incluída no plano — não precisa configurar.</p>
+          <p><strong>🤖 Inteligência artificial:</strong> Incluída no plano — não precisa configurar.</p>
           <p><strong>🔍 Serper.dev:</strong> Buscar empresas no Google. 2.500 buscas grátis/mês.</p>
           <p><strong>🔍 SerpAPI:</strong> Alternativa para buscar no Google Maps. 100 buscas grátis/mês.</p>
           <p><strong>📧 Hunter.io:</strong> Descobrir emails profissionais. 25 buscas grátis/mês.</p>

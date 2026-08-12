@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { complete } from "../_shared/ai.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -76,10 +77,6 @@ Deno.serve(async (req) => {
       .eq("user_id", userId)
       .single();
 
-    const DEEPSEEK_API_KEY = Deno.env.get("DEEPSEEK_API_KEY");
-    if (!DEEPSEEK_API_KEY) {
-      throw new Error("DEEPSEEK_API_KEY not configured");
-    }
 
     console.log(`Generating intelligence for service: ${service_name}`);
 
@@ -143,34 +140,14 @@ ${settings?.agent_persona ? `Persona do agente: ${settings.agent_persona}` : ''}
 
 Retorne APENAS o JSON válido, sem explicações ou markdown.`;
 
-    const aiResponse = await fetch(
-      "https://api.deepseek.com/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${DEEPSEEK_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "deepseek-chat",
-          messages: [
-            { role: "system", content: systemPrompt },
-            { role: "user", content: userPrompt },
-          ],
-          temperature: 0.8,
-          max_tokens: 3000,
-        }),
-      }
-    );
+    // Pela camada comum: OpenAI, DeepSeek e Lovable na ordem, com repetição
+    // do que vale a pena repetir e registro de consumo.
+    const ai = await complete(systemPrompt, userPrompt, {
+      temperature: 0.8,
+      max_tokens: 3000,
+    });
 
-    if (!aiResponse.ok) {
-      const errorText = await aiResponse.text();
-      console.error("AI API error:", errorText);
-      throw new Error("Failed to generate service intelligence");
-    }
-
-    const aiData = await aiResponse.json();
-    const rawContent = aiData.choices?.[0]?.message?.content || "";
+    const rawContent = ai.text;
 
     // Parse JSON from response
     let intelligence;

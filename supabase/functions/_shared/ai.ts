@@ -74,7 +74,67 @@ interface Provider {
   price: Record<string, [number, number]>;
 }
 
-const PROVIDERS: Provider[] = [
+/**
+ * Modelo da OpenAI, configurável por secret.
+ *
+ * O nome fica em variável de ambiente de propósito. Nome de modelo é a coisa
+ * que mais muda nesta indústria — fixar no código significa que trocar de
+ * modelo exige alterar arquivo, revisar, publicar e torcer. Com secret, é um
+ * campo no painel.
+ *
+ * O padrão precisa ser um modelo que exista em qualquer conta. Quem quiser o
+ * mais novo cadastra `OPENAI_MODEL` e pronto.
+ */
+function openaiModel(role: ModelRole): string {
+  const porPapel: Record<ModelRole, string> = {
+    primary: envKey("OPENAI_MODEL") ?? "gpt-4.1",
+    fast: envKey("OPENAI_MODEL_FAST") ?? envKey("OPENAI_MODEL") ?? "gpt-4.1-mini",
+    cheap: envKey("OPENAI_MODEL_CHEAP") ?? "gpt-4.1-mini",
+    fallback: envKey("OPENAI_MODEL_FAST") ?? "gpt-4.1-mini",
+  };
+  return porPapel[role];
+}
+
+/**
+ * Modelos de raciocínio recusam `temperature` e trocaram `max_tokens` por
+ * `max_completion_tokens`. Mandar o campo errado devolve 400 — e um 400 aqui
+ * derruba a resposta ao cliente inteira, não só uma chamada.
+ *
+ * Confirmado contra a API: `gpt-5.4-mini` responde
+ * "Unsupported parameter: 'max_tokens' is not supported with this model"
+ * ao formato antigo, e aceita o novo.
+ *
+ * As variantes `-chat-` da família 5 são as não-raciocínio e aceitam
+ * `temperature` normalmente — por isso a exceção no meio da regra.
+ */
+export function ehRaciocinio(model: string): boolean {
+  if (/-chat(-|$)/i.test(model)) return false;
+  return /^(o[1-9]|gpt-5)/i.test(model);
+}
+
+export const PROVIDERS: Provider[] = [
+  {
+    name: "openai",
+    url: "https://api.openai.com/v1/chat/completions",
+    keyEnv: "OPENAI_API_KEY",
+    // Preenchido em tempo de chamada por `openaiModel`; o mapa fixo aqui é só
+    // o que aparece nos logs quando nada foi configurado.
+    models: {
+      primary: "gpt-4o",
+      fast: "gpt-4o-mini",
+      cheap: "gpt-4o-mini",
+      fallback: "gpt-4o-mini",
+    },
+    // USD por 1M de tokens: [entrada, saída].
+    price: {
+      "gpt-4o": [2.5, 10],
+      "gpt-4o-mini": [0.15, 0.6],
+      "gpt-4.1": [2, 8],
+      "gpt-4.1-mini": [0.4, 1.6],
+      "gpt-4.1-nano": [0.1, 0.4],
+      "o4-mini": [1.1, 4.4],
+    },
+  },
   {
     name: "deepseek",
     url: "https://api.deepseek.com/v1/chat/completions",
@@ -115,8 +175,31 @@ function envKey(name: string): string | null {
   }
 }
 
-function estimateCost(provider: Provider, model: string, inTok: number, outTok: number): number {
-  const price = provider.price[model] ?? [0, 0];
+/**
+ * Preço de um modelo que a tabela não conhece.
+ *
+ * Zero seria a resposta cômoda e é a errada: o teto de gasto diário compara
+ * custo acumulado com um limite, e custo sempre zero faz o teto NUNCA fechar.
+ * Ou seja, cadastrar um modelo novo em `OPENAI_MODEL` desligaria em silêncio
+ * a única proteção contra uma conta de IA fora de controle.
+ *
+ * Estes valores são deliberadamente altos: superestimar faz o teto fechar
+ * cedo demais, o que custa uma pausa. Subestimar custa dinheiro real.
+ */
+export const PRECO_DESCONHECIDO: [number, number] = [5, 20];
+
+export function estimateCost(provider: Provider, model: string, inTok: number, outTok: number): number {
+  const price = provider.price[model];
+
+  if (!price) {
+    console.warn(
+      `[ai] modelo "${model}" não está na tabela de preços de ${provider.name}. ` +
+      `Cobrando pelo teto (${PRECO_DESCONHECIDO[0]}/${PRECO_DESCONHECIDO[1]} por 1M) ` +
+      `para o limite diário continuar valendo.`,
+    );
+    return (inTok / 1_000_000) * PRECO_DESCONHECIDO[0] + (outTok / 1_000_000) * PRECO_DESCONHECIDO[1];
+  }
+
   return (inTok / 1_000_000) * price[0] + (outTok / 1_000_000) * price[1];
 }
 
@@ -139,15 +222,26 @@ async function callProvider(
   apiKey: string,
   opts: AICallOptions,
 ): Promise<AIResult> {
-  const model = provider.models[opts.role ?? "primary"];
+  const role = opts.role ?? "primary";
+  const model = provider.name === "openai" ? openaiModel(role) : provider.models[role];
   const timeoutMs = opts.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+
+  const raciocinio = provider.name === "openai" && ehRaciocinio(model);
 
   const body: Record<string, unknown> = {
     model,
     messages: opts.messages,
-    temperature: opts.temperature ?? 0.7,
-    max_tokens: opts.max_tokens ?? 1_200,
   };
+
+  if (raciocinio) {
+    // Estes modelos escolhem a própria temperatura e recusam o campo. Também
+    // gastam tokens pensando antes de responder, então o teto precisa de
+    // folga — senão a resposta vem truncada no meio.
+    body.max_completion_tokens = (opts.max_tokens ?? 1_200) * 4;
+  } else {
+    body.temperature = opts.temperature ?? 0.7;
+    body.max_tokens = opts.max_tokens ?? 1_200;
+  }
   if (opts.json) body.response_format = { type: "json_object" };
   if (opts.tools) {
     body.tools = opts.tools;
@@ -231,7 +325,10 @@ export async function callAI(opts: AICallOptions): Promise<AIResult> {
     .filter((x): x is { provider: Provider; key: string } => x.key !== null);
 
   if (available.length === 0) {
-    throw new AIUnavailable("Nenhum provedor de IA configurado (DEEPSEEK_API_KEY ou LOVABLE_API_KEY).");
+    throw new AIUnavailable(
+      "Nenhum provedor de IA configurado. Cadastre OPENAI_API_KEY, DEEPSEEK_API_KEY " +
+      "ou LOVABLE_API_KEY nos secrets das edge functions.",
+    );
   }
 
   const failures: string[] = [];

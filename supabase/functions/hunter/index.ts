@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { complete } from "../_shared/ai.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -136,83 +137,19 @@ Deno.serve(async (req) => {
     const leadsWithPhone = foundLeads.filter((lead: any) => lead.phone);
     console.log(`${leadsWithPhone.length} leads have phone numbers`);
 
-    // Use global API keys
-    const DEEPSEEK_API_KEY = Deno.env.get("DEEPSEEK_API_KEY");
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    
-    if (!DEEPSEEK_API_KEY && !LOVABLE_API_KEY) {
-      return new Response(
-        JSON.stringify({ error: "Nenhuma API de IA configurada no servidor." }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
-
-    const messageVariations = settings.message_variations || [];
-    let firstMessage: string;
-
+    // As chaves e a ordem dos provedores moram em `_shared/ai.ts`. Esta
+    // function tinha a própria escada DeepSeek -> Lovable, com o prompt
+    // escrito DUAS VEZES em formatos diferentes: um mandava tudo como
+    // `user`, o outro separava `system` e `user`. Dois textos que deveriam
+    // ser o mesmo, divergindo em silêncio conforme um dos dois era editado.
     if (messageVariations.length > 0) {
       // Use A/B test variation
       const randomVariation =
         messageVariations[Math.floor(Math.random() * messageVariations.length)];
       firstMessage = randomVariation.template || randomVariation;
     } else {
-      // Generate message with AI - prefer user's DeepSeek, fallback to Lovable
-      let aiResponse;
-      
-      if (DEEPSEEK_API_KEY) {
-        // Use DeepSeek API
-        aiResponse = await fetch("https://api.deepseek.com/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${DEEPSEEK_API_KEY}`,
-          },
-          body: JSON.stringify({
-            model: "deepseek-chat",
-            messages: [{ role: "user", content: `Você é ${settings.agent_name}, um especialista em vendas consultivas.
-${settings.agent_persona}
-
-Seu objetivo é criar uma primeira mensagem de prospecção que:
-1. Seja pessoal e não pareça automática
-2. Identifique uma dor comum do nicho
-3. Ofereça uma solução de forma sutil
-4. Termine com uma pergunta aberta para engajar
-
-Serviços oferecidos: ${(settings.services_offered || []).join(", ")}
-Base de conhecimento: ${settings.knowledge_base || ""}
-
-Crie uma mensagem de primeiro contato para uma empresa do nicho "${niches[0]}" localizada em "${locations[0]}".
-Responda APENAS com a mensagem, sem explicações.` }],
-            max_tokens: 500,
-            temperature: 0.9,
-          }),
-        });
-
-        if (aiResponse.ok) {
-          const aiData = await aiResponse.json();
-          firstMessage = aiData.choices?.[0]?.message?.content || "";
-        }
-      }
-      
-      // Fallback to Lovable AI if DeepSeek failed or not configured
-      if (!firstMessage && LOVABLE_API_KEY) {
-        aiResponse = await fetch(
-          "https://ai.gateway.lovable.dev/v1/chat/completions",
-          {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${LOVABLE_API_KEY}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              model: "deepseek-chat",
-              messages: [
-                {
-                  role: "system",
-                  content: `Você é ${settings.agent_name}, um especialista em vendas consultivas.
+      const ai = await complete(
+        `Você é ${settings.agent_name}, um especialista em vendas consultivas.
 ${settings.agent_persona}
 
 Seu objetivo é criar uma primeira mensagem de prospecção que:
@@ -225,25 +162,11 @@ Serviços oferecidos: ${(settings.services_offered || []).join(", ")}
 Base de conhecimento: ${settings.knowledge_base || ""}
 
 Responda APENAS com a mensagem, sem explicações.`,
-                },
-                {
-                  role: "user",
-                  content: `Crie uma mensagem de primeiro contato para uma empresa do nicho "${niches[0]}" localizada em "${locations[0]}".`,
-                },
-              ],
-            }),
-          }
-        );
+        `Crie uma mensagem de primeiro contato para uma empresa do nicho "${niches[0]}" localizada em "${locations[0]}".`,
+        { temperature: 0.9, max_tokens: 500 },
+      );
 
-        if (!aiResponse.ok) {
-          const errorText = await aiResponse.text();
-          console.error("AI API error:", errorText);
-          throw new Error("Failed to generate message");
-        }
-
-        const aiData = await aiResponse.json();
-        firstMessage = aiData.choices?.[0]?.message?.content || "";
-      }
+      firstMessage = ai.text;
     }
 
     // Create leads and log messages

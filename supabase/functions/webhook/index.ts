@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { callAI } from "../_shared/ai.ts";
 import { corsHeaders, verifyWebhookSecret } from "../_shared/auth.ts";
 import {
   agentGate,
@@ -782,88 +783,63 @@ Deno.serve(async (req) => {
     let responseMessage = "";
     let meetingScheduled = false;
 
-    if (DEEPSEEK_API_KEY) {
-      // Use DeepSeek API
-      try {
-        const deepseekResponse = await fetch("https://api.deepseek.com/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${DEEPSEEK_API_KEY}`,
-          },
-          body: JSON.stringify({
-            model: "deepseek-chat",
-            messages: [
-              { role: "system", content: systemPrompt },
-              ...formattedHistory,
-            ],
-            temperature: 0.9,
-            max_tokens: 500,
-          }),
-        });
+    // ---- CHAMADA DO MODELO ----
+    // Antes eram DOIS caminhos: DeepSeek direto, sem ferramenta nenhuma, e
+    // Lovable, com a de agendar reunião. Quem tivesse DEEPSEEK_API_KEY
+    // cadastrada ficava com um agente que NUNCA conseguia marcar reunião — o
+    // modelo nem sabia que a ferramenta existia. O sintoma não parecia um
+    // defeito: o agente dizia "vou agendar" e nada aparecia na agenda.
+    //
+    // Agora é uma chamada só, pela camada comum, que percorre OpenAI,
+    // DeepSeek e Lovable na ordem e sempre oferece a ferramenta.
+    // deno-lint-ignore no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let aiData: any = null;
 
-        if (deepseekResponse.ok) {
-          const deepseekData = await deepseekResponse.json();
-          responseMessage = deepseekData.choices?.[0]?.message?.content || "";
-        }
-      } catch (e) {
-        console.error("DeepSeek error:", e);
-      }
+    try {
+      const ai = await callAI({
+        messages: [
+          { role: "system", content: systemPrompt },
+          ...formattedHistory,
+        ],
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "scheduleMeeting",
+              description: "Agenda uma reunião quando o lead CONFIRMAR explicitamente uma data e horário específicos",
+              parameters: {
+                type: "object",
+                properties: {
+                  date: { type: "string", description: "Data no formato YYYY-MM-DD" },
+                  time: { type: "string", description: "Horário no formato HH:MM" },
+                  duration_minutes: { type: "number", description: "Duração em minutos (padrão 30)" },
+                  notes: { type: "string", description: "Notas ou assunto da reunião" },
+                },
+                required: ["date", "time"],
+              },
+            },
+          },
+        ],
+        tool_choice: "auto",
+        temperature: 0.9,
+      });
+
+      aiData = ai.raw;
+    } catch (e) {
+      // Nenhum provedor respondeu. Não manda nada: existia aqui um
+      // "Opa! Me dá um minutinho que já te respondo 😊", que é uma promessa
+      // que o sistema não cumpre — ninguém volta depois. O lead ficava
+      // esperando uma resposta que nunca vinha, e do lado dele isso é pior
+      // que silêncio, porque ele para de cobrar.
+      console.error("[webhook] nenhum provedor de IA respondeu:", e);
+      return new Response(JSON.stringify({ ok: true, skipped: "ai_unavailable" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    // Fallback to Lovable AI with function calling
-    if (!responseMessage && LOVABLE_API_KEY) {
-      const aiResponse = await fetch(
-        "https://ai.gateway.lovable.dev/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${LOVABLE_API_KEY}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            model: "deepseek-chat",
-            messages: [
-              { role: "system", content: systemPrompt },
-              ...formattedHistory,
-            ],
-            tools: [
-              {
-                type: "function",
-                function: {
-                  name: "scheduleMeeting",
-                  description: "Agenda uma reunião quando o lead CONFIRMAR explicitamente uma data e horário específicos",
-                  parameters: {
-                    type: "object",
-                    properties: {
-                      date: { type: "string", description: "Data no formato YYYY-MM-DD" },
-                      time: { type: "string", description: "Horário no formato HH:MM" },
-                      duration_minutes: { type: "number", description: "Duração em minutos (padrão 30)" },
-                      notes: { type: "string", description: "Notas ou assunto da reunião" },
-                    },
-                    required: ["date", "time"],
-                  },
-                },
-              },
-            ],
-            tool_choice: "auto",
-            temperature: 0.9,
-          }),
-        }
-      );
+    {
 
-      if (!aiResponse.ok) {
-        const errorText = await aiResponse.text();
-        console.error("AI API error:", errorText);
-        
-        if (aiResponse.status === 429 || aiResponse.status === 402) {
-          // Rate limit or payment - use fallback message
-          responseMessage = "Opa! Me dá um minutinho que já te respondo 😊";
-        } else {
-          throw new Error("Failed to generate response");
-        }
-      } else {
-        const aiData = await aiResponse.json();
         const choice = aiData.choices?.[0];
 
         // Check if AI wants to schedule a meeting
@@ -957,15 +933,20 @@ Deno.serve(async (req) => {
           }
         }
 
-        if (!responseMessage) {
-          responseMessage = choice?.message?.content || "";
-        }
+      if (!responseMessage) {
+        responseMessage = choice?.message?.content || "";
       }
     }
 
-    // Fallback if still no response
-    if (!responseMessage) {
-      responseMessage = "Opa! Recebi sua mensagem. Me conta mais sobre como posso te ajudar! 😊";
+    // Modelo respondeu vazio: acontece quando ele so chamou a ferramenta e o
+    // agendamento falhou. Nao inventa um "recebi sua mensagem, me conta mais"
+    // — texto generico no lugar de uma resposta real e o que fazia o lead
+    // perceber que estava falando com robo.
+    if (!responseMessage.trim()) {
+      console.warn(`[webhook] modelo devolveu vazio para o lead ${lead.id}; nada foi enviado.`);
+      return new Response(JSON.stringify({ ok: true, skipped: "resposta_vazia" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     // Clean up response (remove markdown if present)
