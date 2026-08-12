@@ -233,3 +233,48 @@ describe('resolveEntities — consolidação de várias fontes', () => {
     expect(r.merged).toBe(0);
   });
 });
+
+describe('endereço — a penalidade de número diferente precisa disparar', () => {
+  // Esta regra existiu por meses sem nunca rodar: o ramo vinha depois de um
+  // `else if (addrSim >= 0.6)` que já capturava tudo. O resultado era o
+  // oposto do pretendido — o sinal que existia para SEPARAR empurrava para
+  // fundir.
+
+  const naRua = (nome: string, endereco: string) =>
+    make({ name: nome, address: endereco, city: 'Itu', state: 'SP' }, 'google_maps');
+
+  it('mesmo número soma', () => {
+    const v = compareBusinesses(
+      naRua('Clínica Bella', 'Rua Sete de Setembro, 100'),
+      naRua('Clinica Bella Estetica', 'Rua Sete de Setembro, 100'),
+    );
+    expect(v.reasons.join(' ')).toContain('mesmo endereço e número');
+  });
+
+  it('número diferente PENALIZA — e é isto que nunca acontecia', () => {
+    const v = compareBusinesses(
+      naRua('Clínica Bella', 'Rua Sete de Setembro, 100'),
+      naRua('Odonto Sorriso', 'Rua Sete de Setembro, 890'),
+    );
+    expect(v.reasons.join(' ')).toContain('número diferente');
+    expect(v.reasons.join(' ')).not.toContain('mesma rua,'.replace(',', ' —'));
+  });
+
+  it('duas empresas distintas na mesma rua não são fundidas', () => {
+    // O efeito prático do defeito: rua movimentada tem dezenas de empresas, e
+    // tratá-las como a mesma some com o lead de uma delas.
+    const v = compareBusinesses(
+      naRua('Clínica Bella', 'Rua Sete de Setembro, 100'),
+      naRua('Odonto Sorriso', 'Rua Sete de Setembro, 890'),
+    );
+    expect(v.decision).not.toBe('merge');
+  });
+
+  it('sem número dos dois lados, a rua é indício fraco', () => {
+    const v = compareBusinesses(
+      naRua('Clínica Bella', 'Rua Sete de Setembro'),
+      naRua('Clinica Bella Estetica', 'Rua Sete de Setembro'),
+    );
+    expect(v.reasons.join(' ')).toContain('mesma rua');
+  });
+});

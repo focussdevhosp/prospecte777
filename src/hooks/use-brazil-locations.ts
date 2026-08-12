@@ -203,6 +203,9 @@ export function useBrazilLocations() {
 
       return suggestions;
     };
+  // `getStateFromCep` é derivada de `cepRanges`, que já está aqui. Incluí-la
+  // não muda quando isto recalcula e só duplicaria a dependência.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [states, cepRanges]);
 
   // Popular cities for quick selection

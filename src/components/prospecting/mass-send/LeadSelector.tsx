@@ -79,7 +79,8 @@ export function LeadSelector({
   const toggleNicheExpand = (niche: string) => {
     setExpandedNiches(prev => {
       const next = new Set(prev);
-      next.has(niche) ? next.delete(niche) : next.add(niche);
+      if (next.has(niche)) next.delete(niche);
+      else next.add(niche);
       return next;
     });
   };

@@ -87,7 +87,11 @@ export function SpintaxManager() {
     });
   };
 
-  const useSuggestion = (category: string, example: string) => {
+  // Não é hook — é um handler. O nome anterior (`useSuggestion`) disparava a
+  // regra `rules-of-hooks` do ESLint, que vai por convenção de nome. Um
+  // falso positivo permanente é pior que um erro: ensina a ignorar a regra
+  // que existe para pegar hook chamado dentro de callback de verdade.
+  const aplicarSugestao = (category: string, example: string) => {
     setNewCategory(category);
     setNewVariations(example.split(', ').join('\n'));
   };
@@ -155,7 +159,7 @@ export function SpintaxManager() {
                   key={s.category}
                   variant="outline"
                   size="sm"
-                  onClick={() => useSuggestion(s.category, s.example)}
+                  onClick={() => aplicarSugestao(s.category, s.example)}
                 >
                   {s.label}
                 </Button>

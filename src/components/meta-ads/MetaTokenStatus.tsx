@@ -34,7 +34,10 @@ export function MetaTokenStatus({ accessToken, onReconnect }: Props) {
     setLoading(false);
   };
 
-  useEffect(() => { void check(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [accessToken]);
+  // `check` é recriada a cada render; incluí-la reconsultaria o token sem
+  // parar. O token é a única coisa que deve disparar nova conferência.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { void check(); }, [accessToken]);
 
   if (!accessToken) return null;
   if (!info) {

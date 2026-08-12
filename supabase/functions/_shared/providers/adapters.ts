@@ -29,7 +29,7 @@ function env(name: string): string | null {
 
 /** Separa "Itu - SP" em cidade e UF, para o merge poder comparar cidade. */
 function splitLocation(location: string): { city: string | null; state: string | null } {
-  const parts = location.split(/[-,\/]/).map((p) => p.trim()).filter(Boolean);
+  const parts = location.split(/[-,/]/).map((p) => p.trim()).filter(Boolean);
   if (parts.length === 0) return { city: null, state: null };
 
   const last = parts[parts.length - 1];

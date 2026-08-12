@@ -285,15 +285,29 @@ export function compareBusinesses(
     const numA = streetNumber(addrA);
     const numB = streetNumber(addrB);
 
-    if (addrSim >= 0.6 && numA && numB && numA === numB) {
-      score += 20;
-      reasons.push("mesmo endereço e número");
-    } else if (addrSim >= 0.6) {
-      score += 8;
-      reasons.push("mesma rua");
-    } else if (numA && numB && numA !== numB && addrSim >= 0.6) {
-      score -= 15;
-      reasons.push("mesma rua, número diferente");
+    // A ordem aqui já esteve errada e o defeito era invisível: o ramo do
+    // número DIFERENTE vinha depois de um `else if (addrSim >= 0.6)` que já
+    // capturava todos os casos de rua parecida. A penalidade nunca disparava,
+    // e duas empresas distintas na mesma rua — números 100 e 890 — ganhavam
+    // +8 por "mesma rua" em vez de perder 15. Ou seja, o sinal que existia
+    // para SEPARAR estava empurrando para fundir.
+    //
+    // Aninhar em vez de encadear torna isso impossível de repetir: dentro do
+    // bloco, os três casos de número são mutuamente exclusivos por
+    // construção.
+    if (addrSim >= 0.6) {
+      if (numA && numB && numA === numB) {
+        score += 20;
+        reasons.push("mesmo endereço e número");
+      } else if (numA && numB && numA !== numB) {
+        score -= 15;
+        reasons.push("mesma rua, número diferente");
+      } else {
+        // Um dos dois não tem número: a rua parecida ainda é indício, mas
+        // fraco — rua movimentada tem dezenas de empresas.
+        score += 8;
+        reasons.push("mesma rua");
+      }
     }
   }
 

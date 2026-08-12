@@ -95,6 +95,10 @@ export default function CRMContactDetailPage() {
         updateLead({ id: lead.id, location: res.state });
       }
     }).catch(() => {});
+  // Só o id. O efeito GRAVA em `lead` (preenche a localização), e depender
+  // do objeto inteiro faria ele reagir à própria escrita. A guarda no topo
+  // já cobre o caso de a localização existir.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lead?.id]);
 
   const leadMeetings = useMemo(() => meetings.filter(m => m.lead_id === id), [meetings, id]);

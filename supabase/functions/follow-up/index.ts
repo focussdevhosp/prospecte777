@@ -26,6 +26,22 @@ import { decideFollowUp } from "../_shared/agents/follow-up-policy.ts";
 // confiança do lead e, se ele conferir, a reputação de quem assina.
 
 
+/**
+ * Configurações do usuário, no que esta função usa.
+ *
+ * Trocar o `any[]` anterior por `Record<string, unknown>` teria sido pior que
+ * o `any`: `settings.user_id` viraria `unknown` e seria passado adiante como
+ * se fosse texto. Tipo errado engana mais que tipo ausente.
+ */
+interface UserSettingsRow {
+  user_id: string;
+  whatsapp_connected?: boolean | null;
+  whatsapp_instance_id?: string | null;
+  agent_name?: string | null;
+  agent_persona?: string | null;
+  emoji_usage?: string | null;
+}
+
 Deno.serve(async (req) => {
   const preflight = handleCors(req);
   if (preflight) return preflight;
@@ -41,7 +57,7 @@ Deno.serve(async (req) => {
 
   try {
     // Chamada interna processa todo mundo; chamada de usuário, só a conta dele.
-    let targets: any[] = [];
+    let targets: UserSettingsRow[] = [];
 
     if (ctx.kind === "internal") {
       const { data } = await supabase
@@ -70,7 +86,7 @@ Deno.serve(async (req) => {
       closed: 0,
       escalated: 0,
       errors: 0,
-      leads: [] as any[],
+      leads: [] as Array<{ id: string; business_name: string; days_since_contact: number; follow_up_number: number }>,
     };
 
     for (const settings of targets) {

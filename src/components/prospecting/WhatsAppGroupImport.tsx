@@ -318,7 +318,8 @@ export function WhatsAppGroupImport({ onLeadsImported, disabled }: WhatsAppGroup
   const toggleGroupExpand = (groupName: string) => {
     setExpandedGroups(prev => {
       const next = new Set(prev);
-      next.has(groupName) ? next.delete(groupName) : next.add(groupName);
+      if (next.has(groupName)) next.delete(groupName);
+      else next.add(groupName);
       return next;
     });
   };

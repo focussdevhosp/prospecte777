@@ -72,18 +72,30 @@ identifiquei — e a única que não consigo contornar com engenho.
 
 ---
 
-## 4. `npm run lint` acusa 367 problemas anteriores
+## 4. 340 avisos de `no-explicit-any` herdados
 
-**Bloqueio:** nenhum, tecnicamente. Não fiz porque não é o que foi pedido e
-mexer em 40 arquivos alheios ao trabalho embaralharia todo diff destes ciclos.
+**Estado:** o lint voltou a passar. Eram 337 problemas em 11 categorias; as
+10 categorias que não eram `any` foram corrigidas, incluindo dois defeitos
+reais. Sobraram 340 ocorrências de `no-explicit-any`, agora como **aviso**.
 
-**Por que atrapalha:** com o lint vermelho de origem, ele deixa de servir como
-sinal — ninguém repara em erro novo no meio de 367.
+**Por que aviso e não erro:** como erro, `npm run lint` nascia vermelho e
+ficava vermelho — ninguém enxerga um problema novo no meio de 327, e o portão
+deixa de servir de portão. Esta sessão viu esse padrão custar caro duas vezes:
+o `tsc --noEmit` rodava contra um tsconfig de referências e não checava
+arquivo nenhum, e um erro de sintaxe passou por ele.
 
-**O que destrava:** decidir se vale um commit só de `no-explicit-any` nas edge
-functions antigas. Cerca de 340 dos 344 erros são esse. Nenhum ciclo
-acrescentou erro novo; a conferência é sempre `eslint` no arquivo tocado,
-comparado com o mesmo comando no `git stash`.
+Como aviso, o número continua visível e contável, e o lint volta a reprovar o
+que é erro de verdade.
+
+**Distribuição:** 200 em `src/`, 127 nas edge functions, espalhados por cerca
+de cem arquivos — sem concentração que dê para atacar de uma vez (o pior tem
+15).
+
+**O que destrava:** tipar cada ponto com o dado real. É trabalho de dias e
+carrega risco de regressão em código que não dá para rodar aqui. A maior
+parte é `catch (e: any)` e retorno de consulta do Supabase; os segundos têm
+tipo gerado disponível em `src/`, então esse subconjunto é o mais barato de
+atacar primeiro.
 
 ---
 

@@ -36,7 +36,11 @@ export function PWAInstallBanner() {
 
     window.addEventListener('beforeinstallprompt', handler);
     return () => window.removeEventListener('beforeinstallprompt', handler);
-  }, []);
+    // `user` precisa estar aqui. O efeito DECIDE por ele (`if (... || !user) return`)
+    // e a autenticação resolve depois da montagem — com a lista vazia, ele
+    // rodava uma vez com `user` nulo, saía cedo e nunca mais rodava. O banner
+    // de instalação não aparecia para ninguém.
+  }, [user]);
 
   const handleInstall = async () => {
     if (!deferredPrompt) return;

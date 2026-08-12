@@ -353,6 +353,10 @@ export function useMassSendJob() {
         countdownIntervalRef.current = null;
       }
     };
+  // Depende dos CAMPOS, não do objeto. `activeJob` ganha identidade nova a
+  // cada refetch, e depender dele reiniciaria a contagem regressiva a cada
+  // atualização — o número na tela nunca chegaria a zero.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeJob?.id, activeJob?.status, activeJob?.current_index]);
 
   // Get leads from active job

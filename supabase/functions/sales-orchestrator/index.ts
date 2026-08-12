@@ -100,7 +100,16 @@ Deno.serve(async (req) => {
 // CRIAÇÃO
 // ------------------------------------------------------------
 
+/**
+ * Cliente Supabase, tipado no mínimo que esta function usa.
+ *
+ * `any` aqui apagava a conferência de forma das chamadas — e uma chamada com
+ * a forma errada só aparece em produção, porque o PostgREST devolve 400 e o
+ * código segue. O tipo gerado do Supabase não entra em edge function (ele
+ * vive em `src/`), então o mínimo estrutural é o que dá para ter.
+ */
 // deno-lint-ignore no-explicit-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Supa = any;
 
 async function createMission(supabase: Supa, userId: string, body: Record<string, unknown>) {
@@ -756,8 +765,8 @@ async function sendMessage(
     userId: string;
     missionId: string;
     missionLeadId: string;
-    // deno-lint-ignore no-explicit-any
-    lead: any;
+    /** Linha de `leads`. Só os campos que o envio usa. */
+    lead: { id: string; phone: string; business_name?: string | null; first_contact_at?: string | null };
     message: string;
     instanceId: string | null;
   },

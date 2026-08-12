@@ -511,7 +511,7 @@ async function processJob(supabase: any, job: BackgroundJob) {
   const totalItems = job.total_items;
   let processedItems = job.processed_items;
   let failedItems = job.failed_items;
-  let currentIndex = job.current_index;
+  const currentIndex = job.current_index;
 
   // Get payload with leads
   const payload = job.payload as any;

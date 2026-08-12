@@ -883,7 +883,7 @@ Deno.serve(async (req) => {
                 console.log(`Fixed past year in date: ${args.date} -> ${dateStr}`);
               }
               
-              let scheduledAt = new Date(`${dateStr}T${args.time}:00`);
+              const scheduledAt = new Date(`${dateStr}T${args.time}:00`);
               
               // If still in past, move to next occurrence
               if (scheduledAt < now) {

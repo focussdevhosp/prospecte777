@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Dialog,
@@ -21,7 +21,11 @@ export function KeyboardShortcuts() {
   const location = useLocation();
   const [showHelp, setShowHelp] = useState(false);
 
-  const shortcuts: Shortcut[] = [
+  // Memorizado porque o efeito abaixo lê esta lista. Recriada a cada render,
+  // ou o efeito reassina o listener sem parar, ou fecha sobre a versão da
+  // primeira renderização — os dois são jeitos diferentes de o atalho parar
+  // de funcionar sem ninguém perceber.
+  const shortcuts: Shortcut[] = useMemo(() => [
     // Navigation
     { keys: ['g', 'd'], label: 'Dashboard', action: () => navigate('/dashboard'), category: 'Navegação' },
     { keys: ['g', 'p'], label: 'Prospecção', action: () => navigate('/prospecting'), category: 'Navegação' },
@@ -32,7 +36,7 @@ export function KeyboardShortcuts() {
     { keys: ['g', 's'], label: 'Configurações', action: () => navigate('/settings'), category: 'Navegação' },
     // Global
     { keys: ['?'], label: 'Mostrar atalhos', action: () => setShowHelp(true), category: 'Global' },
-  ];
+  ], [navigate]);
 
   useEffect(() => {
     let pendingKey: string | null = null;
@@ -78,7 +82,7 @@ export function KeyboardShortcuts() {
       document.removeEventListener('keydown', handleKeyDown);
       if (timer) clearTimeout(timer);
     };
-  }, [navigate, location.pathname]);
+  }, [navigate, location.pathname, shortcuts]);
 
   const grouped = shortcuts.reduce<Record<string, Shortcut[]>>((acc, s) => {
     (acc[s.category] ??= []).push(s);
