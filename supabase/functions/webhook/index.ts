@@ -1,5 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { callAI } from "../_shared/ai.ts";
+import { callAI, complete } from "../_shared/ai.ts";
 import { corsHeaders, verifyWebhookSecret } from "../_shared/auth.ts";
 import {
   agentGate,
@@ -63,27 +63,18 @@ async function extractAndSaveMemories(
   supabase: any, 
   userId: string, 
   leadId: string, 
-  messages: any[], 
-  apiKey: string | null
+  messages: any[]
 ): Promise<void> {
-  if (!apiKey || messages.length < 2) return;
+  if (messages.length < 2) return;
 
   try {
     const recentMessages = messages.slice(-10).map(m => 
       `${m.sender_type === "lead" ? "Cliente" : "Agente"}: ${m.content}`
     ).join("\n");
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "deepseek-chat",
-        messages: [{
-          role: "user",
-          content: `Analise esta conversa e extraia informações importantes para lembrar sobre o cliente.
+    const ai = await complete(
+      "Você extrai fatos de uma conversa de vendas. Responde apenas JSON.",
+      `Analise esta conversa e extraia informações importantes para lembrar sobre o cliente.
 Retorne APENAS um JSON com arrays de objetos. Não inclua nada além do JSON.
 
 Conversa:
@@ -102,16 +93,13 @@ Retorne este formato exato:
 
 Tipos válidos: personal (nome, cargo), preference (horários, canais), commitment (promessas feitas), objection (objeções levantadas), context (interesses, necessidades)
 
-Extraia apenas informações realmente mencionadas. Se não houver nada relevante, retorne {"memories": []}`
-        }],
-        max_tokens: 500,
-      }),
-    });
+Extraia apenas informações realmente mencionadas. Se não houver nada relevante, retorne {"memories": []}`,
+      { role: "fast", max_tokens: 500, json: true },
+    );
 
-    if (response.ok) {
-      const data = await response.json();
-      const content = data.choices?.[0]?.message?.content || "";
-      
+    {
+      const content = ai.text;
+
       // Parse JSON from response
       const jsonMatch = content.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
@@ -309,9 +297,7 @@ Adapte-se ao estilo de comunicação do lead.`;
 }
 
 // Analyze sentiment of lead messages using AI
-async function analyzeSentiment(message: string, apiKey: string | null): Promise<'positive' | 'neutral' | 'negative'> {
-  if (!apiKey) return 'neutral';
-
+async function analyzeSentiment(message: string): Promise<'positive' | 'neutral' | 'negative'> {
   const positivePatterns = /obrigad|perfeito|ótimo|excelente|adorei|gostei|interesse|quero|sim|pode|bom|maravilh|top|show|massa|legal|bacana|aceito|combinado|fechado|vamos|bora/i;
   const negativePatterns = /não quero|não preciso|não tenho interesse|para de|não me ligue|spam|bloquear|cancelar|desinscrever|chato|péssimo|ruim|nunca|jamais|desisto|esquece/i;
   
@@ -320,31 +306,20 @@ async function analyzeSentiment(message: string, apiKey: string | null): Promise
   
   // For ambiguous messages, use AI
   try {
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "deepseek-chat",
-        messages: [{
-          role: "user",
-          content: `Classifique o sentimento desta mensagem de um lead em uma conversa de vendas. Responda APENAS com: positive, neutral ou negative
+    const ai = await complete(
+      "Você classifica sentimento. Responde uma palavra só.",
+      `Classifique o sentimento desta mensagem de um lead em uma conversa de vendas. Responda APENAS com: positive, neutral ou negative
 
 Mensagem: "${message}"
 
-Classificação:`
-        }],
-        max_tokens: 10,
-      }),
-    });
+Classificação:`,
+      { role: "cheap", max_tokens: 10, temperature: 0 },
+    );
 
-    if (response.ok) {
-      const data = await response.json();
-      const result = data.choices?.[0]?.message?.content?.toLowerCase().trim();
-      if (result?.includes('positive')) return 'positive';
-      if (result?.includes('negative')) return 'negative';
+    {
+      const result = ai.text.toLowerCase().trim();
+      if (result.includes('positive')) return 'positive';
+      if (result.includes('negative')) return 'negative';
     }
   } catch (e) {
     console.error("Sentiment analysis error:", e);
@@ -354,7 +329,7 @@ Classificação:`
 }
 
 // Analyze conversation to extract context
-async function analyzeConversation(messages: any[], apiKey: string | null): Promise<any> {
+async function analyzeConversation(messages: any[]): Promise<any> {
   const context = {
     messageCount: messages.length,
     lastLeadMessage: "",
@@ -392,37 +367,26 @@ async function analyzeConversation(messages: any[], apiKey: string | null): Prom
   const positivePatterns = /ótimo|perfeito|excelente|adorei|maravilha|top|show|massa|legal|bom/i;
   context.isPositive = positivePatterns.test(allText);
 
-  // Generate summary if we have API key and enough messages
-  if (apiKey && messages.length >= 3) {
+  // O resumo dependia de uma chave passada de fora. Sem ela, `context.summary`
+  // ficava vazio e o prompt do agente perdia o histórico — sem nenhum sinal.
+  if (messages.length >= 3) {
     try {
       const conversationText = messages
         .slice(-10) // Last 10 messages
         .map(m => `${m.sender_type === "lead" ? "Cliente" : "Agente"}: ${m.content}`)
         .join("\n");
 
-      const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "deepseek-chat",
-          messages: [{
-            role: "user",
-            content: `Resuma em 2-3 frases o estado atual desta conversa de vendas. O que o cliente quer? Quais objeções teve? Está próximo de fechar?
+      const ai = await complete(
+        "Você resume conversas de venda em poucas frases.",
+        `Resuma em 2-3 frases o estado atual desta conversa de vendas. O que o cliente quer? Quais objeções teve? Está próximo de fechar?
 
 ${conversationText}
 
-Resumo:`
-          }],
-        }),
-      });
+Resumo:`,
+        { role: "fast", max_tokens: 300 },
+      );
 
-      if (response.ok) {
-        const data = await response.json();
-        context.summary = data.choices?.[0]?.message?.content || "";
-      }
+      context.summary = ai.text;
     } catch (e) {
       console.error("Error generating summary:", e);
     }
@@ -755,11 +719,16 @@ Deno.serve(async (req) => {
     const messages = chatHistory || [];
 
     // Analyze conversation context
-    const DEEPSEEK_API_KEY = settings.deepseek_api_key || Deno.env.get("DEEPSEEK_API_KEY");
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    const AI_KEY = DEEPSEEK_API_KEY || LOVABLE_API_KEY;
-
-    const conversationContext = await analyzeConversation(messages, LOVABLE_API_KEY);
+    // Nenhuma chave é lida aqui. Quem escolhe o provedor é `_shared/ai.ts`,
+    // com a chave da plataforma — a mesma para todos os usuários, guardada
+    // como secret da edge function, que nunca chega ao navegador.
+    //
+    // A linha que existia aqui era `settings.deepseek_api_key || env(...)`:
+    // uma chave POR USUÁRIO tinha prioridade sobre a compartilhada. Isso
+    // obrigaria cada cliente a cadastrar a própria chave de IA para ter a
+    // conversa funcionando direito, que é exatamente o contrário do
+    // combinado — e nada na tela explicava isso.
+    const conversationContext = await analyzeConversation(messages);
 
     // Get long-term memory for this lead
     // Memória filtrada por confiança e limitada por seção — a versão antiga
@@ -768,7 +737,7 @@ Deno.serve(async (req) => {
     console.log(`Long-term memory for ${lead.id}: ${longTermMemory.length} chars`);
 
     // Extract and save new memories from this conversation (async, don't wait)
-    extractAndSaveMemories(supabase, userId, lead.id, messages, LOVABLE_API_KEY);
+    extractAndSaveMemories(supabase, userId, lead.id, messages);
 
     // Format chat history for AI (last 20 messages for context)
     const formattedHistory = messages.slice(-20).map((msg) => ({

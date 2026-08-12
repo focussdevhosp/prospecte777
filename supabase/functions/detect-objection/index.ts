@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { complete } from "../_shared/ai.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -47,38 +48,28 @@ Deno.serve(async (req) => {
       return json({ matches: keywordMatches.slice(0, 3), method: "keyword" });
     }
 
-    // Fallback: AI semantic classification
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) return json({ matches: [] });
-
+    // Classificação semântica, quando as palavras-chave não bateram.
+    //
+    // Ia direto ao gateway Lovable, com um modelo escolhido à mão. Sem a
+    // chave, devolvia "nenhuma objeção encontrada" em silêncio — como se a
+    // mensagem do lead fosse limpa. Um "tá caro" passava batido.
     const catalogue = objections
       .map((o, i) => `${i}. [${o.category}] "${o.objection_example}"`)
       .join("\n");
 
-    const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          {
-            role: "system",
-            content: "Você classifica objeções de vendas. Responda APENAS com o número do índice mais provável (0 se nenhum se aplica), sem texto extra.",
-          },
-          {
-            role: "user",
-            content: `Mensagem do lead: "${message}"\n\nObjeções conhecidas:\n${catalogue}\n\nQual índice melhor representa? (só o número, ou -1 se nenhum)`,
-          },
-        ],
-      }),
-    });
+    let raw = "-1";
+    try {
+      const ai = await complete(
+        "Você classifica objeções de vendas. Responda APENAS com o número do índice mais provável (0 se nenhum se aplica), sem texto extra.",
+        `Mensagem do lead: "${message}"\n\nObjeções conhecidas:\n${catalogue}\n\nQual índice melhor representa? (só o número, ou -1 se nenhum)`,
+        { role: "cheap", max_tokens: 10, temperature: 0 },
+      );
+      raw = ai.text.trim() || "-1";
+    } catch (e) {
+      console.error("[detect-objection] nenhum provedor respondeu:", e);
+      return json({ matches: [] });
+    }
 
-    if (!aiRes.ok) return json({ matches: [] });
-    const aiData = await aiRes.json();
-    const raw = aiData.choices?.[0]?.message?.content?.trim() || "-1";
     const idx = parseInt(raw.match(/-?\d+/)?.[0] || "-1", 10);
 
     if (idx >= 0 && idx < objections.length) {

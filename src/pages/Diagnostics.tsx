@@ -403,7 +403,7 @@ export default function DiagnosticsPage() {
               <Bot className="h-8 w-8 text-success" />
               <div>
                 <p className="font-medium">Inteligência Artificial</p>
-                <p className="text-sm text-muted-foreground">DeepSeek</p>
+                <p className="text-sm text-muted-foreground">Incluída no plano</p>
               </div>
             </CardContent>
           </Card>

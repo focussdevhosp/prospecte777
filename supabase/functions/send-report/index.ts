@@ -1,4 +1,5 @@
 import { corsHeaders, handleCors, json, requireUserOrInternal } from "../_shared/auth.ts";
+import { complete } from "../_shared/ai.ts";
 
 Deno.serve(async (req) => {
   const preflight = handleCors(req);
@@ -104,31 +105,21 @@ Deno.serve(async (req) => {
     const conversionRate =
       stats.totalLeads > 0 ? ((stats.wonLeads / stats.totalLeads) * 100).toFixed(1) : "0";
 
-    // Generate report using AI
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY not configured");
-    }
+    // O relatório passa pela camada comum. Antes exigia LOVABLE_API_KEY e
+    // lançava exceção sem ela — o e-mail diário simplesmente não saía, e o
+    // erro só aparecia no log da function.
+    //
+    // Aqui a falha NÃO é fatal, de propósito: os números do relatório vêm do
+    // banco e são verdadeiros com ou sem IA. O que a IA faz é redigir. Se ela
+    // não responder, o texto padrão logo abaixo entrega os mesmos números sem
+    // enfeite — que é melhor que não mandar relatório nenhum.
+    let reportText = "";
 
-    const aiResponse = await fetch(
-      "https://ai.gateway.lovable.dev/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "deepseek-chat",
-          messages: [
-            {
-              role: "system",
-              content: `Você é um assistente de relatórios. Crie um breve relatório diário de prospecção em português.
+    try {
+      const ai = await complete(
+        `Você é um assistente de relatórios. Crie um breve relatório diário de prospecção em português.
 Use emojis para tornar visual. Seja conciso e motivador.`,
-            },
-            {
-              role: "user",
-              content: `Gere um relatório para ${profile?.full_name || "o usuário"} com estas métricas de ontem:
+        `Gere um relatório para ${profile?.full_name || "o usuário"} com estas métricas de ontem:
 - Novos leads: ${stats.newLeads}
 - Reuniões agendadas: ${stats.newMeetings}
 - Mensagens enviadas: ${stats.messagesSent}
@@ -139,16 +130,11 @@ Use emojis para tornar visual. Seja conciso e motivador.`,
 - Taxa de conversão: ${conversionRate}%
 
 Inclua uma dica motivacional no final.`,
-            },
-          ],
-        }),
-      }
-    );
-
-    let reportText = "";
-    if (aiResponse.ok) {
-      const aiData = await aiResponse.json();
-      reportText = aiData.choices?.[0]?.message?.content || "";
+        { role: "fast", max_tokens: 700 },
+      );
+      reportText = ai.text;
+    } catch (e) {
+      console.error("[send-report] IA indisponível, usando o texto padrão:", e);
     }
 
     // Default report if AI fails

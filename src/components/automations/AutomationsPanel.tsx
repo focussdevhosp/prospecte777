@@ -37,7 +37,6 @@ interface AutomationConfig {
   defaultEnabled: boolean;
   badge?: string;
   requiresWhatsApp?: boolean;
-  requiresDeepSeek?: boolean;
 }
 
 const AUTOMATIONS: AutomationConfig[] = [
@@ -85,7 +84,6 @@ const AUTOMATIONS: AutomationConfig[] = [
     settingKey: 'sdr_agent_enabled',
     defaultEnabled: false,
     requiresWhatsApp: true,
-    requiresDeepSeek: true,
     badge: 'IA',
   },
   {
@@ -269,14 +267,12 @@ export function AutomationsPanel() {
                                   Requer WhatsApp
                                 </Badge>
                               )}
-                              {automation.requiresDeepSeek && !(settings as any)?.deepseek_api_key && (
-                                <Badge
-                                  variant="outline"
-                                  className="text-[10px] text-warning border-warning"
-                                >
-                                  Requer DeepSeek API
-                                </Badge>
-                              )}
+                              {/* Existia aqui um "Requer DeepSeek API", que
+                                  só sumia se o usuário cadastrasse uma chave
+                                  própria. A IA é da plataforma e a mesma para
+                                  todos — o usuário não configura nada, então o
+                                  aviso mandava ele procurar um campo que não
+                                  deveria existir. */}
                             </div>
                             <p className="text-sm text-muted-foreground">
                               {automation.description}
