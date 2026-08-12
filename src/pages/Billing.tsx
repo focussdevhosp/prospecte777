@@ -143,6 +143,7 @@ export default function BillingPage() {
 
   return (
     <DashboardLayout
+      eyebrow="Conta"
       title="Planos e Faturamento"
       description="Gerencie seu plano e acompanhe pagamentos"
     >

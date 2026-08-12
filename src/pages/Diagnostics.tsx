@@ -359,6 +359,7 @@ export default function DiagnosticsPage() {
 
   return (
     <DashboardLayout
+      eyebrow="Analisar"
       title="Diagnóstico do Sistema"
       description="Teste todas as funcionalidades da plataforma"
     >

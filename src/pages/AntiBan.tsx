@@ -6,6 +6,7 @@ import { GroupNav, libraryGroup } from '@/components/GroupNav';
 export default function AntiBanPage() {
   return (
     <DashboardLayout
+      eyebrow="Comunicar"
       title="Biblioteca"
       description="Templates, quebra de objeções e proteções anti-ban"
     >

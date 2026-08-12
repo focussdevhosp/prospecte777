@@ -48,7 +48,10 @@ export default function MissionDetailPage() {
 
   if (isLoading) {
     return (
-      <DashboardLayout title="Missão">
+      <DashboardLayout
+      eyebrow="Prospectar"
+      title="Missão"
+    >
         <Skeleton className="h-32 w-full" />
         <Skeleton className="mt-4 h-64 w-full" />
       </DashboardLayout>
@@ -57,7 +60,10 @@ export default function MissionDetailPage() {
 
   if (error || !mission) {
     return (
-      <DashboardLayout title="Missão">
+      <DashboardLayout
+      eyebrow="Prospectar"
+      title="Missão"
+    >
         <Alert className="border-destructive/40">
           <AlertTriangle className="h-4 w-4 text-destructive" />
           <AlertDescription>
@@ -80,7 +86,10 @@ export default function MissionDetailPage() {
   const progress = leads.length > 0 ? Math.round((processed / leads.length) * 100) : 0;
 
   return (
-    <DashboardLayout title={mission.name}>
+    <DashboardLayout
+      eyebrow="Prospectar"
+      title={mission.name}
+    >
       <Button variant="ghost" size="sm" className="mb-4" onClick={() => navigate('/missions')}>
         <ArrowLeft className="mr-2 h-4 w-4" /> Missões
       </Button>
@@ -125,8 +134,8 @@ export default function MissionDetailPage() {
           )}
 
           {sendBlockReason && (
-            <Alert className="mt-4 border-amber-500/40 bg-amber-500/5">
-              <AlertTriangle className="h-4 w-4 text-amber-500" />
+            <Alert className="mt-4 border-warning/40 bg-warning/5">
+              <AlertTriangle className="h-4 w-4 text-warning" />
               <AlertDescription className="text-sm">
                 <strong>Envios retidos:</strong>{' '}
                 {BLOCK_REASONS[sendBlockReason] ?? sendBlockReason.replace(/_/g, ' ')}
@@ -255,7 +264,7 @@ function DraftCard({
         {/* Oferta escolhida + motivo */}
         {item.offer_match?.offer && (
           <div className="mt-3 flex items-start gap-2 rounded-lg bg-muted/50 p-3">
-            <Package className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
+            <Package className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
             <div className="text-xs">
               <span className="font-medium">{item.offer_match.offer.name}</span>
               <span className="text-muted-foreground"> · {item.offer_match.confidence}% de confiança</span>
@@ -348,7 +357,7 @@ function Reasoning({ item }: { item: MissionLead }) {
           <ul className="mt-1 space-y-0.5 text-muted-foreground">
             {item.qualification.reasons.map((r, i) => (
               <li key={i}>
-                <span className={cn('font-medium tabular-nums', r.points > 0 ? 'text-emerald-600' : 'text-destructive')}>
+                <span className={cn('font-medium tabular-nums', r.points > 0 ? 'text-success' : 'text-destructive')}>
                   {r.points > 0 ? '+' : ''}{r.points}
                 </span>{' '}
                 {r.label} — {r.evidence}
@@ -374,7 +383,7 @@ function QualityBar({ scores, overall }: { scores: QualityScores; overall: numbe
   return (
     <div className="mt-3 rounded-lg border p-3">
       <div className="mb-2 flex items-center gap-2">
-        <ShieldCheck className="h-4 w-4 text-emerald-500" />
+        <ShieldCheck className="h-4 w-4 text-success" />
         <span className="text-xs font-medium">Quality Gate aprovado</span>
         <span className="ml-auto text-xs tabular-nums text-muted-foreground">{overall}/100</span>
       </div>
@@ -384,7 +393,7 @@ function QualityBar({ scores, overall }: { scores: QualityScores; overall: numbe
           return (
             <div key={item.label} className="flex items-center justify-between text-[11px]">
               <span className="text-muted-foreground">{item.label}</span>
-              <span className={cn('tabular-nums font-medium', good ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400')}>
+              <span className={cn('tabular-nums font-medium', good ? 'text-success' : 'text-warning')}>
                 {item.value}
               </span>
             </div>
@@ -397,8 +406,8 @@ function QualityBar({ scores, overall }: { scores: QualityScores; overall: numbe
 
 function ScoreBadge({ score }: { score: number }) {
   const tone =
-    score >= 75 ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
-    : score >= 50 ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
+    score >= 75 ? 'bg-success/15 text-success'
+    : score >= 50 ? 'bg-warning/15 text-warning'
     : 'bg-muted text-muted-foreground';
 
   return <Badge variant="secondary" className={cn('tabular-nums', tone)}>score {score}</Badge>;

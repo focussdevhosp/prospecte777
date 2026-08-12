@@ -6,6 +6,7 @@ import { GroupNav, messagingGroup } from '@/components/GroupNav';
 export default function MassSendPage() {
   return (
     <DashboardLayout
+      eyebrow="Comunicar"
       title="Disparos"
       description="Envie mensagens em massa, follow-ups e reative leads frios"
     >

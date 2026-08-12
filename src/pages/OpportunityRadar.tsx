@@ -37,15 +37,12 @@ export default function OpportunityRadarPage() {
   const pending = leads.filter((l) => l.site_score < 0 && l.website).length;
 
   return (
-    <DashboardLayout title="Radar de Oportunidades">
-      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-sm text-muted-foreground">
-            Sua carteira em ordem de necessidade. Quem está pior no digital aparece primeiro —
-            é onde a sua proposta faz mais diferença.
-          </p>
-        </div>
-
+    <DashboardLayout
+      eyebrow="Analisar"
+      title="Radar de Oportunidades"
+      description="Sua carteira em ordem de necessidade. Quem está pior no digital aparece primeiro — é onde a sua proposta faz mais diferença."
+    >
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-end">
         <Button
           onClick={() => auditBatch(undefined)}
           disabled={isAuditingBatch}

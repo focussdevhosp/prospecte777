@@ -37,10 +37,15 @@ export function PremiumPricingCard({ plan, annual, index, checkoutUrl }: Premium
     }
   };
 
+  // Os tres planos percorrem o DEGRADE DA MARCA: violeta, magenta, laranja —
+  // as mesmas cores do logo, na mesma ordem. Antes eram ciano, roxo e ambar,
+  // uma paleta que nao aparecia em nenhum outro lugar do produto. O cartao de
+  // preco e onde a pessoa decide pagar; parecer outra empresa justo ali e o
+  // pior lugar possivel para uma cor solta.
   const schemes = [
-    { glow1: 'hsla(270, 80%, 50%, 1)', glow2: 'hsla(260, 90%, 75%, 1)', glow3: 'hsla(280, 70%, 60%, 1)', check: 'bg-purple-400', label: 'text-purple-400/80', border: '#7B2FF2' },
-    { glow1: 'hsla(190, 100%, 40%, 1)', glow2: 'hsla(200, 100%, 85%, 1)', glow3: 'hsla(185, 100%, 55%, 1)', check: 'bg-cyan-300', label: 'text-cyan-400/80', border: '#00B4D8' },
-    { glow1: 'hsla(35, 90%, 50%, 1)', glow2: 'hsla(40, 100%, 80%, 1)', glow3: 'hsla(30, 90%, 55%, 1)', check: 'bg-amber-400', label: 'text-amber-400/80', border: '#F7941D' },
+    { glow1: 'hsla(262, 68%, 45%, 1)', glow2: 'hsla(262, 70%, 72%, 1)', glow3: 'hsla(275, 65%, 58%, 1)', check: 'bg-[hsl(262,68%,62%)]', label: 'text-[hsl(262,70%,74%)]', border: '#6D3BD9' },
+    { glow1: 'hsla(288, 72%, 45%, 1)', glow2: 'hsla(300, 78%, 76%, 1)', glow3: 'hsla(288, 70%, 58%, 1)', check: 'bg-[hsl(288,72%,62%)]', label: 'text-[hsl(300,75%,78%)]', border: '#C21FC9' },
+    { glow1: 'hsla(22, 92%, 48%, 1)', glow2: 'hsla(34, 95%, 74%, 1)', glow3: 'hsla(16, 88%, 56%, 1)', check: 'bg-[hsl(22,92%,58%)]', label: 'text-[hsl(30,92%,72%)]', border: '#F2660A' },
   ];
   const s = schemes[index] || schemes[0];
 
@@ -49,7 +54,7 @@ export function PremiumPricingCard({ plan, annual, index, checkoutUrl }: Premium
   const backPerks = index === 0
     ? ['Leads ilimitados', 'Suporte real via WhatsApp', 'Templates prontos por nicho', 'Cancele com 1 clique', 'Setup em 5 minutos']
     : index === 1
-    ? ['ROI médio de 23x comprovado', 'Leads ilimitados', 'Agente SDR que nunca dorme', 'Suporte prioritário em minutos', 'Setup assistido incluso']
+    ? ['Leads ilimitados', 'Agente SDR que nunca dorme', 'Suporte prioritário em minutos', 'Setup assistido incluso']
     : ['Volume ilimitado de leads', 'Multi-chip com rotação automática', 'Gerente de sucesso dedicado', 'API completa + Webhooks', 'Onboarding personalizado 1:1'];
 
   const emojis = ['🚀', '⚡', '👑'];
@@ -61,7 +66,7 @@ export function PremiumPricingCard({ plan, annual, index, checkoutUrl }: Premium
       onClick={() => setFlipped(!flipped)}
     >
       {plan.highlight && (
-        <span className="absolute -top-4 left-1/2 -translate-x-1/2 text-sm font-bold uppercase tracking-wider bg-gradient-to-r from-cyan-400 to-blue-500 text-white px-5 py-2 rounded-full z-20 shadow-lg shadow-cyan-500/25">
+        <span className="absolute -top-4 left-1/2 -translate-x-1/2 text-sm font-bold uppercase tracking-wider gradient-primary text-white px-5 py-2 rounded-full z-20 shadow-lg shadow-primary/30">
           Mais popular
         </span>
       )}
@@ -111,8 +116,8 @@ export function PremiumPricingCard({ plan, annual, index, checkoutUrl }: Premium
             <div className={cn(
               'h-12 w-12 rounded-xl border flex items-center justify-center',
               plan.highlight
-                ? 'border-cyan-400/20 bg-gradient-to-br from-cyan-500/20 to-blue-500/20'
-                : 'border-purple-400/20 bg-gradient-to-br from-purple-500/20 to-indigo-500/20'
+                ? 'border-white/15 bg-gradient-to-br from-white/[0.12] to-white/[0.04]'
+                : 'border-white/10 bg-gradient-to-br from-white/[0.08] to-white/[0.02]'
             )}>
               <span className="text-2xl leading-none">{emojis[index]}</span>
             </div>
@@ -126,16 +131,16 @@ export function PremiumPricingCard({ plan, annual, index, checkoutUrl }: Premium
 
           <div className="mb-6">
             <div className="flex items-baseline gap-1">
-              <span className="text-xl font-medium text-blue-200/60 mr-1">R$</span>
+              <span className="text-xl font-medium text-white/55 mr-1">R$</span>
               <span className="text-6xl font-bold tracking-tight text-white">{annual ? plan.annual : plan.price}</span>
-              <span className="text-xl text-blue-200/60 ml-1">/mês</span>
+              <span className="text-xl text-white/55 ml-1">/mês</span>
             </div>
             {annual && (
-              <p className="text-base text-green-400/70 mt-2">Economia de R${(plan.price - plan.annual) * 12}/ano</p>
+              <p className="text-base text-[hsl(152,58%,62%)] mt-2">Economia de R${(plan.price - plan.annual) * 12}/ano</p>
             )}
           </div>
 
-          <ul className="space-y-3 text-xl text-blue-50/90 mb-8">
+          <ul className="space-y-3 text-xl text-white/90 mb-8">
             {plan.features.map(f => (
               <li key={f} className="flex items-start gap-3">
                 <div className={cn('w-6 h-6 rounded-full flex items-center justify-center mt-1 shrink-0', s.check)}>

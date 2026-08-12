@@ -537,6 +537,7 @@ export default function APIReferencePage() {
 
   return (
     <DashboardLayout
+      eyebrow="Conta"
       title="API Reference"
       description="Documentação completa da API pública do NexaProspect"
     >

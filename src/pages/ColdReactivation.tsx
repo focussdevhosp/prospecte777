@@ -82,6 +82,7 @@ export default function ColdReactivationPage() {
 
   return (
     <DashboardLayout
+      eyebrow="Comunicar"
       title="Disparos"
       description="Envie mensagens em massa, follow-ups e reative leads frios"
     >

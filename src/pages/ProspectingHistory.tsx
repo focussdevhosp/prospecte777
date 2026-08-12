@@ -15,6 +15,7 @@ export default function ProspectingHistoryPage() {
 
   return (
     <DashboardLayout
+      eyebrow="Prospectar"
       title="Histórico de Prospecção"
       description="Veja o histórico de todas as sessões de captura e envio"
     >

@@ -16,23 +16,23 @@ import type { AgentEvent } from '@/hooks/use-missions';
  */
 
 const AGENT_META: Record<string, { icon: typeof Search; label: string; color: string }> = {
-  research: { icon: Search, label: 'Pesquisador', color: 'text-blue-500' },
-  qualification: { icon: Target, label: 'Qualificador', color: 'text-violet-500' },
-  offer_matcher: { icon: Package, label: 'Ofertas', color: 'text-amber-500' },
-  strategy: { icon: Route, label: 'Estrategista', color: 'text-cyan-500' },
-  copy: { icon: PenLine, label: 'Copywriter', color: 'text-pink-500' },
-  quality: { icon: ShieldCheck, label: 'Quality Gate', color: 'text-emerald-500' },
-  outreach: { icon: Send, label: 'Abordagem', color: 'text-indigo-500' },
-  conversation: { icon: MessageSquare, label: 'Conversa', color: 'text-teal-500' },
-  scheduling: { icon: Calendar, label: 'Agendamento', color: 'text-green-500' },
-  supervisor: { icon: Pause, label: 'Supervisor', color: 'text-orange-500' },
+  research: { icon: Search, label: 'Pesquisador', color: 'text-info' },
+  qualification: { icon: Target, label: 'Qualificador', color: 'text-chart-4' },
+  offer_matcher: { icon: Package, label: 'Ofertas', color: 'text-warning' },
+  strategy: { icon: Route, label: 'Estrategista', color: 'text-chart-4' },
+  copy: { icon: PenLine, label: 'Copywriter', color: 'text-chart-5' },
+  quality: { icon: ShieldCheck, label: 'Quality Gate', color: 'text-success' },
+  outreach: { icon: Send, label: 'Abordagem', color: 'text-chart-4' },
+  conversation: { icon: MessageSquare, label: 'Conversa', color: 'text-chart-3' },
+  scheduling: { icon: Calendar, label: 'Agendamento', color: 'text-success' },
+  supervisor: { icon: Pause, label: 'Supervisor', color: 'text-brand' },
   orchestrator: { icon: Activity, label: 'Orquestrador', color: 'text-primary' },
 };
 
 const LEVEL_STYLES = {
   info: 'border-border',
-  success: 'border-emerald-500/40 bg-emerald-500/5',
-  warning: 'border-amber-500/40 bg-amber-500/5',
+  success: 'border-success/40 bg-success/5',
+  warning: 'border-warning/40 bg-warning/5',
   error: 'border-destructive/40 bg-destructive/5',
 } as const;
 

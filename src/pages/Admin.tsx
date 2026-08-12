@@ -14,7 +14,10 @@ export default function AdminPage() {
 
   if (checkingAdmin) {
     return (
-      <DashboardLayout title="Admin">
+      <DashboardLayout
+      eyebrow="Conta"
+      title="Admin"
+    >
         <div className="flex flex-col items-center justify-center py-20 gap-3">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
           <p className="text-sm text-muted-foreground">Verificando permissões...</p>
@@ -29,6 +32,7 @@ export default function AdminPage() {
 
   return (
     <DashboardLayout
+      eyebrow="Conta"
       title="Painel Admin"
       description="Gerencie usuários e suporte da plataforma"
     >

@@ -4,6 +4,7 @@ import { ScheduledProspectingTab } from '@/components/prospecting/ScheduledProsp
 export default function ScheduledProspectingPage() {
   return (
     <DashboardLayout
+      eyebrow="Prospectar"
       title="Prospecção Agendada"
       description="Configure capturas automáticas de leads"
     >

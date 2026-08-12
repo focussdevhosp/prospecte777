@@ -5,6 +5,7 @@ import { GroupNav, prospectGroup } from '@/components/GroupNav';
 export default function EmailFinderPage() {
   return (
     <DashboardLayout
+      eyebrow="Prospectar"
       title="Prospectar"
       description="Ferramentas de captação e enriquecimento de leads"
     >

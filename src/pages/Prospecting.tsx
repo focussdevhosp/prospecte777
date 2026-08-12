@@ -63,6 +63,7 @@ export default function ProspectingPage() {
 
   return (
     <DashboardLayout
+      eyebrow="Prospectar"
       title="Prospecção"
       description="Encontre empresas, gere conexões e impulsione seus resultados"
     >

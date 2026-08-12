@@ -35,6 +35,7 @@ export default function AnalyticsPage() {
 
   return (
     <DashboardLayout
+      eyebrow="Analisar"
       title="Análise Avançada"
       description="Métricas detalhadas e insights sobre sua prospecção"
     >

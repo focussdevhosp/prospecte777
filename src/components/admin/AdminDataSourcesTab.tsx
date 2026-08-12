@@ -47,8 +47,8 @@ interface Overview {
 }
 
 const HEALTH_META = {
-  healthy: { label: 'Ativa', icon: CheckCircle2, className: 'text-emerald-600 dark:text-emerald-400' },
-  degraded: { label: 'Instável', icon: AlertTriangle, className: 'text-amber-600 dark:text-amber-400' },
+  healthy: { label: 'Ativa', icon: CheckCircle2, className: 'text-success' },
+  degraded: { label: 'Instável', icon: AlertTriangle, className: 'text-warning' },
   offline: { label: 'Fora do ar', icon: XCircle, className: 'text-destructive' },
   not_configured: { label: 'Não configurada', icon: MinusCircle, className: 'text-muted-foreground' },
 } as const;
@@ -185,8 +185,8 @@ export function AdminDataSourcesTab() {
                           variant="secondary"
                           className={cn(
                             'tabular-nums',
-                            rate >= 60 ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
-                            : rate >= 30 ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
+                            rate >= 60 ? 'bg-success/15 text-success'
+                            : rate >= 30 ? 'bg-warning/15 text-warning'
                             : 'bg-muted text-muted-foreground',
                           )}
                         >

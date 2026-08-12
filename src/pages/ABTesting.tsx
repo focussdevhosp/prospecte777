@@ -5,6 +5,7 @@ import { GroupNav, campaignsGroup } from '@/components/GroupNav';
 export default function ABTestingPage() {
   return (
     <DashboardLayout
+      eyebrow="Vender"
       title="Campanhas"
       description="Campanhas ativas, testes A/B, Agente SDR e reuniões"
     >

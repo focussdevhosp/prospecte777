@@ -14,16 +14,16 @@ import avatar9 from '@/assets/avatars/avatar-9.webp';
 import avatar10 from '@/assets/avatars/avatar-10.webp';
 
 const TESTIMONIALS = [
-  { name: 'Rafael S.', role: 'Agência Digital', text: 'Fechei 8 clientes em 14 dias. A IA personaliza cada mensagem — parece que eu escrevi uma por uma.', avatar: avatar1, gradient: 'from-violet-500 to-fuchsia-500' },
-  { name: 'Camila R.', role: 'Consultoria RH', text: 'Eu gastava 6h/dia prospectando. Hoje acordo com reuniões agendadas no meu calendário.', avatar: avatar2, gradient: 'from-pink-500 to-rose-500' },
-  { name: 'Lucas M.', role: 'Marketing Digital', text: 'Já enviei mais de 4.000 mensagens. Zero bans. O sistema anti-ban é absurdamente eficiente.', avatar: avatar3, gradient: 'from-blue-500 to-cyan-500' },
-  { name: 'Juliana P.', role: 'Arquitetura', text: '3x mais reuniões no primeiro mês. O ROI se pagou no segundo cliente que fechei.', avatar: avatar4, gradient: 'from-emerald-500 to-teal-500' },
-  { name: 'Marcos T.', role: 'Advocacia', text: 'Só chega lead qualificado. A segmentação por nicho economizou horas que eu perdia com curiosos.', avatar: avatar5, gradient: 'from-amber-500 to-orange-500' },
-  { name: 'Fernanda L.', role: 'E-commerce', text: 'Melhor investimento do ano. O primeiro cliente que fechei já cobriu 6 meses de assinatura.', avatar: avatar6, gradient: 'from-red-500 to-pink-500' },
-  { name: 'André C.', role: 'Contabilidade', text: 'CRM, prospecção e follow-up num lugar só. Aposentei 3 ferramentas e economizei R$800/mês.', avatar: avatar7, gradient: 'from-indigo-500 to-violet-500' },
-  { name: 'Patrícia N.', role: 'Imobiliária', text: '12 contratos em 30 dias com follow-up automático. Meus corretores agora só fecham.', avatar: avatar8, gradient: 'from-sky-500 to-blue-500' },
-  { name: 'Diego F.', role: 'SaaS B2B', text: 'Taxa de resposta de 35% via Google Maps. Nenhuma outra ferramenta chegou perto disso.', avatar: avatar9, gradient: 'from-lime-500 to-green-500' },
-  { name: 'Beatriz A.', role: 'Clínica Estética', text: 'Lotei minha agenda da semana toda com 3 dias de prospecção automática. Simplesmente mágico.', avatar: avatar10, gradient: 'from-fuchsia-500 to-purple-500' },
+  { name: 'Rafael S.', role: 'Agência Digital', text: 'Fechei 8 clientes em 14 dias. A IA personaliza cada mensagem — parece que eu escrevi uma por uma.', avatar: avatar1, gradient: 'from-[hsl(var(--primary))] to-[hsl(var(--brand-accent))]' },
+  { name: 'Camila R.', role: 'Consultoria RH', text: 'Eu gastava 6h/dia prospectando. Hoje acordo com reuniões agendadas no meu calendário.', avatar: avatar2, gradient: 'from-[hsl(var(--stage-contact))] to-[hsl(var(--primary))]' },
+  { name: 'Lucas M.', role: 'Marketing Digital', text: 'Já enviei mais de 4.000 mensagens. Zero bans. O sistema anti-ban é absurdamente eficiente.', avatar: avatar3, gradient: 'from-[hsl(var(--chart-4))] to-[hsl(var(--chart-1))]' },
+  { name: 'Juliana P.', role: 'Arquitetura', text: '3x mais reuniões no primeiro mês. O ROI se pagou no segundo cliente que fechei.', avatar: avatar4, gradient: 'from-[hsl(var(--chart-3))] to-[hsl(var(--chart-6))]' },
+  { name: 'Marcos T.', role: 'Advocacia', text: 'Só chega lead qualificado. A segmentação por nicho economizou horas que eu perdia com curiosos.', avatar: avatar5, gradient: 'from-[hsl(var(--brand-accent))] to-[hsl(var(--chart-6))]' },
+  { name: 'Fernanda L.', role: 'E-commerce', text: 'Melhor investimento do ano. O primeiro cliente que fechei já cobriu 6 meses de assinatura.', avatar: avatar6, gradient: 'from-[hsl(var(--chart-5))] to-[hsl(var(--primary))]' },
+  { name: 'André C.', role: 'Contabilidade', text: 'CRM, prospecção e follow-up num lugar só. Aposentei 3 ferramentas e economizei R$800/mês.', avatar: avatar7, gradient: 'from-[hsl(var(--chart-4))] to-[hsl(var(--stage-contact))]' },
+  { name: 'Patrícia N.', role: 'Imobiliária', text: '12 contratos em 30 dias com follow-up automático. Meus corretores agora só fecham.', avatar: avatar8, gradient: 'from-[hsl(var(--stage-contact))] to-[hsl(var(--chart-4))]' },
+  { name: 'Diego F.', role: 'SaaS B2B', text: 'Taxa de resposta de 35% via Google Maps. Nenhuma outra ferramenta chegou perto disso.', avatar: avatar9, gradient: 'from-[hsl(var(--chart-3))] to-[hsl(var(--chart-4))]' },
+  { name: 'Beatriz A.', role: 'Clínica Estética', text: 'Lotei minha agenda da semana toda com 3 dias de prospecção automática. Simplesmente mágico.', avatar: avatar10, gradient: 'from-[hsl(var(--chart-1))] to-[hsl(var(--chart-5))]' },
 ];
 
 export function StoriesTestimonials() {
@@ -133,7 +133,7 @@ export function StoriesTestimonials() {
 
                   <div className="flex gap-1 mt-2">
                     {[...Array(5)].map((_, i) => (
-                      <span key={i} className="text-yellow-400 text-2xl">★</span>
+                      <span key={i} className="text-[hsl(var(--warning))] text-2xl">★</span>
                     ))}
                   </div>
                 </div>

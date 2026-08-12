@@ -26,9 +26,9 @@ import { cn } from '@/lib/utils';
 
 const STATUS_STYLES: Record<Mission['status'], { label: string; className: string }> = {
   draft: { label: 'Rascunho', className: 'bg-muted text-muted-foreground' },
-  running: { label: 'Rodando', className: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' },
-  paused: { label: 'Pausada', className: 'bg-amber-500/15 text-amber-600 dark:text-amber-400' },
-  completed: { label: 'Concluída', className: 'bg-blue-500/15 text-blue-600 dark:text-blue-400' },
+  running: { label: 'Rodando', className: 'bg-success/15 text-success' },
+  paused: { label: 'Pausada', className: 'bg-warning/15 text-warning' },
+  completed: { label: 'Concluída', className: 'bg-info/15 text-info' },
   failed: { label: 'Falhou', className: 'bg-destructive/15 text-destructive' },
 };
 
@@ -50,7 +50,11 @@ export default function MissionsPage() {
   const paused = missions.filter((m) => m.status === 'paused');
 
   return (
-    <DashboardLayout title="Missões">
+    <DashboardLayout
+      eyebrow="Prospectar"
+      title="Missões"
+      description="Cada missão busca, qualifica e prepara a abordagem de um lote de leads."
+    >
       {/* ---- FREIO GLOBAL ---- */}
       {metrics?.outbound_paused && (
         <Alert className="mb-6 border-destructive/40 bg-destructive/5">
@@ -212,9 +216,9 @@ function MetricTile({
   icon: typeof Users; label: string; value: number; highlight?: boolean;
 }) {
   return (
-    <Card className={cn(highlight && 'border-amber-500/50 bg-amber-500/5')}>
+    <Card className={cn(highlight && 'border-warning/50 bg-warning/5')}>
       <CardContent className="p-4">
-        <Icon className={cn('h-4 w-4', highlight ? 'text-amber-500' : 'text-muted-foreground')} />
+        <Icon className={cn('h-4 w-4', highlight ? 'text-warning' : 'text-muted-foreground')} />
         <p className="mt-2 text-2xl font-semibold tabular-nums">{value}</p>
         <p className="text-xs text-muted-foreground">{label}</p>
       </CardContent>
@@ -251,7 +255,7 @@ function MissionCard({
               {mission.niche}{location ? ` · ${location}` : ''} · {GOAL_LABELS[mission.goal]}
             </p>
             {mission.paused_reason && (
-              <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">
+              <p className="mt-1 text-xs text-warning">
                 Pausada: {mission.paused_reason}
               </p>
             )}
