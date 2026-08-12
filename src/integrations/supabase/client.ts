@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
+import { anunciarVersao } from '@/lib/build-info';
 
 // ============================================================
 // CLIENTE SUPABASE
@@ -100,6 +101,10 @@ if (isServiceRoleKey(SUPABASE_PUBLISHABLE_KEY)) {
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
+
+// Anuncia antes de conectar: se a conexão falhar, a linha já saiu, e ela é
+// justamente a que diz contra qual banco a tentativa foi feita.
+anunciarVersao(SUPABASE_URL);
 
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
