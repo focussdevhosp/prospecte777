@@ -4,7 +4,7 @@ O que foi feito enquanto você esteve fora, o que você precisa fazer, e o que
 eu faria em seguida.
 
 Ponto de partida: `a22652f`, 118 testes.
-Agora: `921aa0a`, **253 testes**, 15 ciclos, tudo commitado e no GitHub.
+Agora: `73c7655`, **320 testes**, tudo commitado e no GitHub.
 
 ---
 
@@ -117,6 +117,16 @@ E os três últimos são o inverso: **backend pronto sem tela.**
 | 13 | **Central de IA** (`/ai`): custo por etapa, teto editável — que o erro mandava ajustar numa tela inexistente — e o **Laboratório**, que mostra todo o raciocínio da IA antes de qualquer envio | `f941a0c` |
 | 14 | **ICP Builder**: seis dos sete critérios que dão a nota não tinham campo na tela | `3a4f8d5` |
 | 15 | **Painel prescritivo**: treze números viraram uma fila ordenada pela ordem do dinheiro, cada item com o porquê da posição | `921aa0a` |
+| 16 | **Handoff com dossiê** — e a descoberta de que `tsc --noEmit` nunca checou nada nesta sessão | `096f8fe` |
+| 17 | **Learning Loop**: `mission_leads` guardava ângulo e desfecho de milhares de abordagens que nenhuma consulta lia | `4b99d3d` |
+
+E os quatro últimos vieram de pesquisa de mercado, a seu pedido:
+
+| # | O que foi entregue | Commit |
+|---|---|---|
+| 18 | **Sinais**: o motivo de falar com a empresa HOJE. Prospecção genérica fica em ~3% de resposta; com gatilho, em ~11% | `91ff6fa` |
+| 19 | **Enriquecimento em cascata**: parar no primeiro acerto que preste, grátis antes de pago | `2f46203` |
+| 20 | **Aquecimento e saúde de chip**: o modo de falha do mês 4, onde os líderes tiram 0 de 21 | `73c7655` |
 
 ---
 
@@ -133,7 +143,7 @@ telas novas abrem e falham.
 2. *SQL Editor* do projeto `oeztpxyprifabkvysroh` → cole o
    `MIGRACOES_NOVAS.sql` inteiro → Run.
 
-São 10 migrações, 88 KB. **Todas aditivas** — criam tabela, função, gatilho e
+São 15 migrações, 111 KB. **Todas aditivas** — criam tabela, função, gatilho e
 coluna; nenhuma apaga dado nem remove coluna. No fim há quatro consultas de
 conferência; a última confirma que seus leads continuam lá.
 
@@ -192,9 +202,10 @@ Na ordem em que eu pegaria:
    no fim de cada migração, que pega o essencial e não pega regressão.
 2. **Tela para retomar lead que esgotou as tentativas de envio.** O rascunho
    continua gravado; falta só a interface.
-3. **Biblioteca de ICP reutilizável.** Hoje o perfil é digitado por missão.
-   Quem roda cinco missões parecidas redigita cinco vezes — e é exatamente
-   assim que as pessoas param de preencher.
+3. **Peso de sinal ajustado pela resposta real.** É o último item da pesquisa
+   que não foi feito: mover o peso do ICP para os sinais que de fato geram
+   conversa. A infraestrutura de aprendizado já existe — é aplicá-la aos
+   sinais em vez dos ângulos.
 4. **Continuar a varredura por "tela que não mede nada".** Foi o padrão mais
    produtivo destes doze ciclos: achei quatro (funil da missão, teste A/B,
    melhor horário, contadores do follow-up) e cada um estava escondido atrás
