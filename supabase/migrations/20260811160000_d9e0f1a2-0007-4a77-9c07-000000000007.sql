@@ -69,7 +69,7 @@ $$;
 --    WHERE key = 'functions_base_url';
 -- e rodar o bloco de reagendamento abaixo.
 INSERT INTO private.app_config (key, value)
-VALUES ('functions_base_url', 'https://oeztpxyprifabkvysroh.supabase.co/functions/v1/')
+VALUES ('functions_base_url', 'https://sciphxtbxvbpiypbcxub.supabase.co/functions/v1/')
 ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;
 
 -- Garante o segredo interno mesmo que esta migração rode isolada.

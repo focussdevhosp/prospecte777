@@ -18,11 +18,11 @@ import type { Database } from './types';
 // secrets das edge functions.
 
 const SUPABASE_URL =
-  import.meta.env.VITE_SUPABASE_URL ?? 'https://oeztpxyprifabkvysroh.supabase.co';
+  import.meta.env.VITE_SUPABASE_URL ?? 'https://sciphxtbxvbpiypbcxub.supabase.co';
 
 const SUPABASE_PUBLISHABLE_KEY =
   import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ??
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9lenRweHlwcmlmYWJrdnlzcm9oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAzMTIyODAsImV4cCI6MjA4NTg4ODI4MH0.rGGWHPQTpMsyFPnSBw9XkaDEdmHlcaJJo8tJtfg3IaA';
+  'sb_publishable_RLg7_0prleJlR7tgiffUOQ_YyB6wy5O';
 
 if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
   throw new Error(

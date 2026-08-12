@@ -2905,10 +2905,28 @@ WITH CHECK (public.has_role(auth.uid(), 'admin'));
 -- [38/75] 20260328231751_2eec8b54-2651-48bc-9182-20bbb7ae3f2e.sql
 -- ############################################################
 
+-- ============================================================
+-- ADMIN DA CONTA DONA — SÓ SE ELA EXISTIR AQUI
+-- ============================================================
+-- Esta migração dá papel de admin a um usuário específico, pelo id. Era um
+-- INSERT direto, e num projeto novo ele quebra: o id veio do banco antigo, e
+-- `auth.users` aqui está vazia — a chave estrangeira reprova, a migração
+-- falha, e as 37 seguintes não rodam.
+--
+-- Migração que carrega id de um ambiente não é portátil. Como o histórico
+-- precisa continuar íntegro (outras migrações vieram depois desta e contam
+-- com o schema que ela pressupõe), o INSERT passa a ser condicional em vez de
+-- ser removido.
+--
+-- Em projeto novo, ninguém vira admin por aqui. Quem cria a primeira conta
+-- promove a si mesmo depois — e isso é mais correto que herdar o dono de
+-- outro banco.
 
--- Seed admin role for the owner account
 INSERT INTO public.user_roles (user_id, role)
-VALUES ('4ab898dc-d738-4e01-ab2d-48e7554af43d', 'admin')
+SELECT '4ab898dc-d738-4e01-ab2d-48e7554af43d'::uuid, 'admin'
+WHERE EXISTS (
+  SELECT 1 FROM auth.users WHERE id = '4ab898dc-d738-4e01-ab2d-48e7554af43d'
+)
 ON CONFLICT (user_id, role) DO NOTHING;
 
 
@@ -4032,9 +4050,31 @@ INSERT INTO public.portfolio_sites (user_id, is_template, title, url, category, 
 -- [56/75] 20260726013856_bff0b923-c11a-4d26-aff9-dc6a702bd9ca.sql
 -- ############################################################
 
-DELETE FROM public.subscriptions WHERE user_id = '4ab898dc-d738-4e01-ab2d-48e7554af43d';
+-- ============================================================
+-- PLANO VITALÍCIO DA CONTA DONA — SÓ SE ELA EXISTIR AQUI
+-- ============================================================
+-- Mesma situação da migração que concede o papel de admin: o id veio do banco
+-- antigo, e num projeto novo `auth.users` está vazia. A chave estrangeira
+-- reprova e a migração derruba as seguintes.
+--
+-- Vira condicional em vez de sumir, porque o histórico precisa continuar
+-- íntegro. Em projeto novo isto não faz nada — e não fazer nada é o certo:
+-- herdar a assinatura de um usuário de outro banco seria dar plano
+-- enterprise a uma conta que não existe.
+
+DELETE FROM public.subscriptions
+WHERE user_id = '4ab898dc-d738-4e01-ab2d-48e7554af43d';
+
 INSERT INTO public.subscriptions (user_id, plan, status, started_at, expires_at)
-VALUES ('4ab898dc-d738-4e01-ab2d-48e7554af43d', 'enterprise', 'active', NOW(), NOW() + INTERVAL '100 years');
+SELECT
+  '4ab898dc-d738-4e01-ab2d-48e7554af43d'::uuid,
+  'enterprise',
+  'active',
+  NOW(),
+  NOW() + INTERVAL '100 years'
+WHERE EXISTS (
+  SELECT 1 FROM auth.users WHERE id = '4ab898dc-d738-4e01-ab2d-48e7554af43d'
+);
 
 
 -- ############################################################
@@ -5704,7 +5744,7 @@ $$;
 --    WHERE key = 'functions_base_url';
 -- e rodar o bloco de reagendamento abaixo.
 INSERT INTO private.app_config (key, value)
-VALUES ('functions_base_url', 'https://oeztpxyprifabkvysroh.supabase.co/functions/v1/')
+VALUES ('functions_base_url', 'https://sciphxtbxvbpiypbcxub.supabase.co/functions/v1/')
 ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;
 
 -- Garante o segredo interno mesmo que esta migração rode isolada.
