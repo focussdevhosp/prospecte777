@@ -429,8 +429,45 @@ async function researchAndIngest(
     });
 
     if (businesses.length === 0) {
-      // Nenhuma empresa encontrada: não há fila para abrir, então concluir é
-      // verdade. Passa pela mesma função que decide isso em todo lugar.
+      // ZERO EMPRESAS PRECISA DIZER POR QUÊ.
+      //
+      // Antes a missão terminava "concluída" com zero leads e um aviso de uma
+      // linha: "0 empresas únicas encontradas". As três causas possíveis são
+      // muito diferentes entre si, e o usuário não tinha como distinguir:
+      //
+      //   - o nicho não tem mapeamento (nada foi procurado de verdade);
+      //   - a cidade não foi localizada;
+      //   - procurou certo e não existe ninguém ali.
+      //
+      // A primeira ele resolve trocando a palavra. A terceira ele resolve
+      // mudando de cidade. Sem saber qual é, ele conclui que o produto não
+      // funciona — e nesse caso estava certo.
+      const motivos = (report.providers ?? [])
+        .map((p) => (p as { id?: string; error?: string | null }))
+        .filter((p) => p.error)
+        .map((p) => `${p.id}: ${p.error}`);
+
+      const semMapeamento = motivos.some((m) => m.includes("sem mapeamento"));
+      const semCidade = motivos.some((m) => m.includes("localizar a cidade"));
+
+      await logEvent(supabase, {
+        userId: mission.user_id, missionId: mission.id,
+        agent: "research",
+        event: "search_empty",
+        summary: semMapeamento
+          ? `Nenhuma empresa encontrada: não sabemos procurar pelo nicho "${mission.niche}". ` +
+            `Tente um termo mais comum — "clínica", "salão", "oficina", "restaurante".`
+          : semCidade
+          ? `Nenhuma empresa encontrada: não foi possível localizar "${location}". ` +
+            `Confira o nome da cidade e o estado.`
+          : `Nenhuma empresa encontrada para "${mission.niche}" em ${location}. ` +
+            `A busca funcionou — não há cadastros com telefone nessa combinação.`,
+        detail: { motivos },
+        level: "warning",
+      });
+
+      // Não há fila para abrir, então concluir é verdade. Passa pela mesma
+      // função que decide isso em todo lugar.
       await supabase.rpc("mission_settle_status", { p_mission_id: mission.id });
       return;
     }

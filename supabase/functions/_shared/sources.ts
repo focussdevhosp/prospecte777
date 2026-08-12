@@ -15,8 +15,19 @@ export interface SourceResult {
   error?: string;
 }
 
-const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
-  "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
+/**
+ * Como este cliente se apresenta.
+ *
+ * Era uma string de Chrome — o app fingindo ser um navegador. Isso quebrou a
+ * fonte principal: o Overpass responde HTTP 406 para User-Agent de navegador,
+ * porque a política dele exige que um programa se identifique como programa.
+ * Confirmado na prática: mesma consulta, mesmo IP, 406 com o Chrome falso e
+ * 200 com este.
+ *
+ * Ou seja, o disfarce não era só contra a regra da casa — era o motivo de a
+ * captura devolver zero. As duas coisas se resolvem com a verdade.
+ */
+const UA = "Prospecte777/1.0 (+https://nexaprospect.com.br; contato@nexaprospect.com.br)";
 
 async function fetchWithTimeout(url: string, init: RequestInit = {}, timeoutMs = 20000) {
   const controller = new AbortController();
@@ -35,65 +46,194 @@ async function fetchWithTimeout(url: string, init: RequestInit = {}, timeoutMs =
 // páginas: telefone, site e endereço vêm em campos separados, já do
 // negócio certo. Gratuita e sem chave.
 
-/** Nicho do produto -> tags OSM que representam aquele tipo de negócio. */
-const OSM_TAGS: Record<string, string[]> = {
-  restaurantes: ['"amenity"="restaurant"', '"amenity"="fast_food"'],
-  pizzarias: ['"cuisine"="pizza"', '"amenity"="restaurant"'],
-  hamburguerias: ['"cuisine"="burger"'],
-  cafeterias: ['"amenity"="cafe"'],
-  padarias: ['"shop"="bakery"'],
-  "salões de beleza": ['"shop"="hairdresser"', '"shop"="beauty"'],
-  barbearias: ['"shop"="hairdresser"'],
-  academias: ['"leisure"="fitness_centre"', '"leisure"="sports_centre"'],
-  "clínicas médicas": ['"amenity"="clinic"', '"amenity"="doctors"'],
-  "clínicas odontológicas": ['"amenity"="dentist"'],
-  farmácias: ['"amenity"="pharmacy"'],
-  "pet shops": ['"shop"="pet"', '"amenity"="veterinary"'],
-  "oficinas mecânicas": ['"shop"="car_repair"'],
-  imobiliárias: ['"office"="estate_agent"'],
-  "escritórios de advocacia": ['"office"="lawyer"'],
-  "hotéis e pousadas": ['"tourism"="hotel"', '"tourism"="guest_house"'],
-  "lojas de roupas": ['"shop"="clothes"'],
-  "escolas e cursos": ['"amenity"="school"', '"amenity"="language_school"'],
-  floriculturas: ['"shop"="florist"'],
-  "estúdios de tatuagem": ['"shop"="tattoo"'],
-  contabilidade: ['"office"="accountant"'],
-  supermercados: ['"shop"="supermarket"', '"shop"="convenience"'],
-};
-
-function osmTagsFor(niche: string): string[] {
-  const key = niche.toLowerCase().trim();
-  if (OSM_TAGS[key]) return OSM_TAGS[key];
-
-  // Casamento parcial: "Clínicas Médicas em SP" ainda acha "clínicas médicas".
-  for (const [k, v] of Object.entries(OSM_TAGS)) {
-    if (key.includes(k) || k.includes(key)) return v;
-  }
-  return [];
+/**
+ * Nicho digitado pelo usuário -> tags OSM.
+ *
+ * O campo de nicho é TEXTO LIVRE. A tabela antiga era um mapa com chaves
+ * acentuadas e no plural ("clínicas médicas"), comparado com `includes` — e
+ * quem digitava "clinica de estetica", sem acento, não casava com nada.
+ *
+ * O efeito não parecia defeito: a missão rodava inteira, terminava
+ * "concluída" e trazia ZERO empresas. Nenhuma mensagem dizia que o nicho não
+ * tinha mapeamento, então o usuário concluía que não existem clínicas na
+ * cidade dele.
+ *
+ * Agora: sem acento, sem plural, e por PALAVRA em vez de substring — porque
+ * "clinica de estetica" não contém "clinicas medicas" nem vice-versa, mas as
+ * duas compartilham "clinica".
+ */
+interface MapaOsm {
+  tags: string[];
+  /** Termos que levam a estas tags. Já normalizados: sem acento, singular. */
+  termos: string[];
 }
 
-/** Resolve "Curitiba" -> bounding box, via Nominatim. */
-async function geocode(location: string): Promise<[number, number, number, number] | null> {
-  try {
-    const url = `https://nominatim.openstreetmap.org/search?` +
-      `q=${encodeURIComponent(location + ", Brasil")}&format=json&limit=1&countrycodes=br`;
+const OSM_MAPA: MapaOsm[] = [
+  { tags: ['"amenity"="restaurant"', '"amenity"="fast_food"'],
+    termos: ["restaurante", "lanchonete", "comida", "alimentacao", "bistro", "churrascaria"] },
+  { tags: ['"cuisine"="pizza"'], termos: ["pizzaria", "pizza"] },
+  { tags: ['"cuisine"="burger"'], termos: ["hamburgueria", "hamburguer", "burger"] },
+  { tags: ['"amenity"="cafe"'], termos: ["cafeteria", "cafe", "coffee"] },
+  { tags: ['"shop"="bakery"'], termos: ["padaria", "confeitaria", "panificadora"] },
+  { tags: ['"shop"="beauty"', '"shop"="hairdresser"', '"shop"="cosmetics"'],
+    termos: ["estetica", "beleza", "salao", "cabeleireiro", "manicure", "depilacao",
+             "sobrancelha", "cilios", "spa", "unha"] },
+  { tags: ['"shop"="hairdresser"'], termos: ["barbearia", "barbeiro"] },
+  { tags: ['"leisure"="fitness_centre"', '"leisure"="sports_centre"'],
+    termos: ["academia", "fitness", "musculacao", "crossfit", "pilates", "ginastica"] },
+  { tags: ['"amenity"="clinic"', '"amenity"="doctors"', '"healthcare"="clinic"'],
+    termos: ["clinica", "medico", "medica", "saude", "consultorio", "dermatologia",
+             "fisioterapia", "psicologia", "nutricao"] },
+  { tags: ['"amenity"="dentist"'], termos: ["odontologia", "odontologica", "dentista", "dental"] },
+  // "petshop" junto entra como termo próprio: a busca é por palavra inteira,
+  // então "pet" não alcança quem escreve tudo emendado — e emendado é como a
+  // maioria escreve.
+  { tags: ['"amenity"="veterinary"', '"shop"="pet"'],
+    termos: ["veterinaria", "veterinario", "petshop", "pet"] },
+  { tags: ['"amenity"="pharmacy"'], termos: ["farmacia", "drogaria"] },
+  { tags: ['"shop"="optician"'], termos: ["otica", "oculos"] },
+  { tags: ['"shop"="car_repair"'], termos: ["oficina", "mecanica", "automotivo", "funilaria"] },
+  { tags: ['"shop"="car"'], termos: ["concessionaria", "revenda", "veiculo", "automovel"] },
+  { tags: ['"office"="estate_agent"'], termos: ["imobiliaria", "imovel", "corretor"] },
+  { tags: ['"office"="lawyer"'], termos: ["advocacia", "advogado", "juridico"] },
+  { tags: ['"office"="accountant"'], termos: ["contabilidade", "contador", "contabil"] },
+  { tags: ['"office"="architect"'], termos: ["arquitetura", "arquiteto"] },
+  { tags: ['"office"="company"', '"office"="it"'],
+    termos: ["agencia", "marketing", "publicidade", "software", "tecnologia", "consultoria"] },
+  { tags: ['"tourism"="hotel"', '"tourism"="guest_house"'],
+    termos: ["hotel", "pousada", "hospedagem", "motel"] },
+  { tags: ['"shop"="clothes"'], termos: ["roupa", "vestuario", "boutique", "moda"] },
+  { tags: ['"shop"="shoes"'], termos: ["calcado", "sapato", "sapataria"] },
+  { tags: ['"shop"="jewelry"'], termos: ["joalheria", "joia", "semijoia"] },
+  { tags: ['"amenity"="school"', '"amenity"="language_school"', '"amenity"="college"'],
+    termos: ["escola", "curso", "colegio", "faculdade", "ensino", "idioma", "creche"] },
+  { tags: ['"amenity"="driving_school"'], termos: ["autoescola", "cnh", "habilitacao"] },
+  { tags: ['"shop"="florist"'], termos: ["floricultura", "flor"] },
+  { tags: ['"shop"="tattoo"'], termos: ["tatuagem", "tattoo", "piercing"] },
+  { tags: ['"shop"="supermarket"', '"shop"="convenience"'],
+    termos: ["supermercado", "mercado", "mercearia", "hortifruti"] },
+  { tags: ['"shop"="hardware"', '"shop"="doityourself"'],
+    termos: ["material de construcao", "ferragem", "construcao"] },
+  { tags: ['"shop"="furniture"'], termos: ["movel", "moveleira", "decoracao"] },
+  { tags: ['"shop"="laundry"', '"shop"="dry_cleaning"'], termos: ["lavanderia", "lavagem"] },
+  { tags: ['"amenity"="bar"', '"amenity"="pub"'], termos: ["bar", "pub", "adega", "distribuidora"] },
+  { tags: ['"shop"="bicycle"'], termos: ["bicicletaria", "bicicleta", "bike"] },
+  { tags: ['"shop"="mobile_phone"', '"shop"="electronics"'],
+    termos: ["celular", "eletronico", "informatica"] },
+];
 
-    const res = await fetchWithTimeout(url, {
-      headers: { "User-Agent": "Prospecte777/1.0 (contato@prospecte.app)" },
-    }, 15000);
+/** Tira acento, deixa minúsculo e remove pontuação. */
+export function normalizarTermo(texto: string): string {
+  return texto
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
 
-    if (!res.ok) return null;
-    const data = await res.json();
-    if (!Array.isArray(data) || data.length === 0) return null;
+function semPlural(palavra: string): string {
+  if (palavra.length > 4 && palavra.endsWith("s")) return palavra.slice(0, -1);
+  return palavra;
+}
 
-    // Nominatim devolve [sul, norte, oeste, leste]; Overpass quer o mesmo.
-    const bb = data[0].boundingbox?.map(Number);
-    if (!bb || bb.length !== 4 || bb.some((n: number) => !Number.isFinite(n))) return null;
-    return [bb[0], bb[2], bb[1], bb[3]];
-  } catch (e) {
-    console.error("[osm] geocode falhou:", e);
-    return null;
+/**
+ * Devolve as tags OSM de um nicho, ou lista vazia quando não conhece.
+ *
+ * Lista vazia NÃO é silêncio: quem chama transforma isso numa mensagem
+ * explícita, porque "não sei procurar esse nicho" e "não existe ninguém
+ * nesse nicho aqui" são coisas muito diferentes para quem está esperando.
+ */
+export function osmTagsFor(niche: string): string[] {
+  const palavras = normalizarTermo(niche).split(" ").map(semPlural).filter((p) => p.length >= 3);
+  if (palavras.length === 0) return [];
+
+  let melhor: { tags: string[]; acertos: number } | null = null;
+
+  for (const entrada of OSM_MAPA) {
+    let acertos = 0;
+
+    for (const termo of entrada.termos) {
+      const partes = termo.split(" ").map(semPlural).filter((p) => p.length >= 3);
+      if (partes.length === 0) continue;
+
+      // Termo de uma palavra: basta ela aparecer. Termo composto
+      // ("material de construcao") exige todas as partes relevantes.
+      const bateu = partes.every((p) => palavras.includes(p));
+      if (bateu) acertos += partes.length;
+    }
+
+    if (acertos > 0 && (!melhor || acertos > melhor.acertos)) {
+      melhor = { tags: entrada.tags, acertos };
+    }
   }
+
+  return melhor?.tags ?? [];
+}
+
+/**
+ * Separa "Itu - SP" em cidade e estado.
+ *
+ * Existe porque o texto livre ia inteiro para o Nominatim e ele casava com
+ * uma RUA: "Itu - SP, Brasil" devolvia "Estrada Velha de Indaiatuba e Itu,
+ * Campinas" — uma via de 200 metros, a 100 km da cidade certa. Toda busca
+ * dentro daquela caixa voltava vazia, e nada indicava o motivo.
+ */
+export function separarLocal(location: string): { cidade: string; estado: string | null } {
+  const bruto = location.trim();
+  const m = bruto.match(/^(.+?)\s*[-/,]\s*([A-Za-z]{2})$/);
+  if (m) return { cidade: m[1].trim(), estado: m[2].toUpperCase() };
+  return { cidade: bruto, estado: null };
+}
+
+/**
+ * Resolve "Itu - SP" -> bounding box da CIDADE.
+ *
+ * Duas defesas contra o erro anterior:
+ *   1. consulta estruturada (`city=` + `state=`), que o Nominatim resolve
+ *      contra limites administrativos em vez de qualquer texto parecido;
+ *   2. recusa resultado que não seja lugar — uma `highway` nunca é a cidade.
+ */
+async function geocode(location: string): Promise<[number, number, number, number] | null> {
+  const { cidade, estado } = separarLocal(location);
+
+  const tentativas = [
+    `https://nominatim.openstreetmap.org/search?city=${encodeURIComponent(cidade)}` +
+      (estado ? `&state=${encodeURIComponent(estado)}` : "") +
+      `&country=Brasil&format=json&limit=1`,
+    `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(cidade + ", Brasil")}` +
+      `&format=json&limit=5&countrycodes=br&featureType=city`,
+  ];
+
+  for (const url of tentativas) {
+    try {
+      const res = await fetchWithTimeout(url, {
+        headers: { "User-Agent": UA },
+      }, 15000);
+
+      if (!res.ok) continue;
+      const data = await res.json();
+      if (!Array.isArray(data) || data.length === 0) continue;
+
+      // Só aceita limite administrativo ou lugar. `highway`, `building` e
+      // afins sao o resultado errado com cara de certo.
+      const lugar = data.find((d: Record<string, unknown>) =>
+        d.class === "boundary" || d.class === "place"
+      );
+      if (!lugar) continue;
+
+      const bb = (lugar.boundingbox as string[] | undefined)?.map(Number);
+      if (!bb || bb.length !== 4 || bb.some((n: number) => !Number.isFinite(n))) continue;
+
+      // Nominatim devolve [sul, norte, oeste, leste]; Overpass quer o mesmo.
+      return [bb[0], bb[2], bb[1], bb[3]];
+    } catch (e) {
+      console.error("[osm] geocode falhou:", e);
+    }
+  }
+
+  return null;
 }
 
 export async function searchOpenStreetMap(
