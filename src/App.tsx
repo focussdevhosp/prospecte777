@@ -44,6 +44,9 @@ const SettingsNotifications = lazy(() => import("./pages/settings/SettingsNotifi
 const SettingsReports = lazy(() => import("./pages/settings/SettingsReports"));
 const SettingsMeetings = lazy(() => import("./pages/settings/SettingsMeetings"));
 const SettingsWebhook = lazy(() => import("./pages/settings/SettingsWebhook"));
+const SettingsCrm = lazy(() => import("./pages/settings/SettingsCrm"));
+const SettingsPrivacy = lazy(() => import("./pages/settings/SettingsPrivacy"));
+const UnsubscribePage = lazy(() => import("./pages/Unsubscribe"));
 const TutorialPage = lazy(() => import("./pages/Tutorial"));
 const DiagnosticsPage = lazy(() => import("./pages/Diagnostics"));
 const NotFound = lazy(() => import("./pages/NotFound"));
@@ -93,6 +96,9 @@ const App = () => (
                 <Routes>
                   <Route path="/" element={<LandingPage />} />
                   <Route path="/auth" element={<AuthPage />} />
+                  {/* Sem ProtectedRoute de proposito: quem quer sair da
+                      lista nao tem conta aqui. */}
+                  <Route path="/descadastro" element={<UnsubscribePage />} />
 
                   <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
                   <Route path="/tutorial" element={<ProtectedRoute><TutorialPage /></ProtectedRoute>} />
@@ -146,6 +152,8 @@ const App = () => (
                     <Route path="reports" element={<SettingsReports />} />
                     <Route path="meetings" element={<SettingsMeetings />} />
                     <Route path="webhook" element={<SettingsWebhook />} />
+                    <Route path="crm" element={<SettingsCrm />} />
+                    <Route path="privacidade" element={<SettingsPrivacy />} />
                   </Route>
                   {/* Era /tests, sem link em lugar nenhum e com cara de
                       ferramenta de desenvolvedor. É justamente a tela que

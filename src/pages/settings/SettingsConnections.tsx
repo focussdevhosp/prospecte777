@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { WhatsAppConnection } from '@/components/WhatsAppConnection';
 import { MultiChipSettings } from '@/components/settings/MultiChipSettings';
+import { EmailChannelSettings } from '@/components/settings/EmailChannelSettings';
 import { useUserSettings } from '@/hooks/use-user-settings';
 import { MessageSquare, Loader2, Wifi, WifiOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -82,6 +83,8 @@ export default function SettingsConnections() {
 
       {/* Multi-Chip */}
       <MultiChipSettings />
+
+      <EmailChannelSettings />
 
     </div>
   );

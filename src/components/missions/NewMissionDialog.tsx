@@ -16,10 +16,36 @@ import {
 } from '@/components/ui/select';
 import {
   AUTONOMY_LABELS, GOAL_LABELS, useOffers, useMissions,
-  type AutonomyLevel, type CampaignGoal,
+  type AutonomyLevel, type CampaignGoal, type MissionChannel,
 } from '@/hooks/use-missions';
 import { useIcpProfiles } from '@/hooks/use-icp-profiles';
 import { cn } from '@/lib/utils';
+
+/**
+ * Por onde a abordagem sai.
+ *
+ * O WhatsApp continua sendo o padrão porque é onde a PME brasileira
+ * responde. Mas ele é o ativo mais frágil da operação: chip banido não volta
+ * e leva junto o histórico de conversa de todo mundo. E-mail não queima
+ * número — daí a terceira opção existir.
+ */
+const CHANNEL_OPTIONS: { value: MissionChannel; label: string; hint: string }[] = [
+  {
+    value: 'whatsapp',
+    label: 'WhatsApp',
+    hint: 'Onde a PME responde mais. Gasta o chip, que é o ativo mais frágil aqui.',
+  },
+  {
+    value: 'email',
+    label: 'E-mail',
+    hint: 'Não queima número. Só entra lead que tenha e-mail — os capturados do Maps quase sempre vêm só com telefone.',
+  },
+  {
+    value: 'email_depois_whatsapp',
+    label: 'E-mail quando houver, senão WhatsApp',
+    hint: 'Protege o chip sem perder alcance: cada lead sai pelo canal que ele tem.',
+  },
+];
 
 /**
  * Nova Missão.
@@ -60,6 +86,7 @@ export function NewMissionDialog({
   const [selectedOffers, setSelectedOffers] = useState<string[]>([]);
   const [goal, setGoal] = useState<CampaignGoal>('agendar_demonstracao');
   const [autonomy, setAutonomy] = useState<AutonomyLevel>('assistido');
+  const [channel, setChannel] = useState<MissionChannel>('whatsapp');
   const [targetCount, setTargetCount] = useState(50);
   const [dailyLimit, setDailyLimit] = useState(30);
   const [startHour, setStartHour] = useState(9);
@@ -125,6 +152,7 @@ export function NewMissionDialog({
       offer_ids: selectedOffers,
       goal,
       autonomy_level: autonomy,
+      channel,
       target_count: targetCount,
       daily_limit: dailyLimit,
       start_hour: startHour,
@@ -376,6 +404,31 @@ export function NewMissionDialog({
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Por onde falar</Label>
+              {CHANNEL_OPTIONS.map((op) => (
+                <label
+                  key={op.value}
+                  className={cn(
+                    'flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors',
+                    channel === op.value ? 'border-primary bg-primary/5' : 'border-border hover:bg-muted/50',
+                  )}
+                >
+                  <input
+                    type="radio"
+                    name="channel"
+                    className="mt-1"
+                    checked={channel === op.value}
+                    onChange={() => setChannel(op.value)}
+                  />
+                  <span className="min-w-0">
+                    <span className="block text-sm font-medium">{op.label}</span>
+                    <span className="block text-xs text-muted-foreground">{op.hint}</span>
+                  </span>
+                </label>
+              ))}
             </div>
 
             <div className="space-y-2">

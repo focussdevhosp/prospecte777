@@ -2334,6 +2334,101 @@ export type Database = {
         }
         Relationships: []
       }
+      crm_integrations: {
+        Row: {
+          id: string
+          user_id: string
+          provider: string
+          config: Json
+          active: boolean
+          last_ok_at: string | null
+          last_error: string | null
+          last_error_at: string | null
+          pushed_count: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          provider: string
+          credential: string
+          config?: Json
+          active?: boolean
+          last_ok_at?: string | null
+          last_error?: string | null
+          last_error_at?: string | null
+          pushed_count?: number
+          created_at?: string
+        }
+        Update: {
+          provider?: string
+          credential?: string
+          config?: Json
+          active?: boolean
+          last_ok_at?: string | null
+          last_error?: string | null
+          last_error_at?: string | null
+        }
+        Relationships: []
+      }
+      crm_push_log: {
+        Row: {
+          id: string
+          user_id: string
+          lead_id: string
+          provider: string
+          ok: boolean
+          external_id: string | null
+          message: string
+          already_existed: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          lead_id: string
+          provider: string
+          ok: boolean
+          external_id?: string | null
+          message: string
+          already_existed?: boolean
+          created_at?: string
+        }
+        Update: { ok?: boolean; message?: string }
+        Relationships: []
+      }
+      data_requests: {
+        Row: {
+          id: string
+          user_id: string
+          lead_id: string | null
+          requester: string
+          kind: string
+          status: string
+          note: string | null
+          created_at: string
+          due_at: string
+          resolved_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          lead_id?: string | null
+          requester: string
+          kind: string
+          status?: string
+          note?: string | null
+          created_at?: string
+          due_at?: string
+          resolved_at?: string | null
+        }
+        Update: {
+          status?: string
+          note?: string | null
+          resolved_at?: string | null
+        }
+        Relationships: []
+      }
       icp_profiles: {
         Row: {
           id: string
@@ -2387,6 +2482,8 @@ export type Database = {
       }
       user_settings: {
         Row: {
+          email_from: string | null
+          email_reply_to: string | null
           active_chip_ids: string[] | null
           ai_daily_budget_usd: number | null
           ai_monthly_budget_usd: number | null
@@ -2469,6 +2566,8 @@ export type Database = {
           work_days_only: boolean | null
         }
         Insert: {
+          email_from?: string | null
+          email_reply_to?: string | null
           active_chip_ids?: string[] | null
           ai_daily_budget_usd?: number | null
           ai_monthly_budget_usd?: number | null
@@ -2551,6 +2650,8 @@ export type Database = {
           work_days_only?: boolean | null
         }
         Update: {
+          email_from?: string | null
+          email_reply_to?: string | null
           active_chip_ids?: string[] | null
           ai_daily_budget_usd?: number | null
           ai_monthly_budget_usd?: number | null
@@ -2754,6 +2855,44 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      crm_overview: {
+        Args: Record<string, never>
+        Returns: {
+          provider: string
+          active: boolean
+          enviados: number
+          ja_existiam: number
+          falhas: number
+          ultimo_ok: string | null
+          ultimo_erro: string | null
+          ultimo_erro_em: string | null
+        }[]
+      }
+      public_unsubscribe: {
+        Args: { p_identifier: string; p_source?: string }
+        Returns: Json
+      }
+      lead_data_export: { Args: { p_lead_id: string }; Returns: Json }
+      team_availability: {
+        Args: { p_owner_id: string }
+        Returns: {
+          user_id: string
+          active: boolean
+          open_load: number
+          niches: string[] | null
+          capacity: number | null
+        }[]
+      }
+      outreach_by_channel: {
+        Args: { p_user_id: string; p_days?: number }
+        Returns: {
+          channel: string
+          sent: number
+          replied: number
+          meetings: number
+        }[]
+      }
+
       calculate_lead_score: { Args: { p_lead_id: string }; Returns: number }
       get_current_daily_limit: { Args: { p_user_id: string }; Returns: number }
       get_user_team_ids: { Args: { p_user_id: string }; Returns: string[] }

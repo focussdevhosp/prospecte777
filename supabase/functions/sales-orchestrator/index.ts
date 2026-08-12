@@ -37,6 +37,7 @@ import {
 } from "../_shared/agents/orchestrator.ts";
 import { AUTONOMY, type AutonomyLevel } from "../_shared/agents/types.ts";
 import { classifySendFailure, MAX_SEND_ATTEMPTS } from "../_shared/agents/send-policy.ts";
+import { pickAssignee, type AssignmentStrategy } from "../_shared/agents/assignment.ts";
 
 // Quantos leads a esteira processa por chamada. Cada um custa uma chamada de
 // IA e até duas reescritas; passar disso estoura o tempo da edge function.
@@ -45,6 +46,11 @@ const BATCH_SIZE = 8;
 const VALID_GOALS = [
   "agendar_demonstracao", "solicitar_orcamento", "falar_com_vendedor", "vender", "outro",
 ];
+
+// Os mesmos três valores do CHECK em `missions.channel`. Repetidos aqui de
+// propósito: a lista do banco recusaria o insert com uma mensagem de
+// constraint, e ninguém sabe o que fazer com "violates check constraint".
+const VALID_CHANNELS = ["whatsapp", "email", "email_depois_whatsapp"];
 
 Deno.serve(async (req) => {
   const preflight = handleCors(req);
@@ -154,6 +160,14 @@ async function createMission(supabase: Supa, userId: string, body: Record<string
     }
   }
 
+  // O canal era gravado fixo em "whatsapp" logo abaixo, apesar de a coluna
+  // aceitar três valores e de existir uma function de e-mail pronta. Escolher
+  // na tela não adiantava nada porque nada lia a escolha.
+  const channel = String(body.channel ?? "whatsapp");
+  if (!VALID_CHANNELS.includes(channel)) {
+    return json({ error: "Canal inválido." }, 400);
+  }
+
   const location = [city, state].filter(Boolean).join(" - ") || str(body.region);
 
   // O ICP nasce preenchido com o que o usuário já informou. Sem isto ele
@@ -185,7 +199,7 @@ async function createMission(supabase: Supa, userId: string, body: Record<string
       target_count: targetCount,
       offer_ids: offerIds,
       goal,
-      channel: "whatsapp",
+      channel,
       autonomy_level: autonomy,
       daily_limit: dailyLimit,
       start_hour: startHour,
@@ -439,6 +453,47 @@ async function researchAndIngest(
 
     let inserted = 0;
 
+    // ---- QUEM FICA COM O LEAD ----
+    // `leads.assigned_to` existia desde o começo e nada nunca escreveu nele.
+    // Numa operação de uma pessoa isso não fazia falta; a partir de dois
+    // vendedores, lead sem dono é lead que ninguém atende porque cada um acha
+    // que é do outro.
+    //
+    // A carga é lida UMA VEZ e atualizada na memória a cada atribuição. Ler
+    // do banco a cada lead custaria uma consulta por lead; ler uma vez e não
+    // atualizar jogaria os 50 leads do lote inteiro no mesmo vendedor — o de
+    // menor carga no instante em que a lista foi lida.
+    const { data: equipe } = await supabase.rpc("team_availability", {
+      p_owner_id: mission.user_id,
+    });
+
+    // A estratégia é da EQUIPE, não da missão: mudá-la por campanha faria a
+    // mesma carteira ser repartida por duas réguas diferentes, e aí ninguém
+    // consegue explicar por que um vendedor recebeu mais.
+    const { data: equipeCfg } = await supabase
+      .from("teams")
+      .select("assignment_strategy")
+      .eq("owner_id", mission.user_id)
+      .maybeSingle();
+
+    const estrategia = (equipeCfg?.assignment_strategy ?? "carga") as AssignmentStrategy;
+
+    const membros = ((equipe ?? []) as Array<{
+      user_id: string; active: boolean; open_load: number;
+      niches: string[] | null; capacity: number | null;
+    }>).map((m) => ({
+      userId: m.user_id,
+      openLoad: Number(m.open_load ?? 0),
+      active: m.active !== false,
+      niches: m.niches ?? undefined,
+      capacity: m.capacity ?? undefined,
+    }));
+
+    // Um membro só é a própria conta: distribuir para si mesmo é ruído no
+    // histórico e não responde nenhuma pergunta.
+    const distribui = membros.filter((m) => m.active).length > 1;
+    let rodada = 0;
+
     for (const business of businesses) {
       if (!business.phone) continue; // sem telefone não há abordagem por WhatsApp
 
@@ -490,6 +545,32 @@ async function researchAndIngest(
           continue;
         }
         leadId = created.id;
+
+        // Só lead NOVO entra na distribuição. Lead que já existia na carteira
+        // pode ter dono, conversa em andamento e negociação aberta — trocar a
+        // pessoa no meio disso faz o cliente recomeçar a explicar tudo.
+        if (distribui) {
+          const escolha = pickAssignee(membros, {
+            strategy: estrategia,
+            niche: mission.niche,
+            counter: rodada++,
+          });
+
+          if (escolha.userId) {
+            await supabase.from("leads").update({ assigned_to: escolha.userId }).eq("id", leadId);
+            await supabase.from("lead_assignments").insert({
+              lead_id: leadId,
+              user_id: escolha.userId,
+              assigned_by: null,
+              reason: escolha.reason,
+            });
+
+            // A carga sobe aqui, na memória. É isto que impede o lote inteiro
+            // de cair no mesmo vendedor.
+            const m = membros.find((x) => x.userId === escolha.userId);
+            if (m) m.openLoad += 1;
+          }
+        }
       }
 
       const { error: linkError } = await supabase.from("mission_leads").insert({
@@ -561,6 +642,7 @@ async function runBatch(supabase: Supa, userId: string, body: Record<string, unk
     userId, missionId,
     instanceId: (settings as { whatsapp_instance_id?: string }).whatsapp_instance_id ?? null,
     blocks,
+    channel: mission.channel,
   });
 
   const { data: pending } = await supabase
@@ -649,6 +731,7 @@ async function runBatch(supabase: Supa, userId: string, body: Record<string, unk
             userId, missionId, missionLeadId: row.id,
             lead, message: String(record.draft_message ?? ""),
             instanceId: (settings as { whatsapp_instance_id?: string }).whatsapp_instance_id ?? null,
+            channel: mission.channel,
           });
           if (ok) sent++;
         }
@@ -755,9 +838,32 @@ async function previewLead(supabase: Supa, userId: string, body: Record<string, 
 // ------------------------------------------------------------
 
 /**
- * Delega ao `whatsapp-send`, que já carrega blacklist, opt-out, rotação de
- * chip, checagem de conexão e limite de tamanho. Reimplementar isso aqui
- * criaria uma segunda verdade sobre quando é permitido enviar.
+ * Assunto do e-mail, tirado da PRÓPRIA mensagem.
+ *
+ * A esteira gera um texto só, no formato de WhatsApp. Inventar um assunto
+ * aqui seria escrever uma frase que nenhum quality gate conferiu — e assunto
+ * é justamente a parte que o destinatário lê primeiro. Reaproveitar a
+ * primeira frase mantém tudo dentro do que já foi checado.
+ */
+function assuntoDe(mensagem: string, nomeDaEmpresa?: string | null): string {
+  const primeira = mensagem
+    .split(/\n|(?<=[.!?])\s/)
+    .map((p) => p.trim())
+    .find((p) => p.length >= 12);
+
+  if (!primeira) return nomeDaEmpresa ? `Contato — ${nomeDaEmpresa}` : "Contato";
+  if (primeira.length <= 78) return primeira.replace(/[.!?]+$/, "");
+
+  const corte = primeira.slice(0, 75);
+  return corte.slice(0, corte.lastIndexOf(" ")) + "...";
+}
+
+/**
+ * Delega à function do canal — `whatsapp-send` ou `email-send`. As duas já
+ * carregam dono, parada de emergência, opt-out entre canais e limite.
+ * Reimplementar isso aqui criaria uma segunda verdade sobre quando é
+ * permitido enviar, que foi exatamente como quatro caminhos diferentes
+ * furaram o opt-out antes.
  */
 async function sendMessage(
   supabase: Supa,
@@ -766,27 +872,74 @@ async function sendMessage(
     missionId: string;
     missionLeadId: string;
     /** Linha de `leads`. Só os campos que o envio usa. */
-    lead: { id: string; phone: string; business_name?: string | null; first_contact_at?: string | null };
+    lead: { id: string; phone: string; email?: string | null; business_name?: string | null; first_contact_at?: string | null };
     message: string;
     instanceId: string | null;
+    /** Canal da missão. Ausente = whatsapp, que era o único que existia. */
+    channel?: string | null;
   },
 ): Promise<boolean> {
   const { lead, message } = params;
 
-  try {
-    const res = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/whatsapp-send`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
-      },
-      body: JSON.stringify({
-        phone: lead.phone,
-        message,
-        instance_id: params.instanceId,
-        user_id: params.userId,
-      }),
+  // `email_depois_whatsapp` só vai por e-mail se HOUVER e-mail. Sem isso a
+  // missão inteira travaria em leads capturados do Maps, que na maioria das
+  // vezes vêm só com telefone — e o usuário veria zero envios sem entender
+  // por quê.
+  const desejado = params.channel ?? "whatsapp";
+  const temEmail = !!lead.email;
+  const porEmail = desejado === "email" || (desejado === "email_depois_whatsapp" && temEmail);
+
+  if (porEmail && !temEmail) {
+    // Canal exclusivo de e-mail e lead sem endereço: é definitivo, não
+    // adianta tentar de novo cinco vezes.
+    await supabase.rpc("mission_lead_send_failed", {
+      p_mission_lead_id: params.missionLeadId,
+      p_error: "A missão é por e-mail e este lead não tem endereço de e-mail.",
+      p_definitive: true,
+      p_max_attempts: MAX_SEND_ATTEMPTS,
     });
+
+    await logEvent(supabase, {
+      userId: params.userId, missionId: params.missionId, leadId: lead.id,
+      agent: "outreach",
+      event: "send_failed",
+      summary: `${lead.business_name} não tem e-mail, e esta missão envia por e-mail.`,
+      level: "warning",
+    });
+    return false;
+  }
+
+  const canalUsado = porEmail ? "email" : "whatsapp";
+
+  try {
+    const res = porEmail
+      ? await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/email-send`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+        },
+        body: JSON.stringify({
+          to: lead.email,
+          subject: assuntoDe(message, lead.business_name),
+          text: message,
+          lead_id: lead.id,
+          user_id: params.userId,
+        }),
+      })
+      : await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/whatsapp-send`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+        },
+        body: JSON.stringify({
+          phone: lead.phone,
+          message,
+          instance_id: params.instanceId,
+          user_id: params.userId,
+        }),
+      });
 
     if (!res.ok) {
       const detail = await res.text();
@@ -840,7 +993,7 @@ async function sendMessage(
 
     await supabase
       .from("mission_leads")
-      .update({ status: "sent", sent_at: now })
+      .update({ status: "sent", sent_at: now, sent_channel: canalUsado })
       .eq("id", params.missionLeadId);
 
     await supabase
@@ -855,12 +1008,17 @@ async function sendMessage(
 
     // Registra no histórico para o agente conversacional ter o que ler
     // quando o lead responder.
-    await supabase.from("chat_messages").insert({
-      lead_id: lead.id,
-      sender_type: "agent",
-      content: message,
-      status: "sent",
-    });
+    // O `email-send` ja registra o proprio historico com o assunto junto;
+    // gravar de novo aqui deixaria a conversa com a mesma mensagem duas
+    // vezes, e o agente conversacional leria como se tivesse insistido.
+    if (!porEmail) {
+      await supabase.from("chat_messages").insert({
+        lead_id: lead.id,
+        sender_type: "agent",
+        content: message,
+        status: "sent",
+      });
+    }
 
     await supabase.from("activity_log").insert({
       user_id: params.userId,
@@ -873,7 +1031,9 @@ async function sendMessage(
       userId: params.userId, missionId: params.missionId, leadId: lead.id,
       agent: "outreach",
       event: "message_sent",
-      summary: `Mensagem enviada para ${lead.business_name}.`,
+      summary: porEmail
+        ? `E-mail enviado para ${lead.business_name} (${lead.email}).`
+        : `Mensagem enviada para ${lead.business_name}.`,
       detail: { message },
       level: "success",
     });
@@ -927,6 +1087,8 @@ async function flushApproved(
     missionId: string;
     instanceId: string | null;
     blocks: Set<string>;
+    /** Canal da missão. Sem ele, todo envio aprovado sairia por WhatsApp. */
+    channel?: string | null;
   },
 ): Promise<number> {
   const { data: ready } = await supabase
@@ -966,6 +1128,7 @@ async function flushApproved(
       lead,
       message: String(row.draft_message ?? ""),
       instanceId: params.instanceId,
+      channel: params.channel,
     });
     if (ok) sent++;
   }
@@ -1010,7 +1173,7 @@ async function approveDraft(supabase: Supa, userId: string, body: Record<string,
 
   const { data: row } = await supabase
     .from("mission_leads")
-    .select("*, leads(*), missions(id, name, autonomy_level)")
+    .select("*, leads(*), missions(id, name, autonomy_level, channel)")
     .eq("id", id)
     .eq("user_id", userId)
     .maybeSingle();
@@ -1050,6 +1213,7 @@ async function approveDraft(supabase: Supa, userId: string, body: Record<string,
     lead: row.leads,
     message,
     instanceId: settings?.whatsapp_instance_id ?? null,
+    channel: row.missions?.channel,
   });
 
   // Aprovar o último item da fila pode ser o que conclui a missão.

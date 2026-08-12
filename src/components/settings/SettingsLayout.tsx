@@ -9,7 +9,7 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import {
   Zap, Bot, ArrowLeft, Settings, Menu,
   Users, Bell, Download, Webhook, Shield,
-  Calendar, Key,
+  Calendar, Key, Share2, ScrollText,
 } from 'lucide-react';
 
 const settingsGroups = [
@@ -19,6 +19,7 @@ const settingsGroups = [
       { to: '/settings/connections', icon: Zap, label: 'Conexões' },
       { to: '/settings/api-keys', icon: Key, label: 'Chaves de API' },
       { to: '/settings/webhook', icon: Webhook, label: 'Webhook' },
+      { to: '/settings/crm', icon: Share2, label: 'CRM externo' },
     ],
   },
   {
@@ -35,6 +36,7 @@ const settingsGroups = [
       { to: '/settings/notifications', icon: Bell, label: 'Notificações' },
       { to: '/settings/reports', icon: Download, label: 'Relatórios' },
       { to: '/settings/meetings', icon: Calendar, label: 'Reuniões' },
+      { to: '/settings/privacidade', icon: ScrollText, label: 'Privacidade' },
     ],
   },
 ];

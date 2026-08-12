@@ -17,6 +17,9 @@ export type CampaignGoal =
   | 'agendar_demonstracao' | 'solicitar_orcamento'
   | 'falar_com_vendedor' | 'vender' | 'outro';
 
+/** Os mesmos três valores do CHECK em `missions.channel`. */
+export type MissionChannel = 'whatsapp' | 'email' | 'email_depois_whatsapp';
+
 export const AUTONOMY_LABELS: Record<AutonomyLevel, { label: string; description: string }> = {
   manual: {
     label: 'Manual',
