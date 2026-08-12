@@ -11,6 +11,7 @@ import {
 } from "../_shared/auth.ts";
 import { loadChips, pickChip, recordChipSend } from "../_shared/chips.ts";
 import { initiatorOf, outboundBlockReason } from "../_shared/outbound-gate.ts";
+import { assessChipHealth, effectiveChipLimit } from "../_shared/chip-health.ts";
 
 const MAX_MESSAGE_LENGTH = 4096;
 
@@ -163,6 +164,60 @@ Deno.serve(async (req) => {
     // mensagem pelo chip de outro cliente e queima o número dele.
     const ownership = await assertOwnsInstance(ctx, String(instance_id));
     if (ownership) return ownership;
+
+    // ---- AQUECIMENTO E SAÚDE DO NÚMERO ----
+    // O limite diário da missão protege a CAMPANHA de exagerar. Este aqui
+    // protege o NÚMERO, que é outra coisa: um chip de dois dias não aguenta
+    // o volume que um chip de dois meses aguenta, por melhor que a campanha
+    // esteja configurada.
+    //
+    // Envio manual passa por cima: quem está respondendo um cliente no chat
+    // não está fazendo volume, e travar isso deixaria alguém falando sozinho
+    // do outro lado.
+    if (initiatedBy === "automation") {
+      const { data: allowance } = await ctx.supabase.rpc("chip_allowance", {
+        p_user_id: ownerId,
+        p_instance_id: String(instance_id),
+      });
+
+      if (allowance) {
+        const a = allowance as {
+          day_of_life?: number;
+          sent_today?: number;
+          recent_days?: Array<{ sent: number; failed: number }>;
+          blocks?: number;
+        };
+
+        const saude = assessChipHealth({
+          recentDays: a.recent_days ?? [],
+          blocks: a.blocks ?? 0,
+        });
+
+        const { limit, reason } = effectiveChipLimit({
+          dayOfLife: Number(a.day_of_life ?? 1),
+          // O teto configurado da conta, quando existe; senão um padrão
+          // folgado, porque quem manda de verdade é a rampa.
+          configuredLimit: 500,
+          healthSuggestion: saude.suggestedLimit,
+        });
+
+        if (Number(a.sent_today ?? 0) >= limit) {
+          return json({
+            error:
+              `Este número já enviou ${a.sent_today} mensagens hoje e o teto é ${limit}. ${reason}` +
+              (saude.reasons.length ? ` ${saude.reasons[0]}` : ""),
+            code: "chip_limit_reached",
+            chip: {
+              day_of_life: a.day_of_life,
+              sent_today: a.sent_today,
+              limit,
+              health: saude.health,
+              reasons: saude.reasons,
+            },
+          }, 429);
+        }
+      }
+    }
 
     if (ctx.kind === "user") {
       const limit = await checkRateLimit(ctx.supabase, ctx.userId, "whatsapp-send", 120, 60);

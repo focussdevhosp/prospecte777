@@ -1,7 +1,7 @@
 -- ============================================================
 -- MIGRAÇÕES NOVAS — PARA O BANCO QUE JÁ EXISTE
 -- ============================================================
--- São 14 migrações, todas ADITIVAS: criam tabela, função, gatilho e
+-- São 15 migrações, todas ADITIVAS: criam tabela, função, gatilho e
 -- coluna. Nenhuma apaga dado, nenhuma remove coluna, nenhuma altera tipo de
 -- coluna existente.
 --
@@ -31,7 +31,7 @@
 
 
 -- ############################################################
--- [01/14] 20260811120000_b7c8d9e0-0005-4a55-9c05-000000000005.sql
+-- [01/15] 20260811120000_b7c8d9e0-0005-4a55-9c05-000000000005.sql
 -- ############################################################
 
 -- ============================================================
@@ -552,7 +552,7 @@ CREATE TRIGGER trg_mission_leads_touch
 
 
 -- ############################################################
--- [02/14] 20260811140000_c8d9e0f1-0006-4a66-9c06-000000000006.sql
+-- [02/15] 20260811140000_c8d9e0f1-0006-4a66-9c06-000000000006.sql
 -- ############################################################
 
 -- ============================================================
@@ -886,7 +886,7 @@ CREATE TRIGGER trg_provider_states_touch
 
 
 -- ############################################################
--- [03/14] 20260811160000_d9e0f1a2-0007-4a77-9c07-000000000007.sql
+-- [03/15] 20260811160000_d9e0f1a2-0007-4a77-9c07-000000000007.sql
 -- ############################################################
 
 -- ============================================================
@@ -1060,7 +1060,7 @@ $$;
 
 
 -- ############################################################
--- [04/14] 20260811180000_e0f1a2b3-0008-4a88-9c08-000000000008.sql
+-- [04/15] 20260811180000_e0f1a2b3-0008-4a88-9c08-000000000008.sql
 -- ############################################################
 
 -- ============================================================
@@ -1406,7 +1406,7 @@ COMMENT ON FUNCTION public.mission_refresh_counters(UUID) IS
 
 
 -- ############################################################
--- [05/14] 20260811200000_f1a2b3c4-0009-4a99-9c09-000000000009.sql
+-- [05/15] 20260811200000_f1a2b3c4-0009-4a99-9c09-000000000009.sql
 -- ############################################################
 
 -- ============================================================
@@ -1629,7 +1629,7 @@ $$;
 
 
 -- ############################################################
--- [06/14] 20260811220000_a2b3c4d5-0010-4aaa-9c10-000000000010.sql
+-- [06/15] 20260811220000_a2b3c4d5-0010-4aaa-9c10-000000000010.sql
 -- ############################################################
 
 -- ============================================================
@@ -1781,7 +1781,7 @@ $$;
 
 
 -- ############################################################
--- [07/14] 20260812000000_b3c4d5e6-0011-4abb-9c11-000000000011.sql
+-- [07/15] 20260812000000_b3c4d5e6-0011-4abb-9c11-000000000011.sql
 -- ############################################################
 
 -- ============================================================
@@ -1849,7 +1849,7 @@ $$;
 
 
 -- ############################################################
--- [08/14] 20260812020000_c4d5e6f7-0012-4acc-9c12-000000000012.sql
+-- [08/15] 20260812020000_c4d5e6f7-0012-4acc-9c12-000000000012.sql
 -- ############################################################
 
 -- ============================================================
@@ -2148,7 +2148,7 @@ $$;
 
 
 -- ############################################################
--- [09/14] 20260812040000_d5e6f7a8-0013-4add-9c13-000000000013.sql
+-- [09/15] 20260812040000_d5e6f7a8-0013-4add-9c13-000000000013.sql
 -- ############################################################
 
 -- ============================================================
@@ -2277,7 +2277,7 @@ $$;
 
 
 -- ############################################################
--- [10/14] 20260812060000_e6f7a8b9-0014-4aee-9c14-000000000014.sql
+-- [10/15] 20260812060000_e6f7a8b9-0014-4aee-9c14-000000000014.sql
 -- ############################################################
 
 -- ============================================================
@@ -2406,7 +2406,7 @@ $$;
 
 
 -- ############################################################
--- [11/14] 20260812080000_f7a8b9c0-0015-4aff-9c15-000000000015.sql
+-- [11/15] 20260812080000_f7a8b9c0-0015-4aff-9c15-000000000015.sql
 -- ############################################################
 
 -- ============================================================
@@ -2579,7 +2579,7 @@ $$;
 
 
 -- ############################################################
--- [12/14] 20260812100000_a8b9c0d1-0016-4b00-9c16-000000000016.sql
+-- [12/15] 20260812100000_a8b9c0d1-0016-4b00-9c16-000000000016.sql
 -- ############################################################
 
 -- ============================================================
@@ -2692,7 +2692,7 @@ $$;
 
 
 -- ############################################################
--- [13/14] 20260812120000_b9c0d1e2-0017-4b11-9c17-000000000017.sql
+-- [13/15] 20260812120000_b9c0d1e2-0017-4b11-9c17-000000000017.sql
 -- ############################################################
 
 -- ============================================================
@@ -2888,7 +2888,7 @@ $$;
 
 
 -- ############################################################
--- [14/14] 20260812140000_c0d1e2f3-0018-4b22-9c18-000000000018.sql
+-- [14/15] 20260812140000_c0d1e2f3-0018-4b22-9c18-000000000018.sql
 -- ############################################################
 
 -- ============================================================
@@ -2925,6 +2925,150 @@ BEGIN
     WHERE table_schema = 'public' AND table_name = 'leads' AND column_name = 'email_source'
   ) THEN
     RAISE EXCEPTION 'leads.email_source não foi criada — a cascata gravaria o e-mail sem procedência.';
+  END IF;
+END;
+$$;
+
+
+-- ############################################################
+-- [15/15] 20260812160000_d1e2f3a4-0019-4b33-9c19-000000000019.sql
+-- ############################################################
+
+-- ============================================================
+-- O NÚMERO PRECISA SOBREVIVER AO MÊS 4
+-- ============================================================
+-- `chip_usage` já registra quanto cada número mandou e quantas falhas teve.
+-- Nada nunca leu isso para DECIDIR: a rotação equilibra carga, e o campo
+-- `health` era declarado à mão — alguém escrevia "healthy" e ficava healthy
+-- para sempre.
+--
+-- Faltavam as duas coisas que fazem uma operação de WhatsApp durar:
+--
+-- 1. AQUECIMENTO. Chip novo que dispara 30 mensagens no primeiro dia é chip
+--    novo que some. Volume alto vindo de número sem histórico é lido como
+--    spam, e não há apelação — número banido não volta, e leva junto o
+--    histórico de conversa de todo mundo que já falou com ele.
+--
+-- 2. RECUO AUTOMÁTICO. Falha de envio subindo é o WhatsApp avisando que está
+--    de olho. Continuar no volume cheio depois disso não é usar o número, é
+--    gastá-lo.
+--
+-- A idade do chip sai do próprio `chip_usage`: o primeiro dia em que ele
+-- mandou alguma coisa. Nenhuma coluna nova, nenhum cadastro a mais para
+-- alguém esquecer de preencher.
+-- ============================================================
+
+/**
+ * Tudo que a decisão de "quanto este número pode mandar hoje" precisa.
+ *
+ * Uma chamada só: a alternativa é a edge function fazer três consultas antes
+ * de cada envio, e envio é o caminho mais quente do produto.
+ */
+CREATE OR REPLACE FUNCTION public.chip_allowance(
+  p_user_id     UUID,
+  p_instance_id TEXT
+)
+RETURNS JSONB
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  WITH historico AS (
+    SELECT usage_date, sent_count, failed_count
+    FROM public.chip_usage
+    WHERE user_id = p_user_id AND instance_id = p_instance_id
+  ),
+  recentes AS (
+    SELECT sent_count, failed_count
+    FROM historico
+    WHERE usage_date >= CURRENT_DATE - 7
+    ORDER BY usage_date DESC
+  )
+  SELECT jsonb_build_object(
+    -- Dia de vida: 1 no primeiro dia em que mandou algo. Chip que nunca
+    -- mandou nada também é dia 1 — é exatamente o caso que a rampa protege.
+    'day_of_life', COALESCE(
+      (SELECT (CURRENT_DATE - MIN(usage_date) + 1) FROM historico),
+      1
+    ),
+    'sent_today', COALESCE(
+      (SELECT sent_count FROM historico WHERE usage_date = CURRENT_DATE),
+      0
+    ),
+    'recent_days', COALESCE(
+      (SELECT jsonb_agg(jsonb_build_object('sent', sent_count, 'failed', failed_count))
+       FROM recentes),
+      '[]'::jsonb
+    ),
+    -- Quantos destinatários bloquearam depois de receber por este número.
+    -- É o sinal que mais pesa numa decisão de banimento.
+    'blocks', (
+      SELECT COUNT(*) FROM public.whatsapp_blacklist b
+      WHERE b.user_id = p_user_id
+        AND b.reason = 'opt_out'
+        AND b.created_at >= NOW() - INTERVAL '7 days'
+    )
+  );
+$$;
+
+GRANT EXECUTE ON FUNCTION public.chip_allowance(UUID, TEXT) TO authenticated, service_role;
+
+COMMENT ON FUNCTION public.chip_allowance(UUID, TEXT) IS
+  'Idade, volume de hoje, histórico recente e bloqueios de um número. A '
+  'decisão do teto mora em `_shared/chip-health.ts`, que é testável.';
+
+/**
+ * Panorama dos números da conta, para a tela de anti-bloqueio.
+ *
+ * Mostra quem está em aquecimento e quem está com falha subindo — as duas
+ * informações que hoje só existiam depois que o número já tinha sido banido.
+ */
+CREATE OR REPLACE FUNCTION public.chips_overview(p_user_id UUID)
+RETURNS TABLE (
+  instance_id  TEXT,
+  day_of_life  INTEGER,
+  sent_today   INTEGER,
+  sent_7d      BIGINT,
+  failed_7d    BIGINT,
+  last_sent_at TIMESTAMPTZ
+)
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT
+    u.instance_id,
+    (CURRENT_DATE - MIN(u.usage_date) + 1)::INTEGER,
+    COALESCE(SUM(u.sent_count) FILTER (WHERE u.usage_date = CURRENT_DATE), 0)::INTEGER,
+    COALESCE(SUM(u.sent_count) FILTER (WHERE u.usage_date >= CURRENT_DATE - 7), 0)::BIGINT,
+    COALESCE(SUM(u.failed_count) FILTER (WHERE u.usage_date >= CURRENT_DATE - 7), 0)::BIGINT,
+    MAX(u.last_sent_at)
+  FROM public.chip_usage u
+  WHERE u.user_id = p_user_id
+  GROUP BY u.instance_id
+  ORDER BY 2 ASC;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.chips_overview(UUID) TO authenticated, service_role;
+
+-- Sem este índice, cada envio varre o histórico inteiro do usuário — e envio
+-- é o caminho mais quente do produto.
+CREATE INDEX IF NOT EXISTS idx_chip_usage_lookup
+  ON public.chip_usage (user_id, instance_id, usage_date DESC);
+
+-- ------------------------------------------------------------
+-- CONFERÊNCIA
+-- ------------------------------------------------------------
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+    WHERE n.nspname = 'public' AND p.proname = 'chip_allowance'
+  ) THEN
+    RAISE EXCEPTION 'chip_allowance não foi criada — o aquecimento de chip novo não teria como ser calculado.';
   END IF;
 END;
 $$;

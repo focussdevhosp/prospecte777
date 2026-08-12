@@ -2862,6 +2862,23 @@ export type Database = {
       }
       ai_cost_summary: { Args: { p_user_id: string }; Returns: Json }
 
+      // ---- Saúde e aquecimento de chip ----
+      chip_allowance: {
+        Args: { p_user_id: string; p_instance_id: string }
+        Returns: Json
+      }
+      chips_overview: {
+        Args: { p_user_id: string }
+        Returns: {
+          instance_id: string
+          day_of_life: number
+          sent_today: number
+          sent_7d: number
+          failed_7d: number
+          last_sent_at: string | null
+        }[]
+      }
+
       // ---- Sinais: o motivo de falar com a empresa hoje ----
       lead_active_signals: {
         Args: { p_lead_id: string }
