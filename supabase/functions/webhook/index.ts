@@ -1,5 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { callAI, complete } from "../_shared/ai.ts";
+import { memoriaVazia } from "../_shared/agents/conversation.ts";
 import { corsHeaders, verifyWebhookSecret } from "../_shared/auth.ts";
 import {
   agentGate,
@@ -107,6 +108,22 @@ Extraia apenas informações realmente mencionadas. Se não houver nada relevant
         const memories = parsed.memories || [];
 
         for (const mem of memories) {
+          // Memória que registra AUSÊNCIA é pior que nenhuma memória.
+          //
+          // Um teste real gravou `interesse_servico: "produto/serviço não
+          // especificado, cliente interessado"`. Isso entra no prompt de toda
+          // conversa futura ocupando espaço, e é lido como se fosse um fato
+          // sobre o cliente — quando o conteúdo é justamente "não sabemos".
+          //
+          // O extrator já é instruído a devolver lista vazia quando não há
+          // nada relevante. Ele às vezes preenche assim mesmo, porque um
+          // campo vazio "parece" resposta incompleta para o modelo. O filtro
+          // fica aqui, do lado de quem grava.
+          if (memoriaVazia(mem.value)) {
+            console.log(`[webhook] memória descartada por não afirmar nada: ${mem.key}`);
+            continue;
+          }
+
           if (mem.type && mem.key && mem.value) {
             await supabase.rpc("upsert_lead_memory", {
               p_user_id: userId,

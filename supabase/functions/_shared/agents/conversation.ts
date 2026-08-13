@@ -181,3 +181,42 @@ export function renderConversationEvidence(
 export function renderDossierEvidence(dossier: Dossier): string {
   return renderConversationEvidence(dossier.facts, dossier.hypotheses);
 }
+
+/**
+ * A memória diz alguma coisa, ou só registra que não sabemos?
+ *
+ * A distinção que faz a regra funcionar: expressões sobre o MUNDO valem;
+ * expressões sobre o NOSSO CONHECIMENTO não.
+ *
+ *   "não tem site"        -> fato sobre o negócio. É o gancho de metade das
+ *                            abordagens deste produto. Fica.
+ *   "não especificado"    -> fato sobre a nossa ignorância. Sai.
+ *
+ * Por isso a lista abaixo só tem expressões meta — as que nunca aparecem
+ * numa afirmação sobre o cliente. Um "não" genérico na lista apagaria
+ * justamente o que mais importa.
+ *
+ * A primeira versão ancorava no início da frase e deixou passar o caso real
+ * que originou isto: `interesse_servico: "produto/serviço não especificado,
+ * cliente interessado"` — a expressão vinha no meio. Agora casa em qualquer
+ * posição, o que é seguro porque a lista é de expressões meta.
+ */
+const AUSENCIA_META = [
+  "nao especificad", "nao informad", "nao mencionad", "nao identificad",
+  "nao declarad", "nao definid", "nao fornecid", "nao disponivel",
+  "sem informacao", "desconhecid", "indefinid", "a definir",
+  "nao se aplica", "n/a",
+];
+
+export function memoriaVazia(valor: unknown): boolean {
+  const v = String(valor ?? "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .trim();
+
+  if (v.length < 3) return true;
+  if (v === "nenhum" || v === "nenhuma") return true;
+
+  return AUSENCIA_META.some((termo) => v.includes(termo));
+}
