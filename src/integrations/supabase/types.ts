@@ -317,6 +317,8 @@ export type Database = {
       }
       background_jobs: {
         Row: {
+          sent_items: number
+          skipped_items: number
           completed_at: string | null
           created_at: string
           current_index: number | null
@@ -340,6 +342,8 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          sent_items?: number
+          skipped_items?: number
           completed_at?: string | null
           created_at?: string
           current_index?: number | null
@@ -363,6 +367,8 @@ export type Database = {
           user_id: string
         }
         Update: {
+          sent_items?: number
+          skipped_items?: number
           completed_at?: string | null
           created_at?: string
           current_index?: number | null

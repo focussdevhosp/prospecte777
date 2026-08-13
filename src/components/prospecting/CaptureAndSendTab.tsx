@@ -202,7 +202,22 @@ export function CaptureAndSendTab() {
       quality_score: lead.qualityScore || null,
     }));
 
-    const { error } = await supabase.from('leads').insert(leadsToSave);
+    // `.select()` para RECEBER OS IDS DE VERDADE.
+    //
+    // Sem isto, a tela continuava com o id temporário que ela inventa ao
+    // capturar (`Date.now()-aleatório`), e mandava ESSE id no disparo. A
+    // esteira usa o id para carregar o dossiê do banco — auditoria do site,
+    // memória, histórico. Com um id que não existe, ela não achava nada e
+    // escrevia às cegas.
+    //
+    // O resultado foi medido: 25 de 27 mensagens barradas no portão de
+    // qualidade por "não cita o nome da empresa" e "havia contexto e a
+    // mensagem não usou nada dele", com personalização entre 13 e 37. O
+    // portão estava certo; a entrada é que chegava vazia.
+    const { data: salvos, error } = await supabase
+      .from('leads')
+      .insert(leadsToSave)
+      .select('id, phone');
 
     // Falha aqui precisa aparecer. Buscar leads custa tempo e chamada paga;
     // deixar a pessoa acreditar que guardou o resultado é o pior desfecho —
@@ -215,7 +230,27 @@ export function CaptureAndSendTab() {
       });
       throw error;
     }
+
+    // Troca o id temporário pelo do banco, casando por telefone canônico —
+    // o mesmo critério que a dedup usa. A partir daqui o disparo carrega um
+    // id que a esteira consegue resolver.
+    const porTelefone = new Map(
+      (salvos ?? []).map((r) => [normalizePhone(r.phone), r.id]),
+    );
+
+    setCapturedLeads((atuais) =>
+      atuais.map((l) => {
+        const real = porTelefone.get(normalizePhone(l.phone));
+        return real ? { ...l, id: real } : l;
+      }),
+    );
+
+    return porTelefone;
   };
+
+  /** O id é do banco, e não o temporário que a captura inventa. */
+  const ehIdDoBanco = (id: string) =>
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 
   const handleStop = useCallback(() => {
     isStoppedRef.current = true;
@@ -372,15 +407,49 @@ export function CaptureAndSendTab() {
     setSelectedLeadIds(newIds);
   };
 
-  const handleSendMessages = () => {
+  const handleSendMessages = async () => {
     if (!settings?.whatsapp_connected) {
       toast({ title: '⚠️ WhatsApp não conectado', description: 'Conecte seu WhatsApp nas configurações.', variant: 'destructive' });
       return;
     }
-    const leadsToSend = capturedLeads.filter(l => selectedLeadIds.includes(l.id) && !l.isDuplicate && l.status !== 'sent');
+    let leadsToSend = capturedLeads.filter(l => selectedLeadIds.includes(l.id) && !l.isDuplicate && l.status !== 'sent');
     if (leadsToSend.length === 0) {
       toast({ title: '⚠️ Nenhum lead selecionado', description: 'Selecione leads para enviar mensagens.', variant: 'destructive' });
       return;
+    }
+
+    // GRAVA ANTES DE DISPARAR.
+    //
+    // Dava para disparar sem ter salvado, e o lead ia com o id temporário da
+    // captura. A esteira usa o id para carregar o dossiê — auditoria do site,
+    // memória, histórico — e com um id inexistente ela escrevia sem contexto
+    // nenhum. O portão de qualidade barrava quase tudo, corretamente, e o
+    // usuário via "enviando 20" e recebia uma mensagem só.
+    const naoSalvos = leadsToSend.filter(l => !ehIdDoBanco(l.id));
+
+    if (naoSalvos.length > 0) {
+      try {
+        const porTelefone = await saveLeadsToDatabase(naoSalvos);
+        leadsToSend = leadsToSend.map(l =>
+          ehIdDoBanco(l.id) ? l : { ...l, id: porTelefone?.get(normalizePhone(l.phone)) ?? l.id },
+        );
+      } catch {
+        // `saveLeadsToDatabase` já avisou na tela. Não dispara sem contexto:
+        // mensagem sem dossiê é mensagem genérica, e genérica é o que faz o
+        // lead bloquear o número.
+        return;
+      }
+    }
+
+    const semId = leadsToSend.filter(l => !ehIdDoBanco(l.id));
+    if (semId.length > 0) {
+      toast({
+        title: 'Alguns leads não puderam ser preparados',
+        description: `${semId.length} lead(s) ficaram sem registro no banco e foram deixados de fora — sem isso a IA escreveria sem contexto.`,
+        variant: 'destructive',
+      });
+      leadsToSend = leadsToSend.filter(l => ehIdDoBanco(l.id));
+      if (leadsToSend.length === 0) return;
     }
 
     const isAutoMode = selectedService === 'auto';

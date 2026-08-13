@@ -511,6 +511,9 @@ async function processJob(supabase: any, job: BackgroundJob) {
   const totalItems = job.total_items;
   let processedItems = job.processed_items;
   let failedItems = job.failed_items;
+  // Enviados e pulados sao coisas diferentes e a tela precisa das duas.
+  let sentItems = (job as { sent_items?: number }).sent_items ?? 0;
+  let skippedItems = (job as { skipped_items?: number }).skipped_items ?? 0;
   const currentIndex = job.current_index;
 
   // Get payload with leads
@@ -531,6 +534,8 @@ async function processJob(supabase: any, job: BackgroundJob) {
         current_index: i,
         processed_items: processedItems,
         failed_items: failedItems,
+        sent_items: sentItems,
+        skipped_items: skippedItems,
         last_heartbeat_at: new Date().toISOString(),
         payload: { ...payload, leads },
       })
@@ -559,26 +564,39 @@ async function processJob(supabase: any, job: BackgroundJob) {
     // Process item
     const result = await processJobItem(supabase, job, i, userSettings);
 
-    // Update lead status based on result
+    // A ORDEM DESTE TERNARIO ERA O BUG.
+    //
+    // Item pulado volta como `{ success: true, skipped: true }` — sucesso da
+    // OPERACAO, nao envio. Perguntar por `success` primeiro fazia todo item
+    // pulado ser marcado como 'sent'. O log final dizia "20 enviados" e o
+    // usuario recebia uma mensagem so no WhatsApp.
+    //
+    // `skipped` vem antes porque e a pergunta mais especifica.
     if (leads[i]) {
-      leads[i].status = result.success ? 'sent' : (result.skipped ? 'skipped' : 'failed');
+      leads[i].status = result.skipped ? 'skipped' : (result.success ? 'sent' : 'failed');
       if (!result.success && result.error) {
         leads[i].error_message = result.error;
       }
     }
 
-    if (result.success) {
+    if (result.skipped) {
+      // Contabilizado a parte: pulado nao e envio nem falha. Somar aos
+      // enviados foi o que fez a tela mentir; somar as falhas assustaria sem
+      // motivo, porque o portao pular uma mensagem ruim e o sistema
+      // funcionando.
+      skippedItems++;
+      processedItems++;
+    } else if (result.success) {
+      sentItems++;
       processedItems++;
       // Check if job was stopped during delay
       if ((result as any).stopped) {
         console.log(`[Job ${job.id}] Stopped during delay, exiting loop`);
         break;
       }
-    } else if (!result.skipped) {
+    } else {
       failedItems++;
       console.error(`Item ${i} failed:`, result.error);
-    } else {
-      processedItems++; // Skipped items count as processed
     }
 
     // Update payload with lead status
@@ -591,8 +609,8 @@ async function processJob(supabase: any, job: BackgroundJob) {
   }
 
   // Mark job as completed
-  const sentCount = leads.filter((l: any) => l.status === 'sent').length;
-  const skippedCount = leads.filter((l: any) => l.status === 'skipped').length;
+  const sentCount = sentItems;
+  const skippedCount = skippedItems;
   
   await logToDb(supabase, job.id, job.user_id, 'success', 
     `Job concluído! ${sentCount} enviados, ${failedItems} falhas, ${skippedCount} pulados.`

@@ -33,6 +33,10 @@ export interface MassSendJob {
   };
   total_items: number;
   processed_items: number;
+  /** Sairam de verdade. `processed_items` conta tentativa, inclusive a barrada. */
+  sent_items?: number;
+  /** O portao de qualidade recusou. Nao e falha. */
+  skipped_items?: number;
   failed_items: number;
   current_index: number;
   created_at: string;

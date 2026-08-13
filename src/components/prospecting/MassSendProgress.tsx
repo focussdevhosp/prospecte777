@@ -138,10 +138,22 @@ export function MassSendProgress() {
             </span>
           </div>
           
-          <div className="grid grid-cols-3 gap-2 text-center text-sm">
+          {/* "Enviados" era `processed_items - failed_items`, e
+              `processed_items` soma os PULADOS. Num lote real isso mostrou
+              "20 enviados" quando uma única mensagem tinha saído — as outras
+              foram barradas no portão de qualidade.
+
+              Agora são quatro números, e "bloqueados" tem lugar próprio:
+              não é falha, é o portão recusando uma mensagem ruim. Junto vem
+              a explicação, porque um número sem causa vira desconfiança. */}
+          <div className="grid grid-cols-4 gap-2 text-center text-sm">
             <div className="p-2 rounded-lg bg-success/10">
-              <p className="text-2xl font-bold text-success">{activeJob.processed_items - (activeJob.failed_items || 0)}</p>
+              <p className="text-2xl font-bold text-success">{activeJob.sent_items ?? 0}</p>
               <p className="text-xs text-muted-foreground">Enviados</p>
+            </div>
+            <div className="p-2 rounded-lg bg-warning/10">
+              <p className="text-2xl font-bold text-warning">{activeJob.skipped_items ?? 0}</p>
+              <p className="text-xs text-muted-foreground">Bloqueados</p>
             </div>
             <div className="p-2 rounded-lg bg-destructive/10">
               <p className="text-2xl font-bold text-destructive">{activeJob.failed_items || 0}</p>
@@ -152,6 +164,15 @@ export function MassSendProgress() {
               <p className="text-xs text-muted-foreground">Restantes</p>
             </div>
           </div>
+
+          {(activeJob.skipped_items ?? 0) > 0 && (
+            <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+              <strong>{activeJob.skipped_items} mensagem(ns) não saíram de propósito.</strong>{' '}
+              A revisão de qualidade reprovou o texto — genérico demais, sem citar a empresa ou
+              sem fato para sustentar a abordagem. Não enviar é melhor que queimar o número com
+              mensagem que parece robô.
+            </p>
+          )}
         </div>
 
         {/* Current lead and countdown */}
