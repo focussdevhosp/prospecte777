@@ -25,6 +25,30 @@ export interface CopyContext {
     emojiUsage?: string | null;
     companyName?: string | null;
   };
+  /**
+   * Aberturas já usadas nesta mesma campanha.
+   *
+   * Numa missão de doze restaurantes da mesma cidade, todos sem site, o
+   * gancho verdadeiro é o mesmo para os doze — e o modelo escreve doze vezes
+   * a mesma frase. Isso custa de dois jeitos: quem recebe percebe que é
+   * automático, e doze mensagens idênticas saindo do mesmo número é
+   * exatamente o padrão que faz o WhatsApp derrubar o chip.
+   *
+   * A instrução é trocar a FRASE, nunca o FATO. Procurar outro assunto para
+   * variar seria licença para inventar, que é o que este produto inteiro
+   * existe para não fazer.
+   */
+  recentOpenings?: string[];
+}
+
+/** Primeiras palavras de uma mensagem — o que se repete e denuncia o robô. */
+export function aberturaDe(mensagem: string, palavras = 9): string {
+  return mensagem
+    .replace(/\s+/g, " ")
+    .trim()
+    .split(" ")
+    .slice(0, palavras)
+    .join(" ");
 }
 
 const ANGLE_PLAYBOOK: Record<Strategy["angle"], string> = {
@@ -69,6 +93,25 @@ export function buildCopyPrompt(ctx: CopyContext): { system: string; user: strin
   const style = sender.communicationStyle ?? "direto, humano, sem jargão comercial";
 
   // ---- Bloco da oferta: só o que está cadastrado ----
+  // Aberturas já usadas nesta campanha. Só entra no prompt quando existem —
+  // um bloco vazio gastaria tokens e daria ao modelo uma instrução sem
+  // objeto, que ele tende a "cumprir" inventando diferença onde não precisa.
+  const usadas = (ctx.recentOpenings ?? [])
+    .map((a) => a.trim())
+    .filter((a) => a.length > 0)
+    .slice(0, 6);
+
+  const variacaoBlock = usadas.length === 0 ? "" : `
+# NÃO REPITA A ABERTURA
+Estas frases já foram enviadas nesta mesma campanha:
+${usadas.map((a) => `- "${a}..."`).join("\n")}
+
+Escreva uma abertura diferente destas. Mude a CONSTRUÇÃO da frase, não o
+fato: o fato continua sendo o mesmo e continua sendo obrigatório. NÃO
+procure outro assunto para parecer diferente — inventar um segundo motivo
+é pior que repetir o primeiro.
+`;
+
   const offerBlock = offer
     ? [
       `Nome: ${offer.name}`,
@@ -135,7 +178,7 @@ Pedido final: ${strategy.cta}
 - Sem markdown, sem bullet, sem título, sem aspas em volta, sem assinatura.
 - UMA ideia só. Um problema, uma oferta, um pedido.
 - Não liste serviços. Não escreva propaganda.
-
+${variacaoBlock}
 # SAÍDA
 Responda APENAS com o texto da mensagem. Nada antes, nada depois.`;
 

@@ -16,7 +16,8 @@ import { buildDossier, type LeadRow, type MemoryRow, type MessageRow } from "./d
 import { qualify, explainQualification } from "./qualifier.ts";
 import { matchOffer, offerFromRow } from "./offer-matcher.ts";
 import { buildStrategy } from "./strategist.ts";
-import { buildCopyPrompt, buildRewritePrompt, cleanMessage } from "./copywriter.ts";
+import { buildCopyPrompt, buildRewritePrompt, cleanMessage, aberturaDe
+} from "./copywriter.ts";
 import { evaluate } from "./quality-gate.ts";
 import { AUTONOMY, type AutonomyLevel, type CampaignGoal, type IcpCriteria, type Offer, type QualityThresholds } from "./types.ts";
 import { isUsable, waterfall } from "../providers/enrichment.ts";
@@ -326,9 +327,30 @@ export async function runPipelineForLead(opts: RunOptions): Promise<{
     detail: { angle: strategy.angle, rationale: strategy.rationale },
   });
 
+  // As últimas aberturas desta campanha, para o redator não repetir a mesma
+  // frase doze vezes. Falha aqui é irrelevante: sem a lista ele escreve como
+  // escrevia antes, e o pior caso é a repetição que já existia.
+  let recentOpenings: string[] = [];
+  try {
+    const { data: anteriores } = await supabase
+      .from("mission_leads")
+      .select("draft_message")
+      .eq("mission_id", mission.id)
+      .not("draft_message", "is", null)
+      .order("updated_at", { ascending: false })
+      .limit(6);
+
+    recentOpenings = (anteriores ?? [])
+      .map((r: { draft_message?: string | null }) => aberturaDe(String(r.draft_message ?? "")))
+      .filter((a: string) => a.length > 0);
+  } catch (e) {
+    console.error("[orchestrator] não foi possível ler as aberturas anteriores:", e);
+  }
+
   const copyContext = {
     dossier,
     strategy,
+    recentOpenings,
     sender: {
       agentName: (senderSettings.agent_name as string) ?? "um consultor",
       persona: (senderSettings.agent_persona as string) ?? null,
