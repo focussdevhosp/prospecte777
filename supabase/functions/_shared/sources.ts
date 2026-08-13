@@ -336,7 +336,15 @@ export async function searchDuckDuckGo(
     if (!res.ok) return { source: "duckduckgo", leads: [], error: `HTTP ${res.status}` };
 
     const html = await res.text();
-    const blocks = html.split('class="result__body"');
+
+    // Separa por `result__body` SEM o prefixo `class="`.
+    //
+    // O corte era pela string exata `class="result__body"`, e o DuckDuckGo
+    // passou a emitir `class="links_main links_deep result__body"` — a mesma
+    // classe, com outras na frente. O split deixou de casar e a fonte passou
+    // a devolver zero resultado de uma página que vinha cheia deles, com
+    // HTTP 200 e sem erro nenhum. Nada no sistema apontava para cá.
+    const blocks = html.split("result__body");
     const leads: RawLead[] = [];
 
     for (let i = 1; i < blocks.length; i++) {
