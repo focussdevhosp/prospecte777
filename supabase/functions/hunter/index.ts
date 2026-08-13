@@ -228,6 +228,9 @@ Responda APENAS com a mensagem, sem explicações.`,
 
       createdLeads.push(lead);
 
+      // Vira `true` só quando o envio foi aceito. É o que o webhook consulta.
+      let enviouDeVerdade = false;
+
       // ---- PRIMEIRA ABORDAGEM ----
       // Vai pelo `whatsapp-send` como todo o resto. Falando direto com a
       // Evolution, esta função não consultava a lista de bloqueio: um número
@@ -249,6 +252,7 @@ Responda APENAS com a mensagem, sem explicações.`,
           if (sendError) {
             console.error(`[hunter] envio recusado para ${leadData.phone}: ${sendError.message}`);
           } else {
+            enviouDeVerdade = true;
             await supabase
               .from("chat_messages")
               .update({ status: "delivered" })
@@ -259,11 +263,21 @@ Responda APENAS com a mensagem, sem explicações.`,
           console.error("[hunter] falha no envio:", whatsappError);
         }
       } else {
-        console.log(`WhatsApp not connected - would send to ${leadData.phone}: ${firstMessage.substring(0, 50)}...`);
+        console.log(
+          `[hunter] WhatsApp desconectado — nada foi enviado para ${leadData.phone}.`,
+        );
       }
 
-      // Trigger webhook if configured
-      if (settings.webhook_url) {
+      // O WEBHOOK SO DISPARA SE A MENSAGEM SAIU.
+      //
+      // Ele avisava "lead_contacted" em TODOS os caminhos: WhatsApp
+      // desconectado, envio recusado, excecao no meio. O sistema do cliente
+      // do outro lado — CRM, automacao, planilha — registrava um contato que
+      // nunca aconteceu, e ninguem tinha como perceber a diferenca.
+      //
+      // Um webhook e um contrato com um sistema de terceiro. Mentir para ele
+      // e pior que mentir para uma tela: a tela alguem confere.
+      if (settings.webhook_url && enviouDeVerdade) {
         try {
           await fetch(settings.webhook_url, {
             method: "POST",
