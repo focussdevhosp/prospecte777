@@ -182,13 +182,22 @@ export function ImportTab() {
 
       setWhatsAppProgress(40);
 
-      // Get existing leads to avoid duplicates
-      const { data: existingLeads } = await supabase
-        .from('leads')
-        .select('phone')
-        .eq('user_id', user.id);
+      // Duplicata pelos telefones DESTA importação, comparados pela forma
+      // canônica no banco.
+      //
+      // A versão anterior tinha dois furos: baixava a carteira inteira (que o
+      // PostgREST corta em 1000) e comparava o telefone COMO ESTÁ GRAVADO —
+      // "(11) 98765-4321" e "5511987654321" são o mesmo número e não batiam.
+      const { data: repetidos, error: erroDup } = await supabase.rpc('leads_ja_existentes', {
+        p_user_id: user.id,
+        p_phones: participants.map(p => p.phone),
+      });
 
-      const existingPhones = new Set(existingLeads?.map(l => l.phone) || []);
+      if (erroDup) throw erroDup;
+
+      const existingPhones = new Set(
+        (repetidos ?? []).map((r: { phone_consultado: string }) => r.phone_consultado),
+      );
 
       // Filter out duplicates
       const newParticipants = participants.filter(p => !existingPhones.has(p.phone));

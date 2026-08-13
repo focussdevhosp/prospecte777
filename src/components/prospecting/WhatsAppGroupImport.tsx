@@ -237,13 +237,19 @@ export function WhatsAppGroupImport({ onLeadsImported, disabled }: WhatsAppGroup
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Não autenticado');
 
-      const { data: existingLeads } = await supabase
-        .from('leads')
-        .select('phone')
-        .eq('user_id', user.id);
+      // Só os telefones deste grupo, comparados pela forma canônica no banco.
+      // A leitura anterior baixava a carteira toda — que o PostgREST corta em
+      // 1000 — e comparava só dígitos, sem tratar o "55" do país nem o nono
+      // dígito. Grupo grande importado numa carteira grande trazia repetido.
+      const { data: repetidos, error: erroDup } = await supabase.rpc('leads_ja_existentes', {
+        p_user_id: user.id,
+        p_phones: participants.map(p => p.phone),
+      });
+
+      if (erroDup) throw erroDup;
 
       const existingPhones = new Set(
-        existingLeads?.map(l => l.phone.replace(/\D/g, '')) || []
+        (repetidos ?? []).map((r: { phone_consultado: string }) => r.phone_consultado.replace(/\D/g, '')),
       );
 
       const contacts: ImportedContact[] = participants.map(p => {

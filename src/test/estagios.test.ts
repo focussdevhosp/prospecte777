@@ -8,6 +8,13 @@ import { join } from 'node:path';
  */
 const ESTAGIOS = ['Contato', 'Qualificado', 'Proposta', 'Negociação', 'Ganho', 'Perdido'];
 
+/** Os outros vocabulários com CHECK na mesma tabela. */
+const VOCABULARIOS: Record<string, string[]> = {
+  stage: ESTAGIOS,
+  temperature: ['quente', 'morno', 'frio'],
+  agent_status: ['active', 'paused', 'handoff', 'opted_out'],
+};
+
 function arquivos(dir: string, ext: string, saida: string[] = []): string[] {
   for (const nome of readdirSync(dir)) {
     const caminho = join(dir, nome);

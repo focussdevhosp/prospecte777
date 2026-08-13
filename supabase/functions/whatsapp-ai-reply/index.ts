@@ -13,6 +13,19 @@ import {
 } from "../_shared/agents/conversation.ts";
 import type { Fact, Hypothesis } from "../_shared/agents/types.ts";
 
+/**
+ * O vocabulário que o BANCO aceita, repetido do lado de cá.
+ *
+ * Não é redundância: o `enum` declarado na ferramenta é uma dica para o
+ * modelo, e ele às vezes devolve outra coisa. Quando isso acontece, o CHECK
+ * da tabela recusa a linha — e sem conferência a função respondia "Estágio:
+ * X" para o próprio modelo, que seguia conversando como se tivesse mudado.
+ *
+ * Um teste garante que estas listas continuem iguais às da tabela.
+ */
+const ESTAGIOS_VALIDOS = ["Contato", "Qualificado", "Proposta", "Negociação", "Ganho", "Perdido"];
+const TEMPERATURAS_VALIDAS = ["quente", "morno", "frio"];
+
 // Advanced AI Tools with full intelligence capabilities
 const AI_TOOLS = [
   // ===== SCHEDULING & MEETING =====
@@ -388,7 +401,26 @@ async function executeToolCall(
     }
 
     case "updateLeadStage": {
-      await supabase.from("leads").update({ stage: args.new_stage }).eq("id", leadId);
+      // O `enum` da ferramenta é DICA para o modelo, não garantia. Quando ele
+      // devolve algo fora da lista — "Novo", "Em negociação", o que for — o
+      // CHECK da tabela recusa a linha. Sem validação e sem conferir o erro,
+      // esta função devolvia "Estágio: Novo" para o próprio modelo, que
+      // seguia a conversa acreditando que a mudança tinha acontecido.
+      if (!ESTAGIOS_VALIDOS.includes(String(args.new_stage))) {
+        console.warn(`[ai-reply] modelo pediu estágio inválido: ${args.new_stage}`);
+        return `Estágio "${args.new_stage}" não existe. Os válidos são: ${ESTAGIOS_VALIDOS.join(", ")}.`;
+      }
+
+      const { error } = await supabase
+        .from("leads")
+        .update({ stage: args.new_stage })
+        .eq("id", leadId);
+
+      if (error) {
+        console.error("[ai-reply] falha ao mudar estágio:", error.message);
+        return `Não foi possível mudar o estágio: ${error.message}`;
+      }
+
       await supabase.from("activity_log").insert({
         user_id: userId,
         lead_id: leadId,
@@ -399,10 +431,21 @@ async function executeToolCall(
     }
 
     case "updateLeadTemperature": {
-      await supabase
+      if (!TEMPERATURAS_VALIDAS.includes(String(args.temperature))) {
+        console.warn(`[ai-reply] modelo pediu temperatura inválida: ${args.temperature}`);
+        return `Temperatura "${args.temperature}" não existe. As válidas são: ${TEMPERATURAS_VALIDAS.join(", ")}.`;
+      }
+
+      const { error } = await supabase
         .from("leads")
         .update({ temperature: args.temperature, conversation_summary: args.analysis })
         .eq("id", leadId);
+
+      if (error) {
+        console.error("[ai-reply] falha ao mudar temperatura:", error.message);
+        return `Não foi possível mudar a temperatura: ${error.message}`;
+      }
+
       return `Temperatura: ${args.temperature}`;
     }
 

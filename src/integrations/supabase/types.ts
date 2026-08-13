@@ -2852,6 +2852,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      leads_ja_existentes: {
+        Args: { p_user_id: string; p_phones: string[] }
+        Returns: { phone_consultado: string }[]
+      }
       dashboard_metrics: {
         Args: { p_user_id: string; p_days?: number }
         Returns: Json

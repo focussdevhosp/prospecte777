@@ -88,12 +88,22 @@ export function CaptureAndSendTab() {
   const checkDuplicatesInDatabase = async (leads: CapturedLead[]): Promise<CapturedLead[]> => {
     if (!user?.id || leads.length === 0) return leads;
     try {
-      const { data: existingLeads } = await supabase
-        .from('leads')
-        .select('phone')
-        .eq('user_id', user.id);
-      if (!existingLeads) return leads;
-      const existingPhones = new Set(existingLeads.map(l => normalizePhone(l.phone)));
+      // Pergunta só pelos telefones desta captura, em vez de baixar a
+      // carteira inteira. A leitura antiga não tinha limite e o PostgREST
+      // corta em 1000: numa carteira com 1.500 leads, os 500 últimos ficavam
+      // invisíveis e a duplicata passava batido — a mesma empresa abordada
+      // duas vezes.
+      const { data: repetidos, error } = await supabase.rpc('leads_ja_existentes', {
+        p_user_id: user.id,
+        p_phones: leads.map(l => l.phone),
+      });
+
+      if (error) throw error;
+
+      const existingPhones = new Set(
+        (repetidos ?? []).map((r: { phone_consultado: string }) => normalizePhone(r.phone_consultado)),
+      );
+
       return leads.map(lead => ({
         ...lead,
         isDuplicate: existingPhones.has(normalizePhone(lead.phone)),
