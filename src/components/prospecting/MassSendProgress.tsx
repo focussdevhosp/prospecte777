@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -43,13 +43,18 @@ export function MassSendProgress() {
 
   const [showAllLeads, setShowAllLeads] = useState(false);
 
-  // Auto-refetch when job is running
-  useEffect(() => {
-    if (activeJob?.status === 'running') {
-      const interval = setInterval(refetch, 2000);
-      return () => clearInterval(interval);
-    }
-  }, [activeJob?.status, refetch]);
+  // O TIMER QUE ESTAVA AQUI ERA DUPLICADO.
+  //
+  // `useMassSendJob` ja busca o job por conta propria enquanto ele roda.
+  // Este `setInterval(refetch, 2000)` era um SEGUNDO relogio sobre o mesmo
+  // dado: dois timers independentes, um de 3s e outro de 2s, buscando a
+  // mesma linha. Cerca de duas vezes e meia o numero de requisicoes, sem
+  // nenhuma informacao a mais.
+  //
+  // E o do hook tem uma vantagem que este nao tinha: sendo `refetchInterval`
+  // do TanStack, ele pausa sozinho quando a aba perde o foco. Um disparo de
+  // quatro horas com a aba em segundo plano fazia 7.200 requisicoes por este
+  // caminho para atualizar uma tela que ninguem estava olhando.
 
   if (isLoading) {
     return (

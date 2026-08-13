@@ -43,7 +43,19 @@ export function useJobLogs(jobId?: string) {
       return filteredData as JobLog[];
     },
     enabled: !!user?.id,
-    refetchInterval: 3000, // Poll every 3 seconds
+
+    // Log so cresce enquanto ha job rodando. Fora disso, tres segundos e um
+    // relogio batendo no banco para descobrir que nada mudou — e ele batia
+    // assim em qualquer tela que monte este hook, o dia inteiro.
+    refetchInterval: (query) => {
+      const logs = (query.state.data ?? []) as JobLog[];
+      const ultimo = logs[0]?.created_at;
+      if (!ultimo) return 30_000;
+
+      // Houve linha nova nos ultimos dois minutos? Entao tem job vivo.
+      const minutos = (Date.now() - new Date(ultimo).getTime()) / 60_000;
+      return minutos < 2 ? 3000 : 30_000;
+    },
   });
 
   // Get recent logs for display (last 50)

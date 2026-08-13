@@ -143,7 +143,21 @@ export function useMassSendJob() {
       } as MassSendJob;
     },
     enabled: !!user?.id,
-    refetchInterval: 3000, // Poll every 3 seconds
+
+    // O intervalo depende do que esta acontecendo.
+    //
+    // Antes era 3000 fixo: a tela batia no banco a cada tres segundos PARA
+    // SEMPRE, mesmo sem job nenhum rodando. Numa aba aberta o dia inteiro
+    // isso da 1.200 consultas por hora para receber `null` 1.200 vezes.
+    //
+    // Com job ativo, tres segundos e o certo — a barra precisa andar. Sem
+    // job, meio minuto basta: a unica coisa que a consulta descobriria e que
+    // um disparo comecou, e disparo comeca por acao do proprio usuario nesta
+    // mesma tela.
+    refetchInterval: (query) => {
+      const job = query.state.data as MassSendJob | null;
+      return job && (job.status === 'running' || job.status === 'pending') ? 3000 : 30_000;
+    },
   });
 
   // Create a new mass send job
