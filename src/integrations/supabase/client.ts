@@ -5,70 +5,61 @@ import { anunciarVersao } from '@/lib/build-info';
 // ============================================================
 // CLIENTE SUPABASE
 // ============================================================
-// A URL e a chave vinham fixas neste arquivo, e o `.env` do repositório —
-// que parecia ser a configuração — não tinha efeito nenhum. Quem editasse o
-// `.env` esperando apontar para outro banco continuava batendo no mesmo.
+// QUEM MANDA AQUI É O CÓDIGO, E A VARIÁVEL DE AMBIENTE CONFERE
 //
-// Agora valem as variáveis de ambiente, e os valores abaixo são a reserva.
+// A versão anterior fazia o contrário: a variável mandava, e havia uma LISTA
+// DE PROJETOS ABANDONADOS para desviar do caso conhecido. Isso tinha três
+// problemas, e o terceiro é o que dói:
+//
+//   1. era lista para alguém manter — cada migração de banco exigia lembrar
+//      de acrescentar o ref antigo, e esquecer significava quebra silenciosa;
+//   2. só pegava o UM endereço já conhecido. Se a plataforma de deploy
+//      apontasse para um terceiro projeto (outro produto, um typo), passava
+//      direto e o app quebrava inteiro sem pista;
+//   3. parecia código morto. Um `PROJETOS_ABANDONADOS` com um item lá dentro
+//      é exatamente o tipo de coisa que alguém apaga numa limpeza — e aí o
+//      app volta a apontar para o banco errado, em silêncio.
+//
+// A regra agora é outra e não precisa de lista: ESTE CÓDIGO SÓ FUNCIONA
+// CONTRA O PROJETO PARA O QUAL FOI GERADO. O `types.ts` deste repositório é
+// gerado a partir de um projeto específico; as migrações foram aplicadas
+// nele; as functions estão publicadas nele. Apontar para outro banco sem
+// regerar tudo isso não é configuração — é defeito.
+//
+// Então o ref mora aqui, e `VITE_SUPABASE_URL` vira CONFERÊNCIA: se
+// discordar, o app avisa alto e usa o do código. Trocar de projeto continua
+// possível e passa a ser o que sempre foi de verdade: uma mudança de código,
+// junto com o `types.ts` novo.
 //
 // Só entra aqui chave PUBLICÁVEL (anon). Em projeto Vite, tudo que começa
 // com VITE_ é embutido no bundle que vai para o navegador — a chave
 // `service_role` jamais pode passar por este arquivo. Ela vive só nos
 // secrets das edge functions.
 
-/** Projeto para o qual este schema foi construído e aplicado. */
-const PROJETO_ATUAL = 'sciphxtbxvbpiypbcxub';
-const URL_ATUAL = `https://${PROJETO_ATUAL}.supabase.co`;
-const CHAVE_ATUAL = 'sb_publishable_RLg7_0prleJlR7tgiffUOQ_YyB6wy5O';
+/** Projeto para o qual este schema, estes tipos e estas functions existem. */
+const PROJETO = 'sciphxtbxvbpiypbcxub';
 
-/**
- * Projetos que este app JÁ usou e não usa mais.
- *
- * A plataforma de deploy injeta `VITE_SUPABASE_*` a partir da configuração
- * dela, que é editada em outro lugar e pode ficar para trás. Quando isso
- * acontece, a variável — que existe para dar flexibilidade — passa a apontar
- * para um banco onde as tabelas deste código não existem, e o app quebra
- * inteiro sem nenhuma pista de por quê.
- *
- * Foi exatamente o que houve: o build continuou mandando o endereço antigo
- * depois da migração, e a tela de login morreu com um erro de cota de um
- * projeto que nem é mais o nosso.
- *
- * Variável de ambiente continua tendo a palavra final para qualquer destino
- * NOVO — trocar de banco segue sendo configuração. O que ela não pode mais
- * fazer é ressuscitar um destino que já foi abandonado.
- */
-const PROJETOS_ABANDONADOS = ['oeztpxyprifabkvysroh'];
+const SUPABASE_URL = `https://${PROJETO}.supabase.co`;
+const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_RLg7_0prleJlR7tgiffUOQ_YyB6wy5O';
 
-function ehAbandonado(url: string | undefined): boolean {
-  if (!url) return false;
-  return PROJETOS_ABANDONADOS.some((ref) => url.includes(ref));
+/** Extrai `abcdefgh` de `https://abcdefgh.supabase.co`. */
+export function refDoProjeto(url: string | undefined | null): string | null {
+  const m = String(url ?? '').match(/https:\/\/([a-z0-9]+)\.supabase\.co/i);
+  return m ? m[1] : null;
 }
 
-const urlDoAmbiente = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-const ambienteEstaVelho = ehAbandonado(urlDoAmbiente);
+const refDoAmbiente = refDoProjeto(import.meta.env.VITE_SUPABASE_URL as string | undefined);
 
-if (ambienteEstaVelho) {
-  // Aviso alto e específico: quem abrir o console precisa saber que a
-  // configuração do deploy está desatualizada, mesmo com o app funcionando.
-  console.warn(
-    `[supabase] VITE_SUPABASE_URL aponta para ${urlDoAmbiente}, que é um ` +
-      `projeto abandonado. Usando ${URL_ATUAL}. Atualize as variáveis na ` +
-      `plataforma de deploy para remover este aviso.`,
-  );
-}
-
-const SUPABASE_URL = ambienteEstaVelho ? URL_ATUAL : (urlDoAmbiente ?? URL_ATUAL);
-
-// A chave acompanha a URL: chave de um projeto não abre outro. Se o endereço
-// do ambiente foi descartado, a chave dele também precisa ser.
-const SUPABASE_PUBLISHABLE_KEY = ambienteEstaVelho
-  ? CHAVE_ATUAL
-  : ((import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined) ?? CHAVE_ATUAL);
-
-if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
-  throw new Error(
-    'Supabase não configurado. Defina VITE_SUPABASE_URL e VITE_SUPABASE_PUBLISHABLE_KEY.',
+if (refDoAmbiente && refDoAmbiente !== PROJETO) {
+  // `error`, não `warn`: o app segue funcionando por causa desta linha, mas a
+  // configuração do deploy está errada e alguém precisa consertar na origem.
+  // Aviso discreto some no meio do console e a divergência atravessa meses.
+  console.error(
+    `[supabase] A plataforma de deploy manda VITE_SUPABASE_URL para o projeto ` +
+      `"${refDoAmbiente}", mas este código foi gerado para "${PROJETO}". ` +
+      `Usando "${PROJETO}", que é onde as tabelas e as functions estão. ` +
+      `Corrija VITE_SUPABASE_URL e VITE_SUPABASE_PUBLISHABLE_KEY na plataforma ` +
+      `para o app parar de depender desta correção.`,
   );
 }
 
