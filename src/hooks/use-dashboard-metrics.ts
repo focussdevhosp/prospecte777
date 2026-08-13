@@ -4,6 +4,40 @@ import { useAuth } from '@/lib/auth';
 import { DashboardMetrics, LeadStage } from '@/types/database';
 import { format, subDays } from 'date-fns';
 
+/**
+ * Números do painel.
+ *
+ * ANTES: baixava TODOS os leads da conta e contava no navegador.
+ *
+ *   .from('leads').select('id, stage, temperature, created_at').eq('user_id', ...)
+ *
+ * Sem limite explícito — e o PostgREST deste projeto tem `max_rows = 1000`.
+ * Acima disso ele devolve os primeiros mil e não avisa. Nenhum erro, nenhum
+ * aviso. Numa conta com 1.500 leads, "Total de Leads" mostraria 1000 para
+ * sempre, e o funil, a conversão e as temperaturas sairiam de uma amostra
+ * truncada — nem aleatória, apenas a ordem que o banco devolveu.
+ *
+ * Quanto mais o cliente usasse o produto, mais errado ficaria a primeira tela
+ * que ele abre. E errado em silêncio, que é o tipo que ninguém corrige.
+ *
+ * AGORA: uma agregação no banco. Exata, sem teto, e uma ida de rede em vez de
+ * baixar a carteira inteira a cada minuto.
+ */
+const DIAS_DO_GRAFICO = 90;
+
+interface MetricasDoBanco {
+  totalLeads: number;
+  leadsThisMonth: number;
+  hotLeads: number;
+  warmLeads: number;
+  coldLeads: number;
+  conversionRate: number;
+  meetingsScheduled: number;
+  meetingsThisWeek: number;
+  leadsByStage: Record<LeadStage, number>;
+  leadsByDate: Record<string, number>;
+}
+
 export function useDashboardMetrics() {
   const { user } = useAuth();
 
@@ -12,68 +46,38 @@ export function useDashboardMetrics() {
     queryFn: async (): Promise<DashboardMetrics & { leadsByDate: Record<string, number> }> => {
       if (!user?.id) throw new Error('User not authenticated');
 
-      const { data: leads, error: leadsError } = await supabase
-        .from('leads')
-        .select('id, stage, temperature, created_at')
-        .eq('user_id', user.id);
-
-      if (leadsError) throw leadsError;
-
-      const { data: meetings, error: meetingsError } = await supabase
-        .from('meetings')
-        .select('id, scheduled_at, status')
-        .eq('user_id', user.id);
-
-      if (meetingsError) throw meetingsError;
-
-      const now = new Date();
-      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-      const startOfWeek = new Date(now);
-      startOfWeek.setDate(now.getDate() - now.getDay());
-
-      const totalLeads = leads?.length || 0;
-      const leadsThisMonth = leads?.filter(l => new Date(l.created_at) >= startOfMonth).length || 0;
-
-      const scheduledMeetings = meetings?.filter(m => m.status === 'scheduled') || [];
-      const meetingsScheduled = scheduledMeetings.length;
-      const meetingsThisWeek = scheduledMeetings.filter(m => new Date(m.scheduled_at) >= startOfWeek).length;
-
-      const wonLeads = leads?.filter(l => l.stage === 'Ganho').length || 0;
-      const conversionRate = totalLeads > 0 ? (wonLeads / totalLeads) * 100 : 0;
-
-      const hotLeads = leads?.filter(l => l.temperature === 'quente').length || 0;
-      const warmLeads = leads?.filter(l => l.temperature === 'morno').length || 0;
-      const coldLeads = leads?.filter(l => l.temperature === 'frio').length || 0;
-
-      const stages: LeadStage[] = ['Contato', 'Qualificado', 'Proposta', 'Negociação', 'Ganho', 'Perdido'];
-      const leadsByStage = stages.reduce((acc, stage) => {
-        acc[stage] = leads?.filter(l => l.stage === stage).length || 0;
-        return acc;
-      }, {} as Record<LeadStage, number>);
-
-      // Build leads by date (last 90 days)
-      const leadsByDate: Record<string, number> = {};
-      for (let i = 89; i >= 0; i--) {
-        const dateKey = format(subDays(now, i), 'yyyy-MM-dd');
-        leadsByDate[dateKey] = 0;
-      }
-      leads?.forEach(l => {
-        const dateKey = format(new Date(l.created_at), 'yyyy-MM-dd');
-        if (dateKey in leadsByDate) {
-          leadsByDate[dateKey]++;
-        }
+      const { data, error } = await supabase.rpc('dashboard_metrics', {
+        p_user_id: user.id,
+        p_days: DIAS_DO_GRAFICO,
       });
 
+      if (error) throw error;
+
+      const m = (data ?? {}) as unknown as MetricasDoBanco;
+
+      // O gráfico precisa de TODOS os dias da janela, inclusive os de captura
+      // zero. O banco só devolve os dias que tiveram lead — dia sem captura
+      // simplesmente não existe na tabela. Preencher aqui é o que evita a
+      // linha do gráfico "pular" os dias parados e mentir sobre a constância
+      // da operação.
+      const leadsByDate: Record<string, number> = {};
+      for (let i = DIAS_DO_GRAFICO - 1; i >= 0; i--) {
+        leadsByDate[format(subDays(new Date(), i), 'yyyy-MM-dd')] = 0;
+      }
+      for (const [dia, qtd] of Object.entries(m.leadsByDate ?? {})) {
+        if (dia in leadsByDate) leadsByDate[dia] = Number(qtd) || 0;
+      }
+
       return {
-        totalLeads,
-        leadsThisMonth,
-        meetingsScheduled,
-        meetingsThisWeek,
-        conversionRate,
-        hotLeads,
-        warmLeads,
-        coldLeads,
-        leadsByStage,
+        totalLeads: m.totalLeads ?? 0,
+        leadsThisMonth: m.leadsThisMonth ?? 0,
+        meetingsScheduled: m.meetingsScheduled ?? 0,
+        meetingsThisWeek: m.meetingsThisWeek ?? 0,
+        conversionRate: Number(m.conversionRate ?? 0),
+        hotLeads: m.hotLeads ?? 0,
+        warmLeads: m.warmLeads ?? 0,
+        coldLeads: m.coldLeads ?? 0,
+        leadsByStage: m.leadsByStage ?? ({} as Record<LeadStage, number>),
         leadsByDate,
       };
     },

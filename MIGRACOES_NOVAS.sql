@@ -1,7 +1,7 @@
 -- ============================================================
 -- MIGRAÇÕES NOVAS — PARA O BANCO QUE JÁ EXISTE
 -- ============================================================
--- São 21 migrações, todas ADITIVAS: criam tabela, função, gatilho e
+-- São 22 migrações, todas ADITIVAS: criam tabela, função, gatilho e
 -- coluna. Nenhuma apaga dado, nenhuma remove coluna, nenhuma altera tipo de
 -- coluna existente.
 --
@@ -31,7 +31,7 @@
 
 
 -- ############################################################
--- [01/21] 20260811120000_b7c8d9e0-0005-4a55-9c05-000000000005.sql
+-- [01/22] 20260811120000_b7c8d9e0-0005-4a55-9c05-000000000005.sql
 -- ############################################################
 
 -- ============================================================
@@ -552,7 +552,7 @@ CREATE TRIGGER trg_mission_leads_touch
 
 
 -- ############################################################
--- [02/21] 20260811140000_c8d9e0f1-0006-4a66-9c06-000000000006.sql
+-- [02/22] 20260811140000_c8d9e0f1-0006-4a66-9c06-000000000006.sql
 -- ############################################################
 
 -- ============================================================
@@ -886,7 +886,7 @@ CREATE TRIGGER trg_provider_states_touch
 
 
 -- ############################################################
--- [03/21] 20260811160000_d9e0f1a2-0007-4a77-9c07-000000000007.sql
+-- [03/22] 20260811160000_d9e0f1a2-0007-4a77-9c07-000000000007.sql
 -- ############################################################
 
 -- ============================================================
@@ -1060,7 +1060,7 @@ $$;
 
 
 -- ############################################################
--- [04/21] 20260811180000_e0f1a2b3-0008-4a88-9c08-000000000008.sql
+-- [04/22] 20260811180000_e0f1a2b3-0008-4a88-9c08-000000000008.sql
 -- ############################################################
 
 -- ============================================================
@@ -1406,7 +1406,7 @@ COMMENT ON FUNCTION public.mission_refresh_counters(UUID) IS
 
 
 -- ############################################################
--- [05/21] 20260811200000_f1a2b3c4-0009-4a99-9c09-000000000009.sql
+-- [05/22] 20260811200000_f1a2b3c4-0009-4a99-9c09-000000000009.sql
 -- ############################################################
 
 -- ============================================================
@@ -1629,7 +1629,7 @@ $$;
 
 
 -- ############################################################
--- [06/21] 20260811220000_a2b3c4d5-0010-4aaa-9c10-000000000010.sql
+-- [06/22] 20260811220000_a2b3c4d5-0010-4aaa-9c10-000000000010.sql
 -- ############################################################
 
 -- ============================================================
@@ -1781,7 +1781,7 @@ $$;
 
 
 -- ############################################################
--- [07/21] 20260812000000_b3c4d5e6-0011-4abb-9c11-000000000011.sql
+-- [07/22] 20260812000000_b3c4d5e6-0011-4abb-9c11-000000000011.sql
 -- ############################################################
 
 -- ============================================================
@@ -1849,7 +1849,7 @@ $$;
 
 
 -- ############################################################
--- [08/21] 20260812020000_c4d5e6f7-0012-4acc-9c12-000000000012.sql
+-- [08/22] 20260812020000_c4d5e6f7-0012-4acc-9c12-000000000012.sql
 -- ############################################################
 
 -- ============================================================
@@ -2148,7 +2148,7 @@ $$;
 
 
 -- ############################################################
--- [09/21] 20260812040000_d5e6f7a8-0013-4add-9c13-000000000013.sql
+-- [09/22] 20260812040000_d5e6f7a8-0013-4add-9c13-000000000013.sql
 -- ############################################################
 
 -- ============================================================
@@ -2277,7 +2277,7 @@ $$;
 
 
 -- ############################################################
--- [10/21] 20260812060000_e6f7a8b9-0014-4aee-9c14-000000000014.sql
+-- [10/22] 20260812060000_e6f7a8b9-0014-4aee-9c14-000000000014.sql
 -- ############################################################
 
 -- ============================================================
@@ -2406,7 +2406,7 @@ $$;
 
 
 -- ############################################################
--- [11/21] 20260812080000_f7a8b9c0-0015-4aff-9c15-000000000015.sql
+-- [11/22] 20260812080000_f7a8b9c0-0015-4aff-9c15-000000000015.sql
 -- ############################################################
 
 -- ============================================================
@@ -2579,7 +2579,7 @@ $$;
 
 
 -- ############################################################
--- [12/21] 20260812100000_a8b9c0d1-0016-4b00-9c16-000000000016.sql
+-- [12/22] 20260812100000_a8b9c0d1-0016-4b00-9c16-000000000016.sql
 -- ############################################################
 
 -- ============================================================
@@ -2692,7 +2692,7 @@ $$;
 
 
 -- ############################################################
--- [13/21] 20260812120000_b9c0d1e2-0017-4b11-9c17-000000000017.sql
+-- [13/22] 20260812120000_b9c0d1e2-0017-4b11-9c17-000000000017.sql
 -- ############################################################
 
 -- ============================================================
@@ -2888,7 +2888,7 @@ $$;
 
 
 -- ############################################################
--- [14/21] 20260812140000_c0d1e2f3-0018-4b22-9c18-000000000018.sql
+-- [14/22] 20260812140000_c0d1e2f3-0018-4b22-9c18-000000000018.sql
 -- ############################################################
 
 -- ============================================================
@@ -2931,7 +2931,7 @@ $$;
 
 
 -- ############################################################
--- [15/21] 20260812160000_d1e2f3a4-0019-4b33-9c19-000000000019.sql
+-- [15/22] 20260812160000_d1e2f3a4-0019-4b33-9c19-000000000019.sql
 -- ############################################################
 
 -- ============================================================
@@ -3075,7 +3075,7 @@ $$;
 
 
 -- ############################################################
--- [16/21] 20260812180000_e2f3a4b5-0020-4b44-9c20-000000000020.sql
+-- [16/22] 20260812180000_e2f3a4b5-0020-4b44-9c20-000000000020.sql
 -- ############################################################
 
 -- ============================================================
@@ -3289,7 +3289,7 @@ $$;
 
 
 -- ############################################################
--- [17/21] 20260812200000_f3a4b5c6-0021-4b55-9c21-000000000021.sql
+-- [17/22] 20260812200000_f3a4b5c6-0021-4b55-9c21-000000000021.sql
 -- ############################################################
 
 -- ============================================================
@@ -3379,7 +3379,7 @@ $$;
 
 
 -- ############################################################
--- [18/21] 20260812220000_a4b5c6d7-0022-4b66-9c22-000000000022.sql
+-- [18/22] 20260812220000_a4b5c6d7-0022-4b66-9c22-000000000022.sql
 -- ############################################################
 
 -- ============================================================
@@ -3496,7 +3496,7 @@ $$;
 
 
 -- ############################################################
--- [19/21] 20260813000000_b5c6d7e8-0023-4b77-9c23-000000000023.sql
+-- [19/22] 20260813000000_b5c6d7e8-0023-4b77-9c23-000000000023.sql
 -- ############################################################
 
 -- ============================================================
@@ -3717,7 +3717,7 @@ $$;
 
 
 -- ############################################################
--- [20/21] 20260813020000_c6d7e8f9-0024-4c88-9d24-000000000024.sql
+-- [20/22] 20260813020000_c6d7e8f9-0024-4c88-9d24-000000000024.sql
 -- ############################################################
 
 -- ============================================================
@@ -3903,7 +3903,7 @@ $$;
 
 
 -- ############################################################
--- [21/21] 20260813040000_d7e8f9a0-0025-4d99-9e25-000000000025.sql
+-- [21/22] 20260813040000_d7e8f9a0-0025-4d99-9e25-000000000025.sql
 -- ############################################################
 
 -- ============================================================
@@ -3971,6 +3971,138 @@ BEGIN
       AND column_name = 'serpapi_api_key'
   ) THEN
     RAISE EXCEPTION 'serpapi_api_key sumiu junto — essa é do cliente e o produto usa.';
+  END IF;
+END;
+$$;
+
+
+-- ############################################################
+-- [22/22] 20260813060000_e8f9a0b1-0026-4e00-9f26-000000000026.sql
+-- ############################################################
+
+-- ============================================================
+-- O DASHBOARD PARAVA DE CONTAR EM MIL
+-- ============================================================
+-- A tela buscava TODOS os leads da conta e contava no navegador:
+--
+--   .from('leads').select('id, stage, temperature, created_at').eq('user_id', ...)
+--
+-- Sem limite explícito — e o PostgREST deste projeto tem `max_rows = 1000`.
+-- Acima disso ele devolve os primeiros mil e não avisa. Nenhum erro, nenhum
+-- aviso, nenhuma diferença visível.
+--
+-- O que acontece numa conta com 1.500 leads:
+--   - "Total de Leads" mostra 1000, e para de crescer para sempre;
+--   - a taxa de conversão vira ganhos-dentro-dos-mil / mil;
+--   - funil e temperaturas saem de uma amostra truncada, e nem aleatória —
+--     é a ordem que o Postgres devolveu.
+--
+-- Ou seja: quanto MAIS o cliente usa o produto, MAIS errado fica o painel
+-- que ele abre primeiro. E o erro cresce em silêncio.
+--
+-- Contar é trabalho de banco. Aqui vai uma agregação só, exata, sem teto.
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION public.dashboard_metrics(
+  p_user_id UUID,
+  p_days    INTEGER DEFAULT 90
+)
+RETURNS JSONB
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $fn$
+DECLARE
+  v_result JSONB;
+BEGIN
+  -- SECURITY DEFINER passa por cima do RLS, então o dono é conferido aqui.
+  IF p_user_id <> auth.uid() AND NOT public.has_role(auth.uid(), 'admin') THEN
+    RAISE EXCEPTION 'acesso negado';
+  END IF;
+
+  SELECT jsonb_build_object(
+    'totalLeads',       COALESCE(l.total, 0),
+    'leadsThisMonth',   COALESCE(l.este_mes, 0),
+    'hotLeads',         COALESCE(l.quentes, 0),
+    'warmLeads',        COALESCE(l.mornos, 0),
+    'coldLeads',        COALESCE(l.frios, 0),
+    -- Arredondado em 2 casas no banco: o número que a tela mostra e o que a
+    -- API devolve precisam ser o mesmo, senão dois lugares divergem sobre o
+    -- mesmo dado.
+    'conversionRate',   CASE WHEN COALESCE(l.total, 0) > 0
+                          THEN ROUND((COALESCE(l.ganhos, 0)::NUMERIC / l.total) * 100, 2)
+                          ELSE 0 END,
+    'meetingsScheduled', COALESCE(m.agendadas, 0),
+    'meetingsThisWeek',  COALESCE(m.esta_semana, 0),
+    'leadsByStage', jsonb_build_object(
+      'Contato',     COALESCE(l.contato, 0),
+      'Qualificado', COALESCE(l.qualificado, 0),
+      'Proposta',    COALESCE(l.proposta, 0),
+      'Negociação',  COALESCE(l.negociacao, 0),
+      'Ganho',       COALESCE(l.ganhos, 0),
+      'Perdido',     COALESCE(l.perdido, 0)
+    ),
+    'leadsByDate', COALESCE((
+      SELECT jsonb_object_agg(dia, qtd)
+      FROM (
+        SELECT to_char(created_at AT TIME ZONE 'America/Sao_Paulo', 'YYYY-MM-DD') AS dia,
+               COUNT(*) AS qtd
+        FROM public.leads
+        WHERE user_id = p_user_id
+          AND created_at >= NOW() - (p_days || ' days')::INTERVAL
+        GROUP BY 1
+      ) d
+    ), '{}'::jsonb)
+  )
+  INTO v_result
+  FROM (
+    SELECT
+      COUNT(*)                                                        AS total,
+      COUNT(*) FILTER (WHERE created_at >= date_trunc('month', NOW())) AS este_mes,
+      COUNT(*) FILTER (WHERE temperature = 'quente')                  AS quentes,
+      COUNT(*) FILTER (WHERE temperature = 'morno')                   AS mornos,
+      COUNT(*) FILTER (WHERE temperature = 'frio')                    AS frios,
+      COUNT(*) FILTER (WHERE stage = 'Contato')                       AS contato,
+      COUNT(*) FILTER (WHERE stage = 'Qualificado')                   AS qualificado,
+      COUNT(*) FILTER (WHERE stage = 'Proposta')                      AS proposta,
+      COUNT(*) FILTER (WHERE stage = 'Negociação')                    AS negociacao,
+      COUNT(*) FILTER (WHERE stage = 'Ganho')                         AS ganhos,
+      COUNT(*) FILTER (WHERE stage = 'Perdido')                       AS perdido
+    FROM public.leads
+    WHERE user_id = p_user_id
+  ) l
+  CROSS JOIN (
+    SELECT
+      COUNT(*) FILTER (WHERE status = 'scheduled')                    AS agendadas,
+      COUNT(*) FILTER (WHERE status = 'scheduled'
+                         AND scheduled_at >= date_trunc('week', NOW())) AS esta_semana
+    FROM public.meetings
+    WHERE user_id = p_user_id
+  ) m;
+
+  RETURN v_result;
+END;
+$fn$;
+
+GRANT EXECUTE ON FUNCTION public.dashboard_metrics(UUID, INTEGER) TO authenticated, service_role;
+
+COMMENT ON FUNCTION public.dashboard_metrics(UUID, INTEGER) IS
+  'Números do painel, contados no banco. A versão anterior baixava os leads e '
+  'contava no navegador — e parava em mil por causa do teto do PostgREST, '
+  'ficando cada vez mais errada conforme a conta crescia.';
+
+-- ------------------------------------------------------------
+-- CONFERÊNCIA
+-- ------------------------------------------------------------
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+    WHERE n.nspname = 'public' AND p.proname = 'dashboard_metrics'
+  ) THEN
+    RAISE EXCEPTION 'dashboard_metrics não foi criada — o painel continuaria parando em mil.';
   END IF;
 END;
 $$;

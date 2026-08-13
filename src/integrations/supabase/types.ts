@@ -2852,6 +2852,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      dashboard_metrics: {
+        Args: { p_user_id: string; p_days?: number }
+        Returns: Json
+      }
       crm_overview: {
         Args: Record<string, never>
         Returns: {

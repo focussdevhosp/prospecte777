@@ -180,12 +180,31 @@ export function CaptureAndSendTab() {
       photo_url: lead.photo_url || null,
       lead_group: lead.lead_group || null,
       service_opportunities: lead.service_opportunities || [],
-      stage: 'Novo',
+      // 'Contato', não 'Novo'.
+      //
+      // O CHECK da tabela aceita seis estágios e "Novo" não é um deles, então
+      // o Postgres recusava o INSERT INTEIRO — esta tela nunca conseguiu
+      // salvar um lead sequer. E como o erro não era conferido, ela dizia que
+      // tinha salvado.
+      stage: 'Contato',
       temperature: 'frio',
       source: 'lead_finder',
       quality_score: lead.qualityScore || null,
     }));
-    await supabase.from('leads').insert(leadsToSave);
+
+    const { error } = await supabase.from('leads').insert(leadsToSave);
+
+    // Falha aqui precisa aparecer. Buscar leads custa tempo e chamada paga;
+    // deixar a pessoa acreditar que guardou o resultado é o pior desfecho —
+    // ela fecha a tela e perde tudo.
+    if (error) {
+      toast({
+        title: 'Os leads não foram salvos',
+        description: error.message,
+        variant: 'destructive',
+      });
+      throw error;
+    }
   };
 
   const handleStop = useCallback(() => {

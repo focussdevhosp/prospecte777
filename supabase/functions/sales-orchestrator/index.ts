@@ -1033,15 +1033,52 @@ async function sendMessage(
       .update({ status: "sent", sent_at: now, sent_channel: canalUsado })
       .eq("id", params.missionLeadId);
 
-    await supabase
+    // ATENÇÃO AO QUE NÃO ESTÁ AQUI: `stage: "Abordado"`.
+    //
+    // Essa linha existia e derrubava o UPDATE INTEIRO. O CHECK da tabela só
+    // aceita Contato, Qualificado, Proposta, Negociação, Ganho e Perdido —
+    // "Abordado" nunca existiu no vocabulário. O Postgres recusava a linha
+    // toda, e como ninguém conferia o erro, `message_sent`, `first_contact_at`
+    // e `last_contact_at` também não eram gravados.
+    //
+    // O estrago real era no `last_contact_at`: é dele que o follow-up calcula
+    // há quantos dias o lead está sem resposta. Sem atualização, a conta
+    // sempre partia da data de criação — ou seja, todo lead abordado ficaria
+    // elegível a follow-up imediatamente, e de novo a cada rodada.
+    //
+    // O defeito estava dormente porque só dispara em envio bem-sucedido, e
+    // nenhum envio jamais aconteceu neste projeto. Apareceria no primeiro dia
+    // com o chip conectado.
+    //
+    // O estágio não muda mesmo: mandar a primeira abordagem não avança o lead
+    // no funil — ele continua em "Contato" até responder.
+    const { error: erroLead } = await supabase
       .from("leads")
       .update({
         message_sent: true,
-        stage: "Abordado",
         first_contact_at: lead.first_contact_at ?? now,
         last_contact_at: now,
       })
       .eq("id", lead.id);
+
+    if (erroLead) {
+      // Não interrompe: a mensagem JÁ FOI. Mas precisa gritar, porque daqui
+      // para a frente o follow-up vai calcular em cima de data errada.
+      console.error(
+        `[orchestrator] mensagem enviada mas o lead ${lead.id} não foi atualizado:`,
+        erroLead.message,
+      );
+
+      await logEvent(supabase, {
+        userId: params.userId, missionId: params.missionId, leadId: lead.id,
+        agent: "outreach",
+        event: "lead_update_failed",
+        summary:
+          `A mensagem saiu para ${lead.business_name}, mas o registro do lead não ` +
+          `atualizou. O follow-up pode calcular o prazo errado. Detalhe: ${erroLead.message}`,
+        level: "error",
+      });
+    }
 
     // Registra no histórico para o agente conversacional ter o que ler
     // quando o lead responder.
