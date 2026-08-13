@@ -349,12 +349,34 @@ Deno.serve(async (req) => {
           .from("user_settings")
           .select("user_id")
           .eq("daily_report_enabled", true);
+        // `reports_sent` contava QUEM TEM A OPCAO LIGADA, e o erro do invoke
+        // era ignorado. Com o envio quebrado, o cron reportava "3 relatorios
+        // enviados" enquanto nenhum saia — o mesmo padrao de contar a
+        // tentativa e chamar de resultado.
+        let enviados = 0;
+        let falhos = 0;
+
         for (const userSetting of usersWithReport || []) {
-          await supabase.functions.invoke("send-report", {
+          const { data, error } = await supabase.functions.invoke("send-report", {
             body: { user_id: userSetting.user_id },
           });
+
+          // O `send-report` responde `success: false` com motivo quando o
+          // provedor nao esta configurado. Isso nao levanta `error` no
+          // invoke, entao as duas coisas precisam ser conferidas.
+          if (error || (data && data.success === false)) {
+            falhos++;
+            console.error(
+              `[cron] relatorio nao saiu para ${userSetting.user_id}:`,
+              error?.message ?? data?.code ?? "motivo desconhecido",
+            );
+          } else {
+            enviados++;
+          }
         }
-        results.reports_sent = usersWithReport?.length || 0;
+
+        results.reports_sent = enviados;
+        results.reports_failed = falhos;
       }
     }
 

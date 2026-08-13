@@ -28,6 +28,7 @@ import {
   json,
   requirePaidPlan,
   requireUserOrInternal,
+  serviceClient,
 } from "../_shared/auth.ts";
 import { initiatorOf, outboundBlockReason } from "../_shared/outbound-gate.ts";
 
@@ -81,6 +82,42 @@ Deno.serve(async (req) => {
       }, 400);
     }
 
+    // ---- 1b. TRANSACIONAL x PROSPECÇÃO ----
+    //
+    // Relatório diário, aviso de assinatura e afins são correspondência do
+    // sistema PARA O DONO DA CONTA. Não é abordagem comercial, e passá-los
+    // pelo portão de prospecção produz duas coisas erradas: a parada de
+    // emergência (que existe para parar de incomodar LEADS) mataria o
+    // relatório do próprio usuário, e o opt-out seria consultado contra um
+    // endereço que não é de lead nenhum.
+    //
+    // A permissão é estreita de propósito: transacional só pode ir para o
+    // e-mail cadastrado DAQUELA conta, conferido aqui contra `auth.users`.
+    // Assim a exceção não vira porta para alcançar um lead — o corpo da
+    // requisição não consegue escolher o destino.
+    const transacional = body.kind === "transactional";
+
+    if (transacional) {
+      // Para usuário logado o cliente é escopado no JWT dele e `auth.admin`
+      // não existe ali — chamar daria 500 em vez de resposta. O e-mail já
+      // vem no próprio contexto; o cliente de serviço só entra na chamada
+      // interna, que é como o cron manda o relatório.
+      const emailDaConta = ctx.kind === "user"
+        ? String((ctx.user as { email?: string })?.email ?? "").toLowerCase()
+        : String(
+          (await serviceClient().auth.admin.getUserById(ownerId)).data?.user?.email ?? "",
+        ).toLowerCase();
+
+      if (!emailDaConta || emailDaConta !== destino) {
+        return json({
+          error:
+            "Envio transacional só pode ir para o e-mail da própria conta. " +
+            "Para falar com um lead, use o envio normal, que passa pelo opt-out.",
+          code: "transactional_destination_not_allowed",
+        }, 403);
+      }
+    }
+
     // ---- 2. PARADA DE EMERGÊNCIA ----
     // O mesmo freio do WhatsApp. Um botão que parasse só um canal seria pior
     // que nenhum: quem aperta espera que tudo pare.
@@ -92,7 +129,7 @@ Deno.serve(async (req) => {
       .eq("user_id", ownerId)
       .maybeSingle();
 
-    const freio = outboundBlockReason({
+    const freio = transacional ? null : outboundBlockReason({
       initiatedBy,
       outboundPaused: settings?.outbound_paused === true,
     });
@@ -111,15 +148,17 @@ Deno.serve(async (req) => {
     // Consulta o LEAD, não só o endereço: quem pediu para parar no WhatsApp
     // pediu para parar, ponto. Do lado de quem recebe não existe diferença
     // entre um canal e outro — é a mesma empresa insistindo.
-    const { data: bloqueio } = await ctx.supabase.rpc("outbound_suppressed", {
-      p_user_id: ownerId,
-      p_channel: "email",
-      p_lead_id: lead_id ?? null,
-      p_identifier: destino,
-    });
+    if (!transacional) {
+      const { data: bloqueio } = await ctx.supabase.rpc("outbound_suppressed", {
+        p_user_id: ownerId,
+        p_channel: "email",
+        p_lead_id: lead_id ?? null,
+        p_identifier: destino,
+      });
 
-    if (bloqueio) {
-      return json({ error: String(bloqueio), code: "suppressed" }, 409);
+      if (bloqueio) {
+        return json({ error: String(bloqueio), code: "suppressed" }, 409);
+      }
     }
 
     // ---- 4. PROVEDOR ----
@@ -156,10 +195,15 @@ Deno.serve(async (req) => {
         // exigência de quem manda volume. Sem ele, a reputação do domínio cai
         // e o e-mail para de chegar — a mesma falha do mês 4 do WhatsApp, com
         // outro nome.
-        headers: {
-          "List-Unsubscribe": `<mailto:${settings?.email_reply_to ?? "sair@example.com"}?subject=descadastrar>`,
-          "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
-        },
+        // Só em prospecção. Num relatório para o próprio dono da conta, um
+        // "descadastre-se" é ruído — e pior, convida a desligar o canal pelo
+        // qual o sistema fala com ele.
+        ...(transacional ? {} : {
+          headers: {
+            "List-Unsubscribe": `<mailto:${settings?.email_reply_to ?? "sair@example.com"}?subject=descadastrar>`,
+            "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+          },
+        }),
       }),
     });
 

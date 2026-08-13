@@ -158,13 +158,75 @@ Olá ${profile?.full_name || ""}!
 Continue prospectando! 🚀`;
     }
 
-    // TODO: Send email using Resend or another service
-    console.log("Report generated:", reportText);
-    console.log("Would send email to:", profile?.email);
+    // ---- ENVIO ----
+    //
+    // Aqui havia um `// TODO: Send email using Resend` seguido de dois
+    // console.log e um `success: true`. O relatorio era gerado, jogado no
+    // log da function e a resposta dizia que tinha dado certo.
+    //
+    // O usuario liga "Relatorio diario por email" nas automacoes e nunca
+    // recebe nada. Nenhum erro, nenhuma pista — a automacao aparece ativa e
+    // simplesmente nao existe.
+    //
+    // Vai pelo `email-send`, que e o unico lugar que fala com o provedor.
+    // `kind: transactional` porque relatorio nao e prospeccao: ele so pode
+    // ir para o e-mail da propria conta, e a parada de emergencia (que
+    // existe para parar de incomodar LEADS) nao pode calar o relatorio do
+    // dono.
+    const destinatario = profile?.email;
+
+    if (!destinatario) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          code: "no_email",
+          error: "A conta nao tem e-mail cadastrado, entao nao ha para onde mandar o relatorio.",
+          report: reportText,
+          stats,
+        }),
+        { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const envio = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/email-send`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+      },
+      body: JSON.stringify({
+        to: destinatario,
+        subject: `Seu relatorio de prospeccao — ${new Date().toLocaleDateString("pt-BR")}`,
+        text: reportText,
+        user_id: userId,
+        kind: "transactional",
+      }),
+    });
+
+    if (!envio.ok) {
+      const detalhe = (await envio.text()).slice(0, 300);
+      console.error(`[send-report] o e-mail nao saiu (${envio.status}):`, detalhe);
+
+      // Devolve o relatorio junto: os numeros vem do banco e sao verdadeiros
+      // com ou sem e-mail. O que nao pode e dizer que enviou.
+      return new Response(
+        JSON.stringify({
+          success: false,
+          code: "email_failed",
+          status: envio.status,
+          error: "O relatorio foi gerado, mas o e-mail nao pode ser enviado.",
+          detail: detalhe,
+          report: reportText,
+          stats,
+        }),
+        { status: envio.status === 503 ? 503 : 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     return new Response(
       JSON.stringify({
         success: true,
+        sent_to: destinatario,
         report: reportText,
         stats,
       }),
