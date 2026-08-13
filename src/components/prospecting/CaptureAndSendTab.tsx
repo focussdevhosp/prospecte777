@@ -366,10 +366,22 @@ export function CaptureAndSendTab() {
 
       const newLeads = sortedLeads.filter(l => !l.isDuplicate);
       if (autoSave && newLeads.length > 0 && user?.id) {
-        await saveLeadsToDatabase(newLeads);
+        const porTelefone = await saveLeadsToDatabase(newLeads);
 
-        // Enriquecimento automático em background (não bloqueia UI)
-        const toEnrich = newLeads.filter(l => l.website).slice(0, 30).map(l => l.id);
+        // Enriquecimento em background, com os ids DO BANCO.
+        //
+        // `newLeads` é o retrato de antes de salvar: os ids ali são os
+        // temporários que a captura inventa. Mandá-los para o enriquecimento
+        // fazia a function procurar leads que não existem e não enriquecer
+        // ninguém — em silêncio, porque o `.catch` só olha erro de rede.
+        //
+        // É o mesmo defeito que estragava o disparo, num segundo lugar. O
+        // mapa que `saveLeadsToDatabase` devolve resolve os dois.
+        const toEnrich = newLeads
+          .filter(l => l.website)
+          .slice(0, 30)
+          .map(l => porTelefone?.get(normalizePhone(l.phone)))
+          .filter((id): id is string => !!id);
         if (toEnrich.length > 0) {
           supabase.functions.invoke('lead-enrichment', {
             body: { action: 'batch_enrich', lead_ids: toEnrich },
