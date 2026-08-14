@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/auth';
+import { useToast } from '@/hooks/use-toast';
 
 export function useAdminRole() {
   const { user } = useAuth();
@@ -64,6 +65,7 @@ export interface SupportMessage {
 
 export function useAdminUsers() {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   const { data: users, isLoading: loadingUsers } = useQuery({
     queryKey: ['admin-users'],
@@ -99,6 +101,9 @@ export function useAdminUsers() {
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
       queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
     },
+    // Acao de admin que falha calada: a conta continuaria existindo.
+    onError: (e: Error) =>
+      toast({ title: 'A conta nao foi removida', description: e.message, variant: 'destructive' }),
   });
 
   const blockUserMutation = useMutation({
@@ -112,6 +117,9 @@ export function useAdminUsers() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
     },
+    // Bloqueio calado deixa alguem com acesso enquanto o admin acha que cortou.
+    onError: (e: Error) =>
+      toast({ title: 'A conta nao foi bloqueada', description: e.message, variant: 'destructive' }),
   });
 
   const unblockUserMutation = useMutation({
@@ -125,6 +133,9 @@ export function useAdminUsers() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
     },
+    // O usuario continua sem acesso e ninguem sabe por que.
+    onError: (e: Error) =>
+      toast({ title: 'A conta nao foi desbloqueada', description: e.message, variant: 'destructive' }),
   });
 
   const sendNotificationMutation = useMutation({

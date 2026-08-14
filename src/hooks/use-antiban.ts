@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/auth';
+import { useToast } from '@/hooks/use-toast';
 
 export interface AntiBanConfig {
   id: string;
@@ -72,6 +73,7 @@ export interface ChipHealthLog {
 export function useAntiBan() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   // Fetch antiban config
   const { data: config, isLoading: configLoading } = useQuery({
@@ -192,6 +194,16 @@ export function useAntiBan() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['antiban-config'] });
     },
+    // Estes sao os limites que protegem o chip. Salvar em silencio uma
+    // alteracao que nao foi gravada e pior que nao deixar alterar: o usuario
+    // afrouxa o intervalo achando que afrouxou, ou aperta achando que
+    // apertou, e opera com um numero diferente do que ve na tela.
+    onError: (e: Error) =>
+      toast({
+        title: 'As protecoes nao foram salvas',
+        description: `${e.message} — os limites anteriores continuam valendo.`,
+        variant: 'destructive',
+      }),
   });
 
   // Add variation mutation

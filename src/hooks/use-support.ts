@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/auth';
+import { useToast } from '@/hooks/use-toast';
 
 export interface UserSupportTicket {
   id: string;
@@ -22,6 +23,7 @@ export interface UserSupportMessage {
 export function useUserSupport() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   const { data: tickets, isLoading: loadingTickets } = useQuery({
     queryKey: ['user-support-tickets', user?.id],
@@ -77,6 +79,15 @@ export function useUserSupport() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-support-tickets'] });
     },
+    // Falhar calado aqui e o pior caso do produto inteiro: a pessoa acha que
+    // pediu ajuda e fica esperando uma resposta que nunca vai chegar, porque
+    // o chamado nao existe.
+    onError: (e: Error) =>
+      toast({
+        title: 'O chamado nao foi aberto',
+        description: `${e.message} — tente de novo, ou fale pelo WhatsApp se persistir.`,
+        variant: 'destructive',
+      }),
   });
 
   const sendMessageMutation = useMutation({
@@ -94,6 +105,13 @@ export function useUserSupport() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['support-messages'] });
     },
+    // Mesma logica: a mensagem some do campo e a pessoa assume que foi.
+    onError: (e: Error) =>
+      toast({
+        title: 'A mensagem nao foi enviada',
+        description: e.message,
+        variant: 'destructive',
+      }),
   });
 
   const markNotificationRead = useMutation({
