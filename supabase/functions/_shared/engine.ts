@@ -44,6 +44,14 @@ const SUBNICHES: Record<string, string[]> = {
 export interface EngineOptions {
   niche: string;
   location: string;
+  /**
+   * Ponto e raio, quando a busca e "perto de mim".
+   *
+   * So o OpenStreetMap usa: as outras fontes procuram por TEXTO e nao tem
+   * como receber um raio. Elas seguem com o nome do lugar, que continua
+   * sendo o que vai gravado no lead.
+   */
+  centro?: { lat: number; lng: number; raioKm: number } | null;
   maxResults: number;
   serpApiKey?: string | null;
   serperApiKey?: string | null;
@@ -84,7 +92,7 @@ export async function captureLeads(
   };
 
   // ---- 1. OpenStreetMap (cadastro estruturado, melhor sinal) ----
-  const osm = await searchOpenStreetMap(niche, location, Math.min(maxResults, 400));
+  const osm = await searchOpenStreetMap(niche, location, Math.min(maxResults, 400), opts.centro);
   raw.push(...osm.leads);
   sources.push({ source: osm.source, found: osm.leads.length, error: osm.error });
   await advance();

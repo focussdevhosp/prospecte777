@@ -72,9 +72,33 @@ Deno.serve(async (req) => {
       location,
       num_results = 0,
       min_quality = 0,
+      center,
     } = await req.json();
 
     if (!query) return json({ error: "Query é obrigatória" }, 400);
+
+    // COORDENADAS VEM DE FORA, ENTAO SAO CONFERIDAS AQUI.
+    //
+    // Latitude fora de [-90, 90] ou longitude fora de [-180, 180] produzem
+    // uma caixa impossivel, e o Overpass responde erro que ninguem liga a
+    // "eu cliquei em perto de mim". Pior: `0,0` e o que o navegador devolve
+    // quando a leitura falha e alguem trata como numero valido — e (0,0) fica
+    // no Golfo da Guine, entao a busca "perto de voce" varreria o oceano.
+    const centroValido = (() => {
+      if (!center || typeof center !== "object") return null;
+
+      const lat = Number(center.lat);
+      const lng = Number(center.lng);
+      const raioKm = Number(center.raioKm ?? center.radiusKm ?? 5);
+
+      const finito = [lat, lng, raioKm].every((n) => Number.isFinite(n));
+      if (!finito) return null;
+      if (Math.abs(lat) > 90 || Math.abs(lng) > 180) return null;
+      // Exatamente (0,0) e leitura falha travestida de coordenada.
+      if (lat === 0 && lng === 0) return null;
+
+      return { lat, lng, raioKm };
+    })();
 
     // Chave do usuário tem prioridade sobre a global: quem paga SerpAPI
     // merece usar a cota dele, não competir pela nossa.
@@ -97,6 +121,7 @@ Deno.serve(async (req) => {
     const report = await captureLeads({
       niche: query,
       location: location || "Brasil",
+      centro: centroValido,
       maxResults,
       minQuality: min_quality,
       serpApiKey,

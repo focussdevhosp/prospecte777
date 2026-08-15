@@ -4,6 +4,7 @@ import { useAuth } from '@/lib/auth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useMassSendJob, formatPhoneForWhatsApp } from '@/hooks/use-mass-send-job';
+import type { MinhaLocalizacao } from '@/hooks/use-minha-localizacao';
 import {
   LeadCaptureForm,
   LeadResultsTable,
@@ -32,6 +33,8 @@ export function CaptureAndSendTab() {
   const [leadQuantity, setLeadQuantity] = useState(500);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [foundCount, setFoundCount] = useState(0);
+  // Busca por raio em volta do usuario. Nulo = busca por cidade.
+  const [centro, setCentro] = useState<(MinhaLocalizacao & { raioKm: number }) | null>(null);
 
   const isStoppedRef = useRef(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -258,8 +261,17 @@ export function CaptureAndSendTab() {
   }, [toast]);
 
   const handleSearch = async () => {
-    if (selectedNiches.length === 0 || selectedLocations.length === 0) {
-      toast({ title: '⚠️ Preencha os campos', description: 'Selecione pelo menos um nicho e uma localização.', variant: 'destructive' });
+    // Com "perto de mim" ativo, a area vem das coordenadas — exigir cidade
+    // ali seria pedir duas vezes a mesma informacao, e com o campo desabilitado
+    // por cima disso o botao nunca liberaria.
+    if (selectedNiches.length === 0 || (selectedLocations.length === 0 && !centro)) {
+      toast({
+        title: '⚠️ Preencha os campos',
+        description: centro
+          ? 'Selecione pelo menos um nicho.'
+          : 'Selecione pelo menos um nicho e uma localização.',
+        variant: 'destructive',
+      });
       return;
     }
     setProcessStatus('capturing');
@@ -270,8 +282,17 @@ export function CaptureAndSendTab() {
 
     try {
 
+      // Com raio ativo ha UMA area — a sua. Sem ele, uma por cidade escolhida.
+      // O nome legivel continua sendo o que vai gravado no lead: coordenada em
+      // campo de endereco nao diz nada a quem abrir o CRM depois.
+      const nomeDoCentro = centro?.nome ?? 'Perto de você';
       const combos: Array<{ niche: string; location: string }> = [];
-      for (const n of selectedNiches) for (const l of selectedLocations) combos.push({ niche: n, location: l });
+
+      if (centro) {
+        for (const n of selectedNiches) combos.push({ niche: n, location: nomeDoCentro });
+      } else {
+        for (const n of selectedNiches) for (const l of selectedLocations) combos.push({ niche: n, location: l });
+      }
 
       setProgress({ current: 0, total: combos.length, phase: 'Buscando em paralelo...' });
       const streamed: CapturedLead[] = [];
@@ -290,6 +311,11 @@ export function CaptureAndSendTab() {
               num_results: leadQuantity,
               search_type: 'places',
               expand_search: true,
+              // So o cadastro de estabelecimentos sabe fazer raio. As fontes
+              // de texto seguem com o nome do lugar, que vai junto acima.
+              center: centro
+                ? { lat: centro.lat, lng: centro.lng, raioKm: centro.raioKm }
+                : undefined,
             },
           });
           const results: any[] = response.data?.results ?? [];
@@ -545,6 +571,8 @@ export function CaptureAndSendTab() {
         onStop={handleStop}
         leadQuantity={leadQuantity}
         setLeadQuantity={setLeadQuantity}
+        centro={centro}
+        setCentro={setCentro}
         elapsedTime={elapsedTime}
         foundCount={foundCount}
       />

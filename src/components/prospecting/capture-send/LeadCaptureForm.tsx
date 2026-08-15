@@ -34,6 +34,8 @@ import {
   RotateCcw,
 } from 'lucide-react';
 import { ProgressInfo, AVAILABLE_SERVICES, CAPTURE_FILTERS, SORT_OPTIONS } from './types';
+import { PertoDeMim } from '../PertoDeMim';
+import type { MinhaLocalizacao } from '@/hooks/use-minha-localizacao';
 
 interface LeadCaptureFormProps {
   selectedNiches: string[];
@@ -54,6 +56,9 @@ interface LeadCaptureFormProps {
   setLeadQuantity: (v: number) => void;
   elapsedTime?: number;
   foundCount?: number;
+  /** Busca por raio em volta do usuario, quando ativa. */
+  centro: (MinhaLocalizacao & { raioKm: number }) | null;
+  setCentro: (v: (MinhaLocalizacao & { raioKm: number }) | null) => void;
 }
 
 export function LeadCaptureForm({
@@ -75,9 +80,14 @@ export function LeadCaptureForm({
   setLeadQuantity,
   elapsedTime = 0,
   foundCount = 0,
+  centro,
+  setCentro,
 }: LeadCaptureFormProps) {
   const totalCombinations = selectedNiches.length * selectedLocations.length;
-  const canSearch = selectedNiches.length > 0 && selectedLocations.length > 0;
+  // Com o raio ativo a area vem das coordenadas, entao cidade deixa de ser
+  // obrigatoria — e o campo esta desabilitado nesse modo, o que travaria o
+  // botao para sempre se a condicao continuasse exigindo os dois.
+  const canSearch = selectedNiches.length > 0 && (selectedLocations.length > 0 || !!centro);
 
   const [minRating, setMinRating] = useState(0);
   const [sortBy, setSortBy] = useState('relevance');
@@ -163,12 +173,22 @@ export function LeadCaptureForm({
               <LocationAutocomplete
                 value={selectedLocations}
                 onChange={setSelectedLocations}
-                placeholder="Cidade, estado ou CEP..."
-                disabled={isSearching}
+                placeholder={centro ? 'Usando sua localizacao' : 'Cidade, estado ou CEP...'}
+                disabled={isSearching || !!centro}
                 maxSelections={10}
               />
+              {centro && (
+                <p className="text-[11px] text-muted-foreground">
+                  A busca esta usando o raio abaixo. Remova para voltar a escolher cidades.
+                </p>
+              )}
             </div>
           </div>
+
+          {/* Raio em volta do usuario. Fica junto da localizacao porque e uma
+              ALTERNATIVA a ela, nao um filtro adicional — e as duas ligadas ao
+              mesmo tempo produziriam duas areas concorrentes. */}
+          <PertoDeMim centro={centro} onChange={setCentro} disabled={isSearching} />
 
           {/* Quantity Slider */}
           <div className="p-4 rounded-xl bg-muted/20 border border-border/30">

@@ -236,17 +236,69 @@ async function geocode(location: string): Promise<[number, number, number, numbe
   return null;
 }
 
+/** Maior raio aceito, em km. A tela não oferece mais que isso. */
+export const RAIO_MAX_KM = 300;
+
+/** Um ponto no mapa e o quanto em volta dele interessa. */
+export interface CentroDaBusca {
+  lat: number;
+  lng: number;
+  /** Raio em quilometros. */
+  raioKm: number;
+}
+
+/**
+ * Caixa que envolve um circulo de raio `raioKm` em volta do ponto.
+ *
+ * A conversao de km para grau NAO e a mesma nos dois eixos, e ignorar isso e
+ * o erro classico aqui. Um grau de latitude vale ~111,32 km em qualquer
+ * lugar; um grau de LONGITUDE encolhe conforme se afasta do equador, porque
+ * os meridianos se fecham nos polos.
+ *
+ * No Brasil isso ja pesa: em Porto Alegre (30 graus sul) um grau de longitude
+ * vale ~96 km, nao 111. Usar o mesmo divisor nos dois eixos faria a caixa
+ * ficar 15% estreita demais no leste-oeste — e a busca perderia negocios que
+ * estao dentro do raio pedido.
+ */
+export function bboxDoRaio(centro: CentroDaBusca): [number, number, number, number] {
+  const KM_POR_GRAU_LAT = 111.32;
+  // Teto de 300 km, que é o que a tela oferece. O piso de 0,5 evita caixa
+  // degenerada de quem manda zero.
+  const raio = Math.max(0.5, Math.min(RAIO_MAX_KM, centro.raioKm));
+
+  const dLat = raio / KM_POR_GRAU_LAT;
+
+  // `cos` em radianos. Perto dos polos o cosseno tende a zero e a divisao
+  // explodiria; o piso mantem a conta finita num lugar onde ninguem prospecta.
+  const cos = Math.max(0.01, Math.cos((centro.lat * Math.PI) / 180));
+  const dLng = raio / (KM_POR_GRAU_LAT * cos);
+
+  return [
+    centro.lat - dLat,
+    centro.lng - dLng,
+    centro.lat + dLat,
+    centro.lng + dLng,
+  ];
+}
+
 export async function searchOpenStreetMap(
   niche: string,
   location: string,
   limit = 200,
+  centro?: CentroDaBusca | null,
 ): Promise<SourceResult> {
   const tags = osmTagsFor(niche);
   if (tags.length === 0) {
     return { source: "openstreetmap", leads: [], error: "nicho sem mapeamento OSM" };
   }
 
-  const bbox = await geocode(location);
+  // Com coordenadas, a area e um raio em volta do ponto — e nao a cidade
+  // inteira. E a diferenca entre "perto de mim" significar alguma coisa e
+  // ser so outro nome para "na minha cidade".
+  //
+  // Tambem dispensa o Nominatim: nao ha nome para resolver, entao some junto
+  // a chance de ele devolver a rua errada, que ja aconteceu aqui.
+  const bbox = centro ? bboxDoRaio(centro) : await geocode(location);
   if (!bbox) {
     return { source: "openstreetmap", leads: [], error: "não foi possível localizar a cidade" };
   }
@@ -260,17 +312,59 @@ export async function searchOpenStreetMap(
     `way[${tag}]["contact:phone"](${box});`,
   ]).join("\n  ");
 
-  const query = `[out:json][timeout:25];\n(\n  ${clauses}\n);\nout center ${limit};`;
+  // O TEMPO PEDIDO ACOMPANHA A ÁREA.
+  //
+  // 25 segundos bastam para um bairro e não bastam para um raio de 300 km,
+  // onde a consulta varre meio estado. Com tempo curto o Overpass corta no
+  // meio e devolve erro — que aqui viraria "nenhuma empresa encontrada", a
+  // mensagem mais enganosa possível: o problema não é falta de empresa, é
+  // área grande demais para o tempo dado.
+  const raioPedido = centro ? Math.min(RAIO_MAX_KM, Math.max(0.5, centro.raioKm)) : 0;
+  const segundos = raioPedido > 100 ? 90 : raioPedido > 30 ? 60 : 25;
+
+  const query = `[out:json][timeout:${segundos}];\n(\n  ${clauses}\n);\nout center ${limit};`;
 
   try {
+    // O TETO DO CLIENTE PRECISA SER MAIOR QUE O TEMPO PEDIDO AO OVERPASS.
+    //
+    // Estava fixo em 30s. Com raio de 300 km eu peco 90s ao servidor, entao o
+    // cliente abortava aos 30 enquanto a resposta ainda vinha — e o abort
+    // virava "nenhuma empresa encontrada". Medido: a mesma consulta crua
+    // devolve 200 em 25s para uma tag; a real tem oito clausulas e passa
+    // disso.
+    //
+    // A folga de 20s cobre a viagem da rede e a montagem do JSON, que num
+    // raio grande e um payload consideravel.
+    const tetoCliente = Math.min(110_000, (segundos + 20) * 1000);
+
     const res = await fetchWithTimeout("https://overpass-api.de/api/interpreter", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded", "User-Agent": UA },
       body: `data=${encodeURIComponent(query)}`,
-    }, 30000);
+    }, tetoCliente);
 
     if (!res.ok) {
-      return { source: "openstreetmap", leads: [], error: `HTTP ${res.status}` };
+      // "OCUPADO" NÃO É "NÃO EXISTE NINGUÉM".
+      //
+      // O Overpass é um serviço público e gratuito com poucas vagas
+      // simultâneas por IP. Quando elas acabam, ele responde 429 — e antes
+      // isso descia como um `HTTP 429` cru que a tela mostrava como
+      // "nenhuma empresa encontrada".
+      //
+      // Aconteceu de verdade aqui: três buscas pesadas em sequência e a
+      // quarta voltou vazia em 11 segundos. Sem esta distinção, o usuário
+      // conclui que não há empresas na região dele e desiste — quando bastava
+      // esperar um minuto.
+      const ocupado = res.status === 429 || res.status === 504;
+
+      return {
+        source: "openstreetmap",
+        leads: [],
+        error: ocupado
+          ? "a fonte de dados está ocupada agora (limite de uso). Tente de novo " +
+            "em um minuto, ou reduza o raio para aliviar a consulta."
+          : `HTTP ${res.status}`,
+      };
     }
 
     const data = await res.json();
