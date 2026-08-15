@@ -10,15 +10,71 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.1"
+    PostgrestVersion: "14.15"
   }
   public: {
     Tables: {
+      ab_assignments: {
+        Row: {
+          ab_test_id: string
+          converted_at: string | null
+          created_at: string
+          id: string
+          lead_id: string
+          replied_at: string | null
+          revenue_cents: number
+          sent_at: string
+          user_id: string
+          variant: string
+        }
+        Insert: {
+          ab_test_id: string
+          converted_at?: string | null
+          created_at?: string
+          id?: string
+          lead_id: string
+          replied_at?: string | null
+          revenue_cents?: number
+          sent_at?: string
+          user_id: string
+          variant: string
+        }
+        Update: {
+          ab_test_id?: string
+          converted_at?: string | null
+          created_at?: string
+          id?: string
+          lead_id?: string
+          replied_at?: string | null
+          revenue_cents?: number
+          sent_at?: string
+          user_id?: string
+          variant?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ab_assignments_ab_test_id_fkey"
+            columns: ["ab_test_id"]
+            isOneToOne: false
+            referencedRelation: "ab_tests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ab_assignments_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ab_tests: {
         Row: {
           completed_at: string | null
           confidence: number | null
           created_at: string
+          decision_metric: string | null
+          decision_reason: string | null
           id: string
           min_sample_size: number
           name: string
@@ -45,6 +101,8 @@ export type Database = {
           completed_at?: string | null
           confidence?: number | null
           created_at?: string
+          decision_metric?: string | null
+          decision_reason?: string | null
           id?: string
           min_sample_size?: number
           name: string
@@ -71,6 +129,8 @@ export type Database = {
           completed_at?: string | null
           confidence?: number | null
           created_at?: string
+          decision_metric?: string | null
+          decision_reason?: string | null
           id?: string
           min_sample_size?: number
           name?: string
@@ -228,6 +288,123 @@ export type Database = {
           },
         ]
       }
+      agent_events: {
+        Row: {
+          agent: string
+          created_at: string
+          detail: Json | null
+          event: string
+          id: number
+          lead_id: string | null
+          level: string
+          mission_id: string | null
+          summary: string
+          user_id: string
+        }
+        Insert: {
+          agent: string
+          created_at?: string
+          detail?: Json | null
+          event: string
+          id?: number
+          lead_id?: string | null
+          level?: string
+          mission_id?: string | null
+          summary: string
+          user_id: string
+        }
+        Update: {
+          agent?: string
+          created_at?: string
+          detail?: Json | null
+          event?: string
+          id?: number
+          lead_id?: string | null
+          level?: string
+          mission_id?: string | null
+          summary?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_events_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agent_events_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "missions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_usage: {
+        Row: {
+          agent: string | null
+          completion_tokens: number
+          cost_usd: number
+          created_at: string
+          id: string
+          latency_ms: number
+          lead_id: string | null
+          mission_id: string | null
+          model: string
+          prompt_tokens: number
+          provider: string
+          purpose: string
+          user_id: string
+        }
+        Insert: {
+          agent?: string | null
+          completion_tokens?: number
+          cost_usd?: number
+          created_at?: string
+          id?: string
+          latency_ms?: number
+          lead_id?: string | null
+          mission_id?: string | null
+          model: string
+          prompt_tokens?: number
+          provider: string
+          purpose: string
+          user_id: string
+        }
+        Update: {
+          agent?: string | null
+          completion_tokens?: number
+          cost_usd?: number
+          created_at?: string
+          id?: string
+          latency_ms?: number
+          lead_id?: string | null
+          mission_id?: string | null
+          model?: string
+          prompt_tokens?: number
+          provider?: string
+          purpose?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_usage_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_usage_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "missions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       antiban_config: {
         Row: {
           blacklist_keywords: string[] | null
@@ -317,8 +494,6 @@ export type Database = {
       }
       background_jobs: {
         Row: {
-          sent_items: number
-          skipped_items: number
           completed_at: string | null
           created_at: string
           current_index: number | null
@@ -335,6 +510,8 @@ export type Database = {
           result: Json | null
           retry_count: number | null
           scheduled_at: string | null
+          sent_items: number
+          skipped_items: number
           started_at: string | null
           status: string
           total_items: number | null
@@ -342,8 +519,6 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          sent_items?: number
-          skipped_items?: number
           completed_at?: string | null
           created_at?: string
           current_index?: number | null
@@ -360,6 +535,8 @@ export type Database = {
           result?: Json | null
           retry_count?: number | null
           scheduled_at?: string | null
+          sent_items?: number
+          skipped_items?: number
           started_at?: string | null
           status?: string
           total_items?: number | null
@@ -367,8 +544,6 @@ export type Database = {
           user_id: string
         }
         Update: {
-          sent_items?: number
-          skipped_items?: number
           completed_at?: string | null
           created_at?: string
           current_index?: number | null
@@ -385,6 +560,8 @@ export type Database = {
           result?: Json | null
           retry_count?: number | null
           scheduled_at?: string | null
+          sent_items?: number
+          skipped_items?: number
           started_at?: string | null
           status?: string
           total_items?: number | null
@@ -602,9 +779,9 @@ export type Database = {
       }
       chat_messages: {
         Row: {
-          external_id: string | null
           content: string
           created_at: string
+          external_id: string | null
           id: string
           lead_id: string
           sender_type: string
@@ -613,9 +790,9 @@ export type Database = {
           whatsapp_message_id: string | null
         }
         Insert: {
-          external_id?: string | null
           content: string
           created_at?: string
+          external_id?: string | null
           id?: string
           lead_id: string
           sender_type: string
@@ -624,9 +801,9 @@ export type Database = {
           whatsapp_message_id?: string | null
         }
         Update: {
-          external_id?: string | null
           content?: string
           created_at?: string
+          external_id?: string | null
           id?: string
           lead_id?: string
           sender_type?: string
@@ -679,6 +856,33 @@ export type Database = {
           messages_sent_hour?: number | null
           recommendations?: string[] | null
           risk_factors?: Json | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      chip_usage: {
+        Row: {
+          failed_count: number
+          instance_id: string
+          last_sent_at: string | null
+          sent_count: number
+          usage_date: string
+          user_id: string
+        }
+        Insert: {
+          failed_count?: number
+          instance_id: string
+          last_sent_at?: string | null
+          sent_count?: number
+          usage_date?: string
+          user_id: string
+        }
+        Update: {
+          failed_count?: number
+          instance_id?: string
+          last_sent_at?: string | null
+          sent_count?: number
+          usage_date?: string
           user_id?: string
         }
         Relationships: []
@@ -763,6 +967,139 @@ export type Database = {
           website?: string | null
         }
         Relationships: []
+      }
+      crm_integrations: {
+        Row: {
+          active: boolean
+          config: Json
+          created_at: string
+          credential: string
+          id: string
+          last_error: string | null
+          last_error_at: string | null
+          last_ok_at: string | null
+          provider: string
+          pushed_count: number
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          config?: Json
+          created_at?: string
+          credential: string
+          id?: string
+          last_error?: string | null
+          last_error_at?: string | null
+          last_ok_at?: string | null
+          provider: string
+          pushed_count?: number
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          config?: Json
+          created_at?: string
+          credential?: string
+          id?: string
+          last_error?: string | null
+          last_error_at?: string | null
+          last_ok_at?: string | null
+          provider?: string
+          pushed_count?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      crm_push_log: {
+        Row: {
+          already_existed: boolean
+          created_at: string
+          external_id: string | null
+          id: string
+          lead_id: string
+          message: string
+          ok: boolean
+          provider: string
+          user_id: string
+        }
+        Insert: {
+          already_existed?: boolean
+          created_at?: string
+          external_id?: string | null
+          id?: string
+          lead_id: string
+          message: string
+          ok: boolean
+          provider: string
+          user_id: string
+        }
+        Update: {
+          already_existed?: boolean
+          created_at?: string
+          external_id?: string | null
+          id?: string
+          lead_id?: string
+          message?: string
+          ok?: boolean
+          provider?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_push_log_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      data_requests: {
+        Row: {
+          created_at: string
+          due_at: string
+          id: string
+          kind: string
+          lead_id: string | null
+          note: string | null
+          requester: string
+          resolved_at: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          due_at?: string
+          id?: string
+          kind: string
+          lead_id?: string | null
+          note?: string | null
+          requester: string
+          resolved_at?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          due_at?: string
+          id?: string
+          kind?: string
+          lead_id?: string | null
+          note?: string | null
+          requester?: string
+          resolved_at?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "data_requests_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       favorite_leads: {
         Row: {
@@ -913,6 +1250,57 @@ export type Database = {
           },
         ]
       }
+      icp_profiles: {
+        Row: {
+          created_at: string
+          description: string | null
+          exclusions: string[]
+          id: string
+          is_default: boolean
+          locations: string[]
+          max_rating: number | null
+          min_rating: number | null
+          min_reviews: number | null
+          name: string
+          niches: string[]
+          signals: string[]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          exclusions?: string[]
+          id?: string
+          is_default?: boolean
+          locations?: string[]
+          max_rating?: number | null
+          min_rating?: number | null
+          min_reviews?: number | null
+          name: string
+          niches?: string[]
+          signals?: string[]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          exclusions?: string[]
+          id?: string
+          is_default?: boolean
+          locations?: string[]
+          max_rating?: number | null
+          min_rating?: number | null
+          min_reviews?: number | null
+          name?: string
+          niches?: string[]
+          signals?: string[]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       intelligent_followups: {
         Row: {
           created_at: string
@@ -997,6 +1385,41 @@ export type Database = {
             columns: ["job_id"]
             isOneToOne: false
             referencedRelation: "background_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lead_assignments: {
+        Row: {
+          assigned_by: string | null
+          created_at: string
+          id: string
+          lead_id: string
+          reason: string
+          user_id: string
+        }
+        Insert: {
+          assigned_by?: string | null
+          created_at?: string
+          id?: string
+          lead_id: string
+          reason: string
+          user_id: string
+        }
+        Update: {
+          assigned_by?: string | null
+          created_at?: string
+          id?: string
+          lead_id?: string
+          reason?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_assignments_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
             referencedColumns: ["id"]
           },
         ]
@@ -1163,16 +1586,64 @@ export type Database = {
           },
         ]
       }
+      lead_signals: {
+        Row: {
+          created_at: string
+          detected_at: string
+          evidence: Json
+          expires_at: string
+          id: string
+          lead_id: string
+          strength: number
+          summary: string
+          type: string
+          used_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          detected_at?: string
+          evidence?: Json
+          expires_at: string
+          id?: string
+          lead_id: string
+          strength?: number
+          summary: string
+          type: string
+          used_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          detected_at?: string
+          evidence?: Json
+          expires_at?: string
+          id?: string
+          lead_id?: string
+          strength?: number
+          summary?: string
+          type?: string
+          used_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_signals_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leads: {
         Row: {
-          site_audit: Json | null
-          site_audited_at: string | null
+          address: string | null
           agent_paused_at: string | null
           agent_paused_reason: string | null
           agent_replies_date: string | null
           agent_replies_today: number
           agent_status: string
-          address: string | null
           ai_memory_summary: string | null
           analyzed_needs: Json | null
           assigned_to: string | null
@@ -1181,8 +1652,11 @@ export type Database = {
           company_description: string | null
           conversation_summary: string | null
           created_at: string
+          data_collected_at: string | null
+          data_origin: string | null
           deal_value: number | null
           email: string | null
+          email_source: string | null
           employee_count: string | null
           enriched_at: string | null
           facebook_url: string | null
@@ -1203,6 +1677,7 @@ export type Database = {
           lat: number | null
           lead_group: string | null
           lead_score: number | null
+          legal_basis: string
           linkedin_url: string | null
           lng: number | null
           location: string | null
@@ -1218,6 +1693,10 @@ export type Database = {
           reviews_count: number | null
           score_factors: Json | null
           service_opportunities: string[] | null
+          signal_checked_at: string | null
+          signal_snapshot: Json | null
+          site_audit: Json | null
+          site_audited_at: string | null
           source: string | null
           stage: string
           tags: string[] | null
@@ -1231,14 +1710,12 @@ export type Database = {
           website: string | null
         }
         Insert: {
-          site_audit?: Json | null
-          site_audited_at?: string | null
+          address?: string | null
           agent_paused_at?: string | null
           agent_paused_reason?: string | null
           agent_replies_date?: string | null
           agent_replies_today?: number
           agent_status?: string
-          address?: string | null
           ai_memory_summary?: string | null
           analyzed_needs?: Json | null
           assigned_to?: string | null
@@ -1247,8 +1724,11 @@ export type Database = {
           company_description?: string | null
           conversation_summary?: string | null
           created_at?: string
+          data_collected_at?: string | null
+          data_origin?: string | null
           deal_value?: number | null
           email?: string | null
+          email_source?: string | null
           employee_count?: string | null
           enriched_at?: string | null
           facebook_url?: string | null
@@ -1269,6 +1749,7 @@ export type Database = {
           lat?: number | null
           lead_group?: string | null
           lead_score?: number | null
+          legal_basis?: string
           linkedin_url?: string | null
           lng?: number | null
           location?: string | null
@@ -1284,6 +1765,10 @@ export type Database = {
           reviews_count?: number | null
           score_factors?: Json | null
           service_opportunities?: string[] | null
+          signal_checked_at?: string | null
+          signal_snapshot?: Json | null
+          site_audit?: Json | null
+          site_audited_at?: string | null
           source?: string | null
           stage?: string
           tags?: string[] | null
@@ -1297,14 +1782,12 @@ export type Database = {
           website?: string | null
         }
         Update: {
-          site_audit?: Json | null
-          site_audited_at?: string | null
+          address?: string | null
           agent_paused_at?: string | null
           agent_paused_reason?: string | null
           agent_replies_date?: string | null
           agent_replies_today?: number
           agent_status?: string
-          address?: string | null
           ai_memory_summary?: string | null
           analyzed_needs?: Json | null
           assigned_to?: string | null
@@ -1313,8 +1796,11 @@ export type Database = {
           company_description?: string | null
           conversation_summary?: string | null
           created_at?: string
+          data_collected_at?: string | null
+          data_origin?: string | null
           deal_value?: number | null
           email?: string | null
+          email_source?: string | null
           employee_count?: string | null
           enriched_at?: string | null
           facebook_url?: string | null
@@ -1335,6 +1821,7 @@ export type Database = {
           lat?: number | null
           lead_group?: string | null
           lead_score?: number | null
+          legal_basis?: string
           linkedin_url?: string | null
           lng?: number | null
           location?: string | null
@@ -1350,6 +1837,10 @@ export type Database = {
           reviews_count?: number | null
           score_factors?: Json | null
           service_opportunities?: string[] | null
+          signal_checked_at?: string | null
+          signal_snapshot?: Json | null
+          site_audit?: Json | null
+          site_audited_at?: string | null
           source?: string | null
           stage?: string
           tags?: string[] | null
@@ -1533,6 +2024,221 @@ export type Database = {
         }
         Relationships: []
       }
+      mission_leads: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          dossier: Json | null
+          draft_message: string | null
+          error_message: string | null
+          id: string
+          lead_id: string
+          mission_id: string
+          offer_match: Json | null
+          qualification: Json | null
+          quality: Json | null
+          rejected_reason: string | null
+          replied_at: string | null
+          rewrite_count: number
+          score: number | null
+          send_attempts: number
+          sent_at: string | null
+          sent_channel: string | null
+          status: string
+          strategy: Json | null
+          temperature: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          dossier?: Json | null
+          draft_message?: string | null
+          error_message?: string | null
+          id?: string
+          lead_id: string
+          mission_id: string
+          offer_match?: Json | null
+          qualification?: Json | null
+          quality?: Json | null
+          rejected_reason?: string | null
+          replied_at?: string | null
+          rewrite_count?: number
+          score?: number | null
+          send_attempts?: number
+          sent_at?: string | null
+          sent_channel?: string | null
+          status?: string
+          strategy?: Json | null
+          temperature?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          dossier?: Json | null
+          draft_message?: string | null
+          error_message?: string | null
+          id?: string
+          lead_id?: string
+          mission_id?: string
+          offer_match?: Json | null
+          qualification?: Json | null
+          quality?: Json | null
+          rejected_reason?: string | null
+          replied_at?: string | null
+          rewrite_count?: number
+          score?: number | null
+          send_attempts?: number
+          sent_at?: string | null
+          sent_channel?: string | null
+          status?: string
+          strategy?: Json | null
+          temperature?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mission_leads_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mission_leads_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "missions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      missions: {
+        Row: {
+          ai_budget_usd: number | null
+          autonomy_level: string
+          channel: string
+          city: string | null
+          created_at: string
+          daily_limit: number
+          end_hour: number
+          goal: string
+          icp: Json
+          icp_profile_id: string | null
+          id: string
+          keywords: string[] | null
+          last_run_at: string | null
+          leads_contacted: number
+          leads_drafted: number
+          leads_found: number
+          leads_qualified: number
+          leads_replied: number
+          meetings_booked: number
+          name: string
+          niche: string
+          offer_ids: string[] | null
+          paused_at: string | null
+          paused_reason: string | null
+          quality_thresholds: Json
+          region: string | null
+          segment: string | null
+          start_hour: number
+          state: string | null
+          status: string
+          target_count: number
+          updated_at: string
+          user_id: string
+          work_days_only: boolean
+        }
+        Insert: {
+          ai_budget_usd?: number | null
+          autonomy_level?: string
+          channel?: string
+          city?: string | null
+          created_at?: string
+          daily_limit?: number
+          end_hour?: number
+          goal?: string
+          icp?: Json
+          icp_profile_id?: string | null
+          id?: string
+          keywords?: string[] | null
+          last_run_at?: string | null
+          leads_contacted?: number
+          leads_drafted?: number
+          leads_found?: number
+          leads_qualified?: number
+          leads_replied?: number
+          meetings_booked?: number
+          name: string
+          niche: string
+          offer_ids?: string[] | null
+          paused_at?: string | null
+          paused_reason?: string | null
+          quality_thresholds?: Json
+          region?: string | null
+          segment?: string | null
+          start_hour?: number
+          state?: string | null
+          status?: string
+          target_count?: number
+          updated_at?: string
+          user_id: string
+          work_days_only?: boolean
+        }
+        Update: {
+          ai_budget_usd?: number | null
+          autonomy_level?: string
+          channel?: string
+          city?: string | null
+          created_at?: string
+          daily_limit?: number
+          end_hour?: number
+          goal?: string
+          icp?: Json
+          icp_profile_id?: string | null
+          id?: string
+          keywords?: string[] | null
+          last_run_at?: string | null
+          leads_contacted?: number
+          leads_drafted?: number
+          leads_found?: number
+          leads_qualified?: number
+          leads_replied?: number
+          meetings_booked?: number
+          name?: string
+          niche?: string
+          offer_ids?: string[] | null
+          paused_at?: string | null
+          paused_reason?: string | null
+          quality_thresholds?: Json
+          region?: string | null
+          segment?: string | null
+          start_hour?: number
+          state?: string | null
+          status?: string
+          target_count?: number
+          updated_at?: string
+          user_id?: string
+          work_days_only?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "missions_icp_profile_id_fkey"
+            columns: ["icp_profile_id"]
+            isOneToOne: false
+            referencedRelation: "icp_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       niche_patterns: {
         Row: {
           avg_messages_to_convert: number | null
@@ -1644,6 +2350,50 @@ export type Database = {
         }
         Relationships: []
       }
+      outbound_suppression: {
+        Row: {
+          channel: string
+          created_at: string
+          id: string
+          identifier: string | null
+          lead_id: string | null
+          note: string | null
+          reason: string
+          source: string | null
+          user_id: string
+        }
+        Insert: {
+          channel?: string
+          created_at?: string
+          id?: string
+          identifier?: string | null
+          lead_id?: string | null
+          note?: string | null
+          reason?: string
+          source?: string | null
+          user_id: string
+        }
+        Update: {
+          channel?: string
+          created_at?: string
+          id?: string
+          identifier?: string | null
+          lead_id?: string | null
+          note?: string | null
+          reason?: string
+          source?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "outbound_suppression_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payment_events: {
         Row: {
           amount: number | null
@@ -1688,6 +2438,41 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      pending_replies: {
+        Row: {
+          first_seen_at: string
+          last_seen_at: string
+          lead_id: string
+          message_count: number
+          processing: boolean
+          user_id: string
+        }
+        Insert: {
+          first_seen_at?: string
+          last_seen_at?: string
+          lead_id: string
+          message_count?: number
+          processing?: boolean
+          user_id: string
+        }
+        Update: {
+          first_seen_at?: string
+          last_seen_at?: string
+          lead_id?: string
+          message_count?: number
+          processing?: boolean
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pending_replies_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: true
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       portfolio_sites: {
         Row: {
@@ -1734,33 +2519,6 @@ export type Database = {
           updated_at?: string
           url?: string
           user_id?: string | null
-        }
-        Relationships: []
-      }
-      pending_replies: {
-        Row: {
-          first_seen_at: string
-          last_seen_at: string
-          lead_id: string
-          message_count: number
-          processing: boolean
-          user_id: string
-        }
-        Insert: {
-          first_seen_at?: string
-          last_seen_at?: string
-          lead_id: string
-          message_count?: number
-          processing?: boolean
-          user_id: string
-        }
-        Update: {
-          first_seen_at?: string
-          last_seen_at?: string
-          lead_id?: string
-          message_count?: number
-          processing?: boolean
-          user_id?: string
         }
         Relationships: []
       }
@@ -1899,6 +2657,54 @@ export type Database = {
         }
         Relationships: []
       }
+      provider_states: {
+        Row: {
+          avg_latency_ms: number
+          circuit_open_until: string | null
+          consecutive_failures: number
+          enabled: boolean
+          health: string
+          last_error: string | null
+          last_run_at: string | null
+          priority: number
+          provider_id: string
+          total_found: number
+          total_runs: number
+          total_unique: number
+          updated_at: string
+        }
+        Insert: {
+          avg_latency_ms?: number
+          circuit_open_until?: string | null
+          consecutive_failures?: number
+          enabled?: boolean
+          health?: string
+          last_error?: string | null
+          last_run_at?: string | null
+          priority?: number
+          provider_id: string
+          total_found?: number
+          total_runs?: number
+          total_unique?: number
+          updated_at?: string
+        }
+        Update: {
+          avg_latency_ms?: number
+          circuit_open_until?: string | null
+          consecutive_failures?: number
+          enabled?: boolean
+          health?: string
+          last_error?: string | null
+          last_run_at?: string | null
+          priority?: number
+          provider_id?: string
+          total_found?: number
+          total_runs?: number
+          total_unique?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       push_subscriptions: {
         Row: {
           auth: string
@@ -1983,6 +2789,36 @@ export type Database = {
           total_leads_captured?: number | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      search_cache: {
+        Row: {
+          businesses: Json
+          cache_key: string
+          created_at: string
+          hits: number
+          location: string
+          result_count: number
+          term: string
+        }
+        Insert: {
+          businesses?: Json
+          cache_key: string
+          created_at?: string
+          hits?: number
+          location: string
+          result_count?: number
+          term: string
+        }
+        Update: {
+          businesses?: Json
+          cache_key?: string
+          created_at?: string
+          hits?: number
+          location?: string
+          result_count?: number
+          term?: string
         }
         Relationships: []
       }
@@ -2259,28 +3095,37 @@ export type Database = {
       }
       team_members: {
         Row: {
+          active: boolean
+          capacity: number
           created_at: string
           id: string
           invited_by: string | null
           joined_at: string
+          niches: string[]
           role: string
           team_id: string
           user_id: string
         }
         Insert: {
+          active?: boolean
+          capacity?: number
           created_at?: string
           id?: string
           invited_by?: string | null
           joined_at?: string
+          niches?: string[]
           role?: string
           team_id: string
           user_id: string
         }
         Update: {
+          active?: boolean
+          capacity?: number
           created_at?: string
           id?: string
           invited_by?: string | null
           joined_at?: string
+          niches?: string[]
           role?: string
           team_id?: string
           user_id?: string
@@ -2297,6 +3142,7 @@ export type Database = {
       }
       teams: {
         Row: {
+          assignment_strategy: string
           created_at: string
           id: string
           name: string
@@ -2304,6 +3150,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          assignment_strategy?: string
           created_at?: string
           id?: string
           name: string
@@ -2311,6 +3158,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          assignment_strategy?: string
           created_at?: string
           id?: string
           name?: string
@@ -2340,166 +3188,14 @@ export type Database = {
         }
         Relationships: []
       }
-      crm_integrations: {
-        Row: {
-          id: string
-          user_id: string
-          provider: string
-          config: Json
-          active: boolean
-          last_ok_at: string | null
-          last_error: string | null
-          last_error_at: string | null
-          pushed_count: number
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          provider: string
-          credential: string
-          config?: Json
-          active?: boolean
-          last_ok_at?: string | null
-          last_error?: string | null
-          last_error_at?: string | null
-          pushed_count?: number
-          created_at?: string
-        }
-        Update: {
-          provider?: string
-          credential?: string
-          config?: Json
-          active?: boolean
-          last_ok_at?: string | null
-          last_error?: string | null
-          last_error_at?: string | null
-        }
-        Relationships: []
-      }
-      crm_push_log: {
-        Row: {
-          id: string
-          user_id: string
-          lead_id: string
-          provider: string
-          ok: boolean
-          external_id: string | null
-          message: string
-          already_existed: boolean
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          lead_id: string
-          provider: string
-          ok: boolean
-          external_id?: string | null
-          message: string
-          already_existed?: boolean
-          created_at?: string
-        }
-        Update: { ok?: boolean; message?: string }
-        Relationships: []
-      }
-      data_requests: {
-        Row: {
-          id: string
-          user_id: string
-          lead_id: string | null
-          requester: string
-          kind: string
-          status: string
-          note: string | null
-          created_at: string
-          due_at: string
-          resolved_at: string | null
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          lead_id?: string | null
-          requester: string
-          kind: string
-          status?: string
-          note?: string | null
-          created_at?: string
-          due_at?: string
-          resolved_at?: string | null
-        }
-        Update: {
-          status?: string
-          note?: string | null
-          resolved_at?: string | null
-        }
-        Relationships: []
-      }
-      icp_profiles: {
-        Row: {
-          id: string
-          user_id: string
-          name: string
-          description: string | null
-          niches: string[]
-          locations: string[]
-          signals: string[]
-          exclusions: string[]
-          min_rating: number | null
-          max_rating: number | null
-          min_reviews: number | null
-          is_default: boolean
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          name: string
-          description?: string | null
-          niches?: string[]
-          locations?: string[]
-          signals?: string[]
-          exclusions?: string[]
-          min_rating?: number | null
-          max_rating?: number | null
-          min_reviews?: number | null
-          is_default?: boolean
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          name?: string
-          description?: string | null
-          niches?: string[]
-          locations?: string[]
-          signals?: string[]
-          exclusions?: string[]
-          min_rating?: number | null
-          max_rating?: number | null
-          min_reviews?: number | null
-          is_default?: boolean
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
       user_settings: {
         Row: {
-          email_from: string | null
-          email_reply_to: string | null
           active_chip_ids: string[] | null
-          ai_daily_budget_usd: number | null
-          ai_monthly_budget_usd: number | null
-          outbound_paused: boolean | null
-          outbound_paused_at: string | null
-          outbound_paused_reason: string | null
-          default_autonomy_level: string | null
           agent_name: string | null
           agent_persona: string | null
           agent_type: string | null
+          ai_daily_budget_usd: number
+          ai_monthly_budget_usd: number
           apify_token: string | null
           auto_end_hour: number | null
           auto_first_message_enabled: boolean | null
@@ -2521,7 +3217,10 @@ export type Database = {
           created_at: string
           daily_message_limit: number | null
           daily_report_enabled: boolean | null
+          default_autonomy_level: string
+          email_from: string | null
           email_notifications: boolean | null
+          email_reply_to: string | null
           emoji_usage: string | null
           extra_chip_instances: Json | null
           follow_up_tone: string | null
@@ -2540,6 +3239,9 @@ export type Database = {
           onboarding_completed: boolean | null
           onboarding_niche: string | null
           operate_all_day: boolean | null
+          outbound_paused: boolean
+          outbound_paused_at: string | null
+          outbound_paused_reason: string | null
           pause_duration_minutes: number | null
           pause_on_error: boolean | null
           personality_traits: Json | null
@@ -2571,18 +3273,12 @@ export type Database = {
           work_days_only: boolean | null
         }
         Insert: {
-          email_from?: string | null
-          email_reply_to?: string | null
           active_chip_ids?: string[] | null
-          ai_daily_budget_usd?: number | null
-          ai_monthly_budget_usd?: number | null
-          outbound_paused?: boolean | null
-          outbound_paused_at?: string | null
-          outbound_paused_reason?: string | null
-          default_autonomy_level?: string | null
           agent_name?: string | null
           agent_persona?: string | null
           agent_type?: string | null
+          ai_daily_budget_usd?: number
+          ai_monthly_budget_usd?: number
           apify_token?: string | null
           auto_end_hour?: number | null
           auto_first_message_enabled?: boolean | null
@@ -2604,7 +3300,10 @@ export type Database = {
           created_at?: string
           daily_message_limit?: number | null
           daily_report_enabled?: boolean | null
+          default_autonomy_level?: string
+          email_from?: string | null
           email_notifications?: boolean | null
+          email_reply_to?: string | null
           emoji_usage?: string | null
           extra_chip_instances?: Json | null
           follow_up_tone?: string | null
@@ -2623,6 +3322,9 @@ export type Database = {
           onboarding_completed?: boolean | null
           onboarding_niche?: string | null
           operate_all_day?: boolean | null
+          outbound_paused?: boolean
+          outbound_paused_at?: string | null
+          outbound_paused_reason?: string | null
           pause_duration_minutes?: number | null
           pause_on_error?: boolean | null
           personality_traits?: Json | null
@@ -2654,18 +3356,12 @@ export type Database = {
           work_days_only?: boolean | null
         }
         Update: {
-          email_from?: string | null
-          email_reply_to?: string | null
           active_chip_ids?: string[] | null
-          ai_daily_budget_usd?: number | null
-          ai_monthly_budget_usd?: number | null
-          outbound_paused?: boolean | null
-          outbound_paused_at?: string | null
-          outbound_paused_reason?: string | null
-          default_autonomy_level?: string | null
           agent_name?: string | null
           agent_persona?: string | null
           agent_type?: string | null
+          ai_daily_budget_usd?: number
+          ai_monthly_budget_usd?: number
           apify_token?: string | null
           auto_end_hour?: number | null
           auto_first_message_enabled?: boolean | null
@@ -2687,7 +3383,10 @@ export type Database = {
           created_at?: string
           daily_message_limit?: number | null
           daily_report_enabled?: boolean | null
+          default_autonomy_level?: string
+          email_from?: string | null
           email_notifications?: boolean | null
+          email_reply_to?: string | null
           emoji_usage?: string | null
           extra_chip_instances?: Json | null
           follow_up_tone?: string | null
@@ -2706,6 +3405,9 @@ export type Database = {
           onboarding_completed?: boolean | null
           onboarding_niche?: string | null
           operate_all_day?: boolean | null
+          outbound_paused?: boolean
+          outbound_paused_at?: string | null
+          outbound_paused_reason?: string | null
           pause_duration_minutes?: number | null
           pause_on_error?: boolean | null
           personality_traits?: Json | null
@@ -2858,55 +3560,99 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      leads_ja_existentes: {
-        Args: { p_user_id: string; p_phones: string[] }
-        Returns: { phone_consultado: string }[]
+      ab_sync_counters: { Args: { p_test_id: string }; Returns: undefined }
+      ab_test_stats: { Args: { p_test_id: string }; Returns: Json }
+      ab_tests_to_evaluate: {
+        Args: never
+        Returns: {
+          min_sample: number
+          test_id: string
+          user_id: string
+        }[]
       }
-      dashboard_metrics: {
-        Args: { p_user_id: string; p_days?: number }
+      agent_can_reply: {
+        Args: { p_lead_id: string; p_max_replies_per_day?: number }
+        Returns: string
+      }
+      agent_count_reply: { Args: { p_lead_id: string }; Returns: undefined }
+      agent_handoff: {
+        Args: { p_lead_id: string; p_reason: string }
+        Returns: undefined
+      }
+      agent_opt_out: {
+        Args: { p_keyword?: string; p_lead_id: string }
+        Returns: undefined
+      }
+      ai_budget_check: {
+        Args: { p_mission_id?: string; p_user_id: string }
+        Returns: string
+      }
+      ai_cost_summary: { Args: { p_user_id: string }; Returns: Json }
+      calculate_lead_score: { Args: { p_lead_id: string }; Returns: number }
+      chip_allowance: {
+        Args: { p_instance_id: string; p_user_id: string }
         Returns: Json
+      }
+      chips_overview: {
+        Args: { p_user_id: string }
+        Returns: {
+          day_of_life: number
+          failed_7d: number
+          instance_id: string
+          last_sent_at: string
+          sent_7d: number
+          sent_today: number
+        }[]
+      }
+      command_center: { Args: { p_user_id: string }; Returns: Json }
+      consume_rate_limit: {
+        Args: {
+          p_action: string
+          p_identity: string
+          p_max: number
+          p_window_seconds: number
+        }
+        Returns: {
+          allowed: boolean
+          remaining: number
+          reset_in_seconds: number
+        }[]
       }
       crm_overview: {
-        Args: Record<string, never>
+        Args: never
         Returns: {
-          provider: string
           active: boolean
           enviados: number
-          ja_existiam: number
           falhas: number
-          ultimo_ok: string | null
-          ultimo_erro: string | null
-          ultimo_erro_em: string | null
+          ja_existiam: number
+          provider: string
+          ultimo_erro: string
+          ultimo_erro_em: string
+          ultimo_ok: string
         }[]
       }
-      public_unsubscribe: {
-        Args: { p_identifier: string; p_source?: string }
+      dashboard_metrics: {
+        Args: { p_days?: number; p_user_id: string }
         Returns: Json
       }
-      lead_data_export: { Args: { p_lead_id: string }; Returns: Json }
-      team_availability: {
-        Args: { p_owner_id: string }
+      data_sources_overview: { Args: never; Returns: Json }
+      emergency_stop: {
+        Args: { p_reason?: string; p_user_id: string }
+        Returns: number
+      }
+      expire_lead_signals: { Args: never; Returns: number }
+      get_chip_usage_today: {
+        Args: { p_user_id: string }
         Returns: {
-          user_id: string
-          active: boolean
-          open_load: number
-          niches: string[] | null
-          capacity: number | null
+          failed_count: number
+          instance_id: string
+          sent_count: number
         }[]
       }
-      outreach_by_channel: {
-        Args: { p_user_id: string; p_days?: number }
-        Returns: {
-          channel: string
-          sent: number
-          replied: number
-          meetings: number
-        }[]
-      }
-
-      calculate_lead_score: { Args: { p_lead_id: string }; Returns: number }
       get_current_daily_limit: { Args: { p_user_id: string }; Returns: number }
+      get_internal_secret: { Args: never; Returns: string }
       get_user_team_ids: { Args: { p_user_id: string }; Returns: string[] }
+      has_active_subscription: { Args: { p_user_id: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -2915,35 +3661,6 @@ export type Database = {
         Returns: boolean
       }
       is_lead_owner: { Args: { p_lead_id: string }; Returns: boolean }
-      get_chip_usage_today: {
-        Args: { p_user_id: string }
-        Returns: {
-          instance_id: string
-          sent_count: number
-          failed_count: number
-        }[]
-      }
-      has_active_subscription: {
-        Args: { p_user_id: string }
-        Returns: boolean
-      }
-      opportunity_radar: {
-        Args: { p_user_id: string; p_limit?: number }
-        Returns: {
-          id: string
-          business_name: string
-          phone: string
-          niche: string | null
-          website: string | null
-          stage: string
-          rating: number | null
-          reviews_count: number | null
-          site_score: number
-          site_pitch: string | null
-          opportunity_score: number
-          reasons: string[]
-        }[]
-      }
       is_phone_blacklisted: {
         Args: { p_phone: string; p_user_id: string }
         Returns: boolean
@@ -2952,11 +3669,149 @@ export type Database = {
         Args: { p_team_id: string; p_user_id: string }
         Returns: boolean
       }
+      lead_active_signals: {
+        Args: { p_lead_id: string }
+        Returns: {
+          detected_at: string
+          evidence: Json
+          expires_at: string
+          id: string
+          strength: number
+          summary: string
+          type: string
+        }[]
+      }
+      lead_data_export: { Args: { p_lead_id: string }; Returns: Json }
+      lead_handoff_brief: { Args: { p_lead_id: string }; Returns: Json }
+      lead_site_score: { Args: { p_audit: Json }; Returns: number }
+      leads_ja_existentes: {
+        Args: { p_phones: string[]; p_user_id: string }
+        Returns: {
+          phone_consultado: string
+        }[]
+      }
+      mission_can_send: { Args: { p_mission_id: string }; Returns: string }
+      mission_lead_send_failed: {
+        Args: {
+          p_definitive?: boolean
+          p_error: string
+          p_max_attempts?: number
+          p_mission_lead_id: string
+        }
+        Returns: Json
+      }
+      mission_pending_work: {
+        Args: { p_mission_id: string }
+        Returns: {
+          awaiting_human: number
+          ready_to_send: number
+          to_process: number
+        }[]
+      }
+      mission_refresh_counters: {
+        Args: { p_mission_id: string }
+        Returns: undefined
+      }
+      mission_settle_status: { Args: { p_mission_id: string }; Returns: Json }
+      missions_pending_batch: {
+        Args: { p_limit?: number }
+        Returns: {
+          mission_id: string
+          pending: number
+          ready_to_send: number
+          user_id: string
+        }[]
+      }
+      normalize_phone_br: { Args: { p_phone: string }; Returns: string }
+      opportunity_radar: {
+        Args: { p_limit?: number; p_user_id: string }
+        Returns: {
+          business_name: string
+          id: string
+          niche: string
+          opportunity_score: number
+          phone: string
+          rating: number
+          reasons: string[]
+          reviews_count: number
+          site_pitch: string
+          site_score: number
+          stage: string
+          website: string
+        }[]
+      }
+      outbound_suppressed: {
+        Args: {
+          p_channel: string
+          p_identifier?: string
+          p_lead_id?: string
+          p_user_id: string
+        }
+        Returns: string
+      }
+      outreach_by_angle: {
+        Args: { p_days?: number; p_user_id: string }
+        Returns: {
+          angle: string
+          meetings: number
+          replied: number
+          sent: number
+        }[]
+      }
+      outreach_by_channel: {
+        Args: { p_days?: number; p_user_id: string }
+        Returns: {
+          channel: string
+          meetings: number
+          replied: number
+          sent: number
+        }[]
+      }
+      outreach_by_offer: {
+        Args: { p_days?: number; p_user_id: string }
+        Returns: {
+          meetings: number
+          offer: string
+          replied: number
+          sent: number
+        }[]
+      }
       process_spintax: {
         Args: { p_content: string; p_user_id: string }
         Returns: string
       }
+      prospecting_hour_stats: {
+        Args: { p_days?: number; p_user_id: string }
+        Returns: {
+          hour_of_day: number
+          replied: number
+          sent: number
+        }[]
+      }
+      prune_lead_memory: { Args: never; Returns: number }
+      prune_rate_limits: { Args: never; Returns: number }
+      public_unsubscribe: {
+        Args: { p_identifier: string; p_source?: string }
+        Returns: Json
+      }
+      purge_search_cache: { Args: { p_hours?: number }; Returns: number }
+      record_chip_send: {
+        Args: { p_failed?: boolean; p_instance_id: string; p_user_id: string }
+        Returns: undefined
+      }
       recover_stale_jobs: { Args: never; Returns: number }
+      resume_outbound: { Args: { p_user_id: string }; Returns: undefined }
+      signals_overview: { Args: { p_user_id: string }; Returns: Json }
+      team_availability: {
+        Args: { p_owner_id: string }
+        Returns: {
+          active: boolean
+          capacity: number
+          niches: string[]
+          open_load: number
+          user_id: string
+        }[]
+      }
       upsert_lead_memory: {
         Args: {
           p_confidence?: number
@@ -2969,118 +3824,7 @@ export type Database = {
         }
         Returns: string
       }
-
-      // ---- Esteira comercial (missões) ----
-      // Devolvem NULL quando a operação é permitida, ou o motivo do bloqueio
-      // em texto. Falha fechada: na dúvida, não envia.
-      mission_can_send: { Args: { p_mission_id: string }; Returns: string | null }
-      emergency_stop: {
-        Args: { p_user_id: string; p_reason?: string }
-        Returns: number
-      }
-      resume_outbound: { Args: { p_user_id: string }; Returns: undefined }
-      command_center: { Args: { p_user_id: string }; Returns: Json }
-      mission_refresh_counters: { Args: { p_mission_id: string }; Returns: undefined }
-      mission_pending_work: {
-        Args: { p_mission_id: string }
-        Returns: { to_process: number; awaiting_human: number; ready_to_send: number }[]
-      }
-      mission_settle_status: { Args: { p_mission_id: string }; Returns: Json }
-      mission_lead_send_failed: {
-        Args: {
-          p_mission_lead_id: string
-          p_error: string
-          p_definitive?: boolean
-          p_max_attempts?: number
-        }
-        Returns: Json
-      }
-      missions_pending_batch: {
-        Args: { p_limit?: number }
-        Returns: {
-          mission_id: string
-          user_id: string
-          pending: number
-          ready_to_send: number
-        }[]
-      }
-
-      // ---- Custo de IA ----
-      ai_budget_check: {
-        Args: { p_user_id: string; p_mission_id?: string }
-        Returns: string | null
-      }
-      ai_cost_summary: { Args: { p_user_id: string }; Returns: Json }
-
-      // ---- Saúde e aquecimento de chip ----
-      chip_allowance: {
-        Args: { p_user_id: string; p_instance_id: string }
-        Returns: Json
-      }
-      chips_overview: {
-        Args: { p_user_id: string }
-        Returns: {
-          instance_id: string
-          day_of_life: number
-          sent_today: number
-          sent_7d: number
-          failed_7d: number
-          last_sent_at: string | null
-        }[]
-      }
-
-      // ---- Sinais: o motivo de falar com a empresa hoje ----
-      lead_active_signals: {
-        Args: { p_lead_id: string }
-        Returns: {
-          id: string
-          type: string
-          summary: string
-          evidence: Json
-          strength: number
-          detected_at: string
-          expires_at: string
-        }[]
-      }
-      signals_overview: { Args: { p_user_id: string }; Returns: Json }
-      expire_lead_signals: { Args: never; Returns: number }
-
-      // ---- Aprendizado com o que já foi enviado ----
-      outreach_by_angle: {
-        Args: { p_user_id: string; p_days?: number }
-        Returns: { angle: string; sent: number; replied: number; meetings: number }[]
-      }
-      outreach_by_offer: {
-        Args: { p_user_id: string; p_days?: number }
-        Returns: { offer: string; sent: number; replied: number; meetings: number }[]
-      }
-
-      // ---- Handoff ----
-      lead_handoff_brief: { Args: { p_lead_id: string }; Returns: Json }
-
-      // ---- Horário de contato ----
-      // Derivada de chat_messages. Substitui prospecting_stats.responses_received,
-      // que nunca saiu de zero e ainda assim virava recomendação.
-      prospecting_hour_stats: {
-        Args: { p_user_id: string; p_days?: number }
-        Returns: { hour_of_day: number; sent: number; replied: number }[]
-      }
-
-      // ---- Teste A/B ----
-      // Os contadores saíram das colunas e passaram a ser derivados de
-      // `ab_assignments`: contador que ninguém incrementa vira zero eterno.
-      ab_test_stats: { Args: { p_test_id: string }; Returns: Json }
-      ab_sync_counters: { Args: { p_test_id: string }; Returns: undefined }
-      ab_tests_to_evaluate: {
-        Args: never
-        Returns: { test_id: string; user_id: string; min_sample: number }[]
-      }
-
-      // ---- Fontes de dados (Super Admin) ----
-      data_sources_overview: { Args: never; Returns: Json }
-      purge_search_cache: { Args: { p_hours?: number }; Returns: number }
-
-      lead_site_score: { Args: { p_audit: Json }; Returns: number }
+      verify_internal_secret: { Args: { p_secret: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"

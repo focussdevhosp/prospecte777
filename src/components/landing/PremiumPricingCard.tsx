@@ -61,7 +61,7 @@ export function PremiumPricingCard({ plan, annual, index, checkoutUrl }: Premium
 
   return (
     <div
-      className="relative h-full cursor-pointer"
+      className="relative min-h-full cursor-pointer"
       style={{ perspective: '1200px' }}
       onClick={() => setFlipped(!flipped)}
     >
@@ -72,7 +72,7 @@ export function PremiumPricingCard({ plan, annual, index, checkoutUrl }: Premium
       )}
 
       <div
-        className="relative w-full h-full transition-transform duration-700 ease-out"
+        className="relative w-full min-h-full transition-transform duration-700 ease-out"
         style={{
           transformStyle: 'preserve-3d',
           transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
@@ -80,7 +80,7 @@ export function PremiumPricingCard({ plan, annual, index, checkoutUrl }: Premium
       >
         {/* ═══ FRONT ═══ */}
         <div
-          className="premium-price-card relative rounded-2xl p-8 h-full"
+          className="premium-price-card relative overflow-hidden rounded-2xl p-8 min-h-full"
           style={{
             backgroundColor: 'hsla(210, 30%, 8%, 1)',
             backgroundImage: cardBg,
@@ -140,7 +140,7 @@ export function PremiumPricingCard({ plan, annual, index, checkoutUrl }: Premium
             )}
           </div>
 
-          <ul className="space-y-3 text-xl text-white/90 mb-8">
+          <ul className="space-y-2.5 text-base text-white/90 mb-8">
             {plan.features.map(f => (
               <li key={f} className="flex items-start gap-3">
                 <div className={cn('w-6 h-6 rounded-full flex items-center justify-center mt-1 shrink-0', s.check)}>
