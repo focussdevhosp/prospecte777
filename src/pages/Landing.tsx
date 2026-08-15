@@ -401,7 +401,7 @@ export default function Landing() {
         <section id="precos" className="relative py-16 px-4 md:px-8 scroll-mt-24">
           <SectionHeader tag="Investimento" title={<>Um plano. <span className="landing-gradient-text">Acesso total.</span></>} subtitle="Sem surpresas. Todas as funcionalidades desbloqueadas desde o primeiro dia. Cancele quando quiser, sem burocracia." />
           <div className="max-w-md mx-auto">
-            <div className="h-[560px]">
+            <div className="min-h-[620px]">
               <PremiumPricingCard plan={{ ...SINGLE_PLAN, annual: SINGLE_PLAN.price }} annual={false} index={0} checkoutUrl={CAKTO_CHECKOUT_URL} />
             </div>
           </div>
