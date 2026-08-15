@@ -2122,6 +2122,9 @@ export type Database = {
       }
       missions: {
         Row: {
+          center_lat: number | null
+          center_lng: number | null
+          center_radius_km: number | null
           ai_budget_usd: number | null
           autonomy_level: string
           channel: string
@@ -2158,6 +2161,9 @@ export type Database = {
           work_days_only: boolean
         }
         Insert: {
+          center_lat?: number | null
+          center_lng?: number | null
+          center_radius_km?: number | null
           ai_budget_usd?: number | null
           autonomy_level?: string
           channel?: string
@@ -2194,6 +2200,9 @@ export type Database = {
           work_days_only?: boolean
         }
         Update: {
+          center_lat?: number | null
+          center_lng?: number | null
+          center_radius_km?: number | null
           ai_budget_usd?: number | null
           autonomy_level?: string
           channel?: string

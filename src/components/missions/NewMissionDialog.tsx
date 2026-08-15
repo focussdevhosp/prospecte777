@@ -19,6 +19,8 @@ import {
   type AutonomyLevel, type CampaignGoal, type MissionChannel,
 } from '@/hooks/use-missions';
 import { useIcpProfiles } from '@/hooks/use-icp-profiles';
+import { PertoDeMim } from '@/components/prospecting/PertoDeMim';
+import type { MinhaLocalizacao } from '@/hooks/use-minha-localizacao';
 import { cn } from '@/lib/utils';
 
 /**
@@ -87,6 +89,8 @@ export function NewMissionDialog({
   const [goal, setGoal] = useState<CampaignGoal>('agendar_demonstracao');
   const [autonomy, setAutonomy] = useState<AutonomyLevel>('assistido');
   const [channel, setChannel] = useState<MissionChannel>('whatsapp');
+  // Busca por raio em volta do usuario. Nulo = busca pelo nome do lugar.
+  const [centro, setCentro] = useState<(MinhaLocalizacao & { raioKm: number }) | null>(null);
   const [targetCount, setTargetCount] = useState(50);
   const [dailyLimit, setDailyLimit] = useState(30);
   const [startHour, setStartHour] = useState(9);
@@ -139,7 +143,9 @@ export function NewMissionDialog({
   const canSubmit =
     effectiveName.trim().length >= 3 &&
     niche.trim().length >= 2 &&
-    city.trim().length >= 2 &&
+    // Coordenada já é uma área: exigir cidade junto travaria a missão de
+    // quem está num lugar cujo nome o reverso não devolveu.
+    (city.trim().length >= 2 || !!centro) &&
     endHour > startHour &&
     !createMission.isPending;
 
@@ -147,12 +153,18 @@ export function NewMissionDialog({
     const result = await createMission.mutateAsync({
       name: effectiveName.trim(),
       niche: niche.trim(),
-      city: city.trim(),
+      // Sem isto a missão nasceria sem lugar escrito: o campo fica desabilitado
+      // no modo raio, e a lista mostraria um card em branco. O nome vem do
+      // reverso da própria coordenada — é onde a pessoa está, não um chute.
+      city: centro ? (centro.nome ?? '').trim() : city.trim(),
       state: state.trim() || null,
       offer_ids: selectedOffers,
       goal,
       autonomy_level: autonomy,
       channel,
+      // A posicao vai GRAVADA na missao: ela pode rodar dias depois, de
+      // outro lugar, e o alvo continua sendo onde estava quem a criou.
+      center: centro ? { lat: centro.lat, lng: centro.lng, raioKm: centro.raioKm } : undefined,
       target_count: targetCount,
       daily_limit: dailyLimit,
       start_hour: startHour,
@@ -211,12 +223,15 @@ export function NewMissionDialog({
               </div>
 
               <div>
-                <Label htmlFor="mission-city">Cidade *</Label>
+                <Label htmlFor="mission-city">
+                  {centro ? 'Cidade' : 'Cidade *'}
+                </Label>
                 <Input
                   id="mission-city"
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
-                  placeholder="Itu"
+                  placeholder={centro ? (centro.nome ?? 'Sua posição atual') : 'Itu'}
+                  disabled={!!centro}
                 />
               </div>
 
@@ -334,7 +349,11 @@ export function NewMissionDialog({
                 className="mt-2"
               />
             </div>
-          </section>
+          
+            {/* Alternativa à cidade, não filtro adicional: as duas ligadas ao
+                mesmo tempo produziriam duas áreas concorrentes. */}
+            <PertoDeMim centro={centro} onChange={setCentro} />
+</section>
 
           {/* ---- OFERTAS ---- */}
           <section className="space-y-3">

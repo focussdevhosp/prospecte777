@@ -88,6 +88,14 @@ export interface SearchQuery {
   limit: number;
   /** Variações semânticas geradas pela expansão de consulta. */
   variants?: string[];
+  /**
+   * Ponto e raio, quando a busca é "perto de mim".
+   *
+   * Só o cadastro de estabelecimentos (OpenStreetMap) sabe usar: as outras
+   * fontes procuram por TEXTO e não têm como receber um raio. Elas seguem
+   * com `location`, que continua sendo o nome legível do lugar.
+   */
+  centro?: { lat: number; lng: number; raioKm: number } | null;
 }
 
 export interface ProviderResult {

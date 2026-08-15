@@ -60,7 +60,12 @@ export class OpenStreetMapProvider implements LeadProvider {
 
   async search(query: SearchQuery): Promise<ProviderResult> {
     const startedAt = Date.now();
-    const result = await searchOpenStreetMap(query.term, query.location, query.limit);
+    const result = await searchOpenStreetMap(
+      query.term,
+      query.location,
+      query.limit,
+      query.centro,
+    );
     const { city, state } = splitLocation(query.location);
 
     return {

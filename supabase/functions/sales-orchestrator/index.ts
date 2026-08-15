@@ -127,7 +127,13 @@ async function createMission(supabase: Supa, userId: string, body: Record<string
 
   const city = str(body.city);
   const state = str(body.state);
-  if (!city && !str(body.region)) {
+
+  // Coordenada JÁ É uma área. Exigir cidade junto obrigaria a digitar o que
+  // a leitura do aparelho acabou de resolver — e travaria a missão de quem
+  // está num lugar cujo nome o reverso não devolveu.
+  const temCentro = !!body.center && typeof body.center === "object";
+
+  if (!city && !str(body.region) && !temCentro) {
     return json({ error: "Informe ao menos a cidade ou a região." }, 400);
   }
 
@@ -168,6 +174,39 @@ async function createMission(supabase: Supa, userId: string, body: Record<string
     return json({ error: "Canal inválido." }, 400);
   }
 
+  // CENTRO DA BUSCA, quando a missão é "perto de mim".
+  //
+  // Validado aqui além do CHECK da tabela: a constraint recusa a linha com
+  // uma mensagem de Postgres que ninguém sabe ler, e este caminho responde
+  // em português dizendo o que fazer.
+  //
+  // (0,0) entra na recusa de propósito — é leitura falha do aparelho
+  // travestida de coordenada. Fica no Golfo da Guiné.
+  let centro: { lat: number; lng: number; raioKm: number } | null = null;
+
+  if (body.center && typeof body.center === "object") {
+    const c = body.center as Record<string, unknown>;
+    const lat = Number(c.lat);
+    const lng = Number(c.lng);
+    const raioKm = Math.round(Number(c.raioKm ?? 10));
+
+    const valido = [lat, lng, raioKm].every((n) => Number.isFinite(n)) &&
+      Math.abs(lat) <= 90 && Math.abs(lng) <= 180 &&
+      !(lat === 0 && lng === 0) &&
+      raioKm >= 1 && raioKm <= 300;
+
+    if (!valido) {
+      return json({
+        error:
+          "A localização recebida não é válida. Refaça a leitura da sua posição, " +
+          "ou informe a cidade no lugar dela.",
+        code: "center_invalid",
+      }, 400);
+    }
+
+    centro = { lat, lng, raioKm };
+  }
+
   const location = [city, state].filter(Boolean).join(" - ") || str(body.region);
 
   // O ICP nasce preenchido com o que o usuário já informou. Sem isto ele
@@ -200,6 +239,9 @@ async function createMission(supabase: Supa, userId: string, body: Record<string
       offer_ids: offerIds,
       goal,
       channel,
+      center_lat: centro?.lat ?? null,
+      center_lng: centro?.lng ?? null,
+      center_radius_km: centro?.raioKm ?? null,
       autonomy_level: autonomy,
       daily_limit: dailyLimit,
       start_hour: startHour,
@@ -392,6 +434,15 @@ async function researchAndIngest(
         location,
         limit: mission.target_count,
         variants: expandQuery(mission.niche),
+        // Guardado na missão, não recalculado: a posição de quem criou a
+        // missão é a que vale, e ela pode rodar dias depois, de outro lugar.
+        centro: mission.center_lat != null && mission.center_lng != null
+          ? {
+            lat: Number(mission.center_lat),
+            lng: Number(mission.center_lng),
+            raioKm: Number(mission.center_radius_km ?? 10),
+          }
+          : null,
       },
       supabase,
       keys: { serper: keys.serper, serpapi: keys.serpapi },
