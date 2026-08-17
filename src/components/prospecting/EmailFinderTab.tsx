@@ -71,9 +71,9 @@ export function EmailFinderTab() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h3 className="text-lg font-medium">Busca de Email & Enriquecimento</h3>
+        <h3 className="text-lg font-medium">Localizador de E-mails & Enriquecimento</h3>
         <p className="text-sm text-muted-foreground">
-          Encontre emails profissionais e enriqueça seus leads com dados adicionais usando Hunter.io
+          Encontre e-mails profissionais por domínio ou empresa e enriqueça seus leads com dados adicionais.
         </p>
       </div>
 

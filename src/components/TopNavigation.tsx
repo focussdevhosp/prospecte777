@@ -77,7 +77,7 @@ const insightItems = [
 
 const toolItems = [
   { title: 'Agente SDR', icon: Bot, path: '/sdr-agent' },
-  { title: 'Email Finder', icon: Mail, path: '/email-finder' },
+  { title: 'Localizador de E-mails', icon: Mail, path: '/email-finder' },
   { title: 'Extrator Social', icon: Globe, path: '/social-extractor' },
   { title: 'Reuniões', icon: Calendar, path: '/meetings' },
 ];
