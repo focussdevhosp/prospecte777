@@ -49,7 +49,7 @@ import { Search, Building2, Mail, Globe, Send, RefreshCw, Flame, MessageSquareTe
 export const prospectGroup: GroupNavItem[] = [
   { label: 'Buscar Leads', path: '/prospecting', icon: Search },
   { label: 'Radar CNPJ', path: '/cnpj-radar', icon: Building2 },
-  { label: 'Email Finder', path: '/email-finder', icon: Mail },
+  { label: 'Localizador de E-mails', path: '/email-finder', icon: Mail },
   { label: 'Extrator Social', path: '/social-extractor', icon: Globe },
 ];
 

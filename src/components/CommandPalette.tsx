@@ -30,7 +30,7 @@ const routes: CommandRoute[] = [
   { label: 'Prospecção', icon: <Target className="h-4 w-4" />, path: '/prospecting', group: 'Captura', keywords: 'buscar leads capturar google maps web' },
   
   { label: 'CNPJ Radar', icon: <FileText className="h-4 w-4" />, path: '/cnpj-radar', group: 'Captura' },
-  { label: 'Email Finder', icon: <Mail className="h-4 w-4" />, path: '/email-finder', group: 'Captura' },
+  { label: 'Localizador de E-mails', icon: <Mail className="h-4 w-4" />, path: '/email-finder', group: 'Captura', keywords: 'puxar e-mail domínio' },
   { label: 'Extrator Social', icon: <Globe className="h-4 w-4" />, path: '/social-extractor', group: 'Captura', keywords: 'instagram facebook' },
   { label: 'Disparo em Massa', icon: <Send className="h-4 w-4" />, path: '/mass-send', group: 'Engajamento', keywords: 'enviar mensagem' },
   { label: 'Campanhas', icon: <Zap className="h-4 w-4" />, path: '/campaigns', group: 'Engajamento' },
